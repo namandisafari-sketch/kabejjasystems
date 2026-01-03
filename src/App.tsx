@@ -104,7 +104,7 @@ import RenterDashboard from "./pages/RenterDashboard";
 import SubscriptionExpired from "./pages/SubscriptionExpired";
 import NotFound from "./pages/NotFound";
 import FirebaseLogin from "./pages/FirebaseLogin";
-import { FirebaseAuthProvider } from "./integrations/firebase/AuthContext";
+import { AuthProvider } from "./integrations/supabase/AuthContext";
 import { HasuraProvider } from "./integrations/hasura/provider";
 // Marketer Portal
 import MarketerPortal from "./pages/MarketerPortal";
@@ -154,7 +154,7 @@ function SmartHome() {
 
 const App = () => (
   <ThemeProvider defaultTheme="light" storageKey="kabejja-ui-theme">
-    <FirebaseAuthProvider>
+    <AuthProvider>
       <HasuraProvider>
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
@@ -296,7 +296,7 @@ const App = () => (
           </TooltipProvider>
         </QueryClientProvider>
       </HasuraProvider>
-    </FirebaseAuthProvider>
+    </AuthProvider>
   </ThemeProvider>
 );
 

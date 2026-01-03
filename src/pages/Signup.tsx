@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { db } from "@/hooks/use-database";
-import { useFirebaseAuth } from "@/integrations/firebase";
+
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -17,31 +17,13 @@ import { getBusinessTypeConfig, getBusinessTypesByCategory, categoryLabels } fro
 const Signup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isFirebaseEnabled, signInWithGoogle, loading: firebaseLoading } = useFirebaseAuth();
+
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleGoogleSignIn = async () => {
-    try {
-      await signInWithGoogle();
-      toast({
-        title: "Welcome!",
-        description: "You've successfully signed in with Google. Please complete your business setup.",
-      });
-      // For Google sign-in, we might need to redirect to a profile completion page
-      // For now, redirect to dashboard
-      navigate('/dashboard');
-    } catch (error: any) {
-      console.error('Google sign in error:', error);
-      toast({
-        title: "Sign Up Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-  
+
+
   const [formData, setFormData] = useState({
     businessName: "",
     businessType: "",
@@ -59,7 +41,7 @@ const Signup = () => {
 
   // Check if the selected business type is a school
   const isSchoolType = ['kindergarten', 'primary_school', 'secondary_school'].includes(formData.businessType);
-  
+
   // Check if rental business
   const isRentalType = formData.businessType === 'rental_management';
 
@@ -72,7 +54,7 @@ const Signup = () => {
         .select('*')
         .eq('is_active', true)
         .order('display_order', { ascending: true });
-      
+
       if (error) throw error;
       return data;
     },
@@ -88,7 +70,7 @@ const Signup = () => {
         .select('*')
         .eq('is_active', true)
         .order('display_order', { ascending: true });
-      
+
       if (error) throw error;
       return data;
     },
@@ -105,7 +87,7 @@ const Signup = () => {
         .eq('is_active', true)
         .eq('package_type', 'subscription')
         .order('price', { ascending: true });
-      
+
       if (error) throw error;
       return data;
     },
@@ -122,7 +104,7 @@ const Signup = () => {
         'secondary_school': 'secondary',
       };
       const schoolLevel = schoolLevelMap[formData.businessType];
-      
+
       // Fetch packages that match the specific level OR are for 'all' levels
       const { data, error } = await db
         .from('school_packages')
@@ -130,7 +112,7 @@ const Signup = () => {
         .eq('is_active', true)
         .in('school_level', [schoolLevel, 'all'])
         .order('price_per_term', { ascending: true });
-      
+
       if (error) throw error;
       return data;
     },
@@ -150,7 +132,7 @@ const Signup = () => {
       });
       return;
     }
-    
+
     if (step === 2 && !formData.packageId && !formData.schoolPackageId) {
       toast({
         title: "Select a Package",
@@ -159,13 +141,13 @@ const Signup = () => {
       });
       return;
     }
-    
+
     setStep(step + 1);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Password Mismatch",
@@ -174,7 +156,7 @@ const Signup = () => {
       });
       return;
     }
-    
+
     if (formData.password.length < 6) {
       toast({
         title: "Weak Password",
@@ -183,9 +165,9 @@ const Signup = () => {
       });
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
       const { data: authData, error: authError } = await db.auth.signUp({
         email: formData.ownerEmail,
@@ -197,10 +179,10 @@ const Signup = () => {
           },
         },
       });
-      
+
       if (authError) throw authError;
       if (!authData.user) throw new Error("User creation failed");
-      
+
       // Wait for session to be established
       if (authData.session) {
         await db.auth.setSession(authData.session);
@@ -212,10 +194,10 @@ const Signup = () => {
         });
         if (signInError) throw signInError;
       }
-      
+
       // Small delay to ensure auth state is propagated
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // Use RPC function to create tenant (bypasses RLS)
       const { data: tenantId, error: tenantError } = await db
         .rpc('create_tenant_for_signup', {
@@ -227,7 +209,7 @@ const Signup = () => {
           p_package_id: isSchoolType ? null : formData.packageId || null,
           p_referred_by_code: formData.referralCode || null,
         });
-      
+
       if (tenantError) throw tenantError;
       if (!tenantId) throw new Error("Failed to create tenant");
 
@@ -238,10 +220,10 @@ const Signup = () => {
             p_tenant_id: tenantId,
             p_package_id: formData.schoolPackageId,
           });
-        
+
         if (schoolDataError) throw schoolDataError;
       }
-      
+
       // Use RPC function to create profile (bypasses RLS)
       const { error: profileError } = await db
         .rpc('create_profile_for_signup', {
@@ -250,7 +232,7 @@ const Signup = () => {
           p_full_name: formData.ownerName,
           p_phone: formData.phone,
         });
-      
+
       if (profileError) throw profileError;
 
       const businessTypeConfig = getBusinessTypeConfig(formData.businessType);
@@ -258,7 +240,7 @@ const Signup = () => {
         const nonCoreModules = businessTypeConfig.defaultModules.filter(
           code => !['dashboard', 'pos', 'products', 'sales', 'customers', 'employees', 'expenses', 'reports', 'settings'].includes(code)
         );
-        
+
         if (nonCoreModules.length > 0) {
           const moduleInserts = nonCoreModules.map(code => ({
             tenant_id: tenantId,
@@ -266,18 +248,18 @@ const Signup = () => {
             is_enabled: true,
             enabled_by: authData.user!.id,
           }));
-          
+
           await db.from('tenant_modules').insert(moduleInserts);
         }
       }
-      
+
       toast({
         title: "Welcome to Your Free Trial!",
         description: "Your 14-day free trial has started. Enjoy full access!",
       });
-      
+
       navigate("/business");
-      
+
     } catch (error: any) {
       console.error('Signup error:', error);
       toast({
@@ -296,8 +278,8 @@ const Signup = () => {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex flex-col safe-top safe-bottom">
       {/* Header */}
       <header className="flex items-center justify-between p-4">
-        <Link 
-          to="/" 
+        <Link
+          to="/"
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors touch-target"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -318,20 +300,19 @@ const Signup = () => {
               <CardDescription className="text-sm">
                 Step {step} of 3 — {stepTitles[step - 1]}
               </CardDescription>
-              
+
               {/* Progress Bar */}
               <div className="flex gap-1.5 mt-4">
                 {[1, 2, 3].map((s) => (
                   <div
                     key={s}
-                    className={`h-1.5 flex-1 rounded-full transition-colors ${
-                      s <= step ? 'bg-primary' : 'bg-muted'
-                    }`}
+                    className={`h-1.5 flex-1 rounded-full transition-colors ${s <= step ? 'bg-primary' : 'bg-muted'
+                      }`}
                   />
                 ))}
               </div>
             </CardHeader>
-            
+
             <CardContent className="pb-6">
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Step 1: Business Details */}
@@ -348,7 +329,7 @@ const Signup = () => {
                         className="h-12 touch-target"
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="businessType">Business Type *</Label>
                       <Select value={formData.businessType} onValueChange={(value) => handleChange('businessType', value)}>
@@ -371,7 +352,7 @@ const Signup = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="phone">Phone *</Label>
@@ -385,7 +366,7 @@ const Signup = () => {
                           className="h-12 touch-target"
                         />
                       </div>
-                      
+
                       <div className="space-y-2">
                         <Label htmlFor="email">Email *</Label>
                         <Input
@@ -399,7 +380,7 @@ const Signup = () => {
                         />
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="address">Address (Optional)</Label>
                       <Input
@@ -410,17 +391,17 @@ const Signup = () => {
                         className="h-12 touch-target"
                       />
                     </div>
-                    
+
                     <Button type="button" onClick={handleNext} className="w-full h-12 touch-target btn-press">
                       Continue
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
-                    
+
                     {/* Dev Mode Shortcut */}
                     {import.meta.env.DEV && formData.businessType && (
-                      <Button 
-                        type="button" 
-                        variant="outline" 
+                      <Button
+                        type="button"
+                        variant="outline"
                         onClick={() => navigate('/business', { state: { devBusinessType: formData.businessType, devBusinessName: formData.businessName || 'Dev Business' } })}
                         className="w-full h-10 border-dashed border-warning text-warning hover:bg-warning/10"
                       >
@@ -429,7 +410,7 @@ const Signup = () => {
                     )}
                   </div>
                 )}
-                
+
                 {/* Step 2: Package Selection */}
                 {step === 2 && (
                   <div className="space-y-4 animate-fade-in">
@@ -440,11 +421,10 @@ const Signup = () => {
                           <button
                             type="button"
                             key={pkg.id}
-                            className={`w-full text-left p-4 rounded-lg border-2 transition-all touch-target ${
-                              formData.schoolPackageId === pkg.id
+                            className={`w-full text-left p-4 rounded-lg border-2 transition-all touch-target ${formData.schoolPackageId === pkg.id
                                 ? 'border-primary bg-primary/5 shadow-soft'
                                 : 'border-border hover:border-primary/40'
-                            }`}
+                              }`}
                             onClick={() => handleChange('schoolPackageId', pkg.id)}
                           >
                             <div className="flex items-start justify-between gap-3">
@@ -480,11 +460,10 @@ const Signup = () => {
                           <button
                             type="button"
                             key={pkg.id}
-                            className={`w-full text-left p-4 rounded-lg border-2 transition-all touch-target ${
-                              formData.packageId === pkg.id
+                            className={`w-full text-left p-4 rounded-lg border-2 transition-all touch-target ${formData.packageId === pkg.id
                                 ? 'border-primary bg-primary/5 shadow-soft'
                                 : 'border-border hover:border-primary/40'
-                            }`}
+                              }`}
                             onClick={() => handleChange('packageId', pkg.id)}
                           >
                             <div className="flex items-start justify-between gap-3">
@@ -520,11 +499,10 @@ const Signup = () => {
                           <button
                             type="button"
                             key={pkg.id}
-                            className={`w-full text-left p-4 rounded-lg border-2 transition-all touch-target ${
-                              formData.packageId === pkg.id
+                            className={`w-full text-left p-4 rounded-lg border-2 transition-all touch-target ${formData.packageId === pkg.id
                                 ? 'border-primary bg-primary/5 shadow-soft'
                                 : 'border-border hover:border-primary/40'
-                            }`}
+                              }`}
                             onClick={() => handleChange('packageId', pkg.id)}
                           >
                             <div className="flex items-start justify-between gap-3">
@@ -555,7 +533,7 @@ const Signup = () => {
                           </button>
                         ))
                       )}
-                      
+
                       {/* Show message if no packages available */}
                       {isSchoolType && (!schoolPackages || schoolPackages.length === 0) && (
                         <div className="text-center py-8 text-muted-foreground">
@@ -563,14 +541,14 @@ const Signup = () => {
                           <p className="text-sm mt-1">Please contact support to set up pricing.</p>
                         </div>
                       )}
-                      
+
                       {isRentalType && (!rentalPackages || rentalPackages.length === 0) && (
                         <div className="text-center py-8 text-muted-foreground">
                           <p>No rental packages available yet.</p>
                           <p className="text-sm mt-1">Please contact support to set up pricing.</p>
                         </div>
                       )}
-                      
+
                       {!isSchoolType && !isRentalType && formData.businessType && (!businessPackages || businessPackages.length === 0) && (
                         <div className="text-center py-8 text-muted-foreground">
                           <p>No packages available for this business type yet.</p>
@@ -578,7 +556,7 @@ const Signup = () => {
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="flex gap-3 pt-2">
                       <Button type="button" variant="outline" onClick={() => setStep(1)} className="flex-1 h-12 touch-target">
                         <ArrowLeft className="mr-2 h-4 w-4" />
@@ -591,51 +569,11 @@ const Signup = () => {
                     </div>
                   </div>
                 )}
-                
+
                 {/* Step 3: Owner Details */}
                 {step === 3 && (
                   <div className="space-y-4 animate-fade-in">
-                    {/* Google Sign Up Option */}
-                    {isFirebaseEnabled && (
-                      <>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={handleGoogleSignIn}
-                          disabled={firebaseLoading}
-                          className="w-full h-12 touch-target btn-press text-base font-medium gap-3"
-                        >
-                          <svg className="h-5 w-5" viewBox="0 0 24 24">
-                            <path
-                              fill="currentColor"
-                              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                            />
-                            <path
-                              fill="currentColor"
-                              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                            />
-                            <path
-                              fill="currentColor"
-                              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                            />
-                            <path
-                              fill="currentColor"
-                              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                            />
-                          </svg>
-                          Continue with Google
-                        </Button>
 
-                        <div className="relative my-4">
-                          <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t" />
-                          </div>
-                          <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-card px-2 text-muted-foreground">Or create with email</span>
-                          </div>
-                        </div>
-                      </>
-                    )}
 
                     <div className="space-y-2">
                       <Label htmlFor="ownerName">Your Full Name *</Label>
@@ -648,7 +586,7 @@ const Signup = () => {
                         className="h-12 touch-target"
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="ownerEmail">Your Email *</Label>
                       <Input
@@ -662,7 +600,7 @@ const Signup = () => {
                         className="h-12 touch-target"
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="password">Password *</Label>
                       <div className="relative">
@@ -684,7 +622,7 @@ const Signup = () => {
                         </button>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="confirmPassword">Confirm Password *</Label>
                       <Input
@@ -697,7 +635,7 @@ const Signup = () => {
                         className="h-12 touch-target"
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="referralCode">Referral Code (Optional)</Label>
                       <Input
@@ -708,7 +646,7 @@ const Signup = () => {
                         className="h-12 touch-target"
                       />
                     </div>
-                    
+
                     <div className="flex gap-3 pt-2">
                       <Button type="button" variant="outline" onClick={() => setStep(2)} className="flex-1 h-12 touch-target">
                         <ArrowLeft className="mr-2 h-4 w-4" />
@@ -721,7 +659,7 @@ const Signup = () => {
                   </div>
                 )}
               </form>
-              
+
               <div className="mt-6 text-center space-y-2">
                 <p className="text-sm text-muted-foreground">
                   Already have an account?{" "}

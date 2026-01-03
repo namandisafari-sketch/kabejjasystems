@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { db } from "@/hooks/use-database";
-import { useFirebaseAuth } from "@/integrations/firebase";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import kabejjaLogo from "@/assets/kabejja-logo.png";
@@ -14,29 +13,10 @@ import kabejjaLogo from "@/assets/kabejja-logo.png";
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isFirebaseEnabled, signInWithGoogle, loading: firebaseLoading } = useFirebaseAuth();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const handleGoogleSignIn = async () => {
-    try {
-      await signInWithGoogle();
-      toast({
-        title: "Welcome!",
-        description: "You've successfully signed in with Google",
-      });
-      navigate('/dashboard');
-    } catch (error: any) {
-      console.error('Google sign in error:', error);
-      toast({
-        title: "Sign In Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,17 +49,17 @@ const Login = () => {
       });
 
       // Check if user is admin (role can be string or enum)
-      const isAdmin = profile?.role === 'superadmin' || 
-                      profile?.role === 'admin' ||
-                      String(profile?.role) === 'superadmin' ||
-                      String(profile?.role) === 'admin';
+      const isAdmin = profile?.role === 'superadmin' ||
+        profile?.role === 'admin' ||
+        String(profile?.role) === 'superadmin' ||
+        String(profile?.role) === 'admin';
 
       console.log('Login - Is admin:', isAdmin, 'Role:', profile?.role);
 
       // Use window.location for more reliable navigation after auth
       const targetPath = isAdmin ? '/admin' : '/dashboard';
       console.log('Login - Navigating to:', targetPath);
-      
+
       // Small delay to ensure auth state is propagated
       setTimeout(() => {
         window.location.href = targetPath;
@@ -100,8 +80,8 @@ const Login = () => {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex flex-col safe-top safe-bottom">
       {/* Header */}
       <header className="flex items-center justify-between p-4">
-        <Link 
-          to="/" 
+        <Link
+          to="/"
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors touch-target"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -121,7 +101,7 @@ const Login = () => {
               <CardTitle className="text-2xl">Welcome Back</CardTitle>
               <CardDescription>Sign in to your account</CardDescription>
             </CardHeader>
-            
+
             <CardContent className="pb-6">
               {/* Google Sign In */}
               {isFirebaseEnabled && (
@@ -179,7 +159,7 @@ const Login = () => {
                     className="h-12 touch-target"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                   <div className="relative">
@@ -202,16 +182,16 @@ const Login = () => {
                     </button>
                   </div>
                 </div>
-                
-                <Button 
-                  type="submit" 
-                  disabled={loading} 
+
+                <Button
+                  type="submit"
+                  disabled={loading}
                   className="w-full h-12 touch-target btn-press text-base font-medium"
                 >
                   {loading ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
-              
+
               <div className="mt-6 text-center">
                 <p className="text-sm text-muted-foreground">
                   Don't have an account?{" "}
