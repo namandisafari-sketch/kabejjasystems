@@ -103,7 +103,7 @@ import RenterPortal from "./pages/RenterPortal";
 import RenterDashboard from "./pages/RenterDashboard";
 import SubscriptionExpired from "./pages/SubscriptionExpired";
 import NotFound from "./pages/NotFound";
-import FirebaseLogin from "./pages/FirebaseLogin";
+
 import { AuthProvider } from "./integrations/supabase/AuthContext";
 import { HasuraProvider } from "./integrations/hasura/provider";
 // Marketer Portal
@@ -168,7 +168,7 @@ const App = () => (
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/admin-signup" element={<AdminSignup />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/firebase-login" element={<FirebaseLogin />} />
+
                 <Route path="/payment-upload" element={<PaymentUpload />} />
                 <Route path="/pending-approval" element={<PendingApproval />} />
                 <Route path="/dashboard" element={<Dashboard />} />
