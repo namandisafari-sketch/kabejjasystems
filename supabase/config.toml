@@ -1,0 +1,13 @@
+project_id = "rrvdswuciofjkydofpie"
+
+[functions.hasura-proxy]
+verify_jwt = false
+
+[functions.firebase-to-hasura]
+verify_jwt = false
+
+[functions.create-marketer-account]
+verify_jwt = false
+
+[functions.link-marketer-login]
+verify_jwt = false

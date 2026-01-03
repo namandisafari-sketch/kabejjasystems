@@ -1,0 +1,324 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Kabejja Systems Design System
+   Modern, Mobile-First, Professional
+   Deep Navy Blue with soft curves
+   All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Kabejja Navy Brand Palette - Light Mode */
+    --background: 210 25% 98%;
+    --foreground: 220 35% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 35% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 35% 15%;
+
+    /* Primary - Deep Navy Blue from logo */
+    --primary: 220 55% 25%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 210 25% 94%;
+    --secondary-foreground: 220 35% 25%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 220 15% 45%;
+
+    /* Accent - Vibrant teal for highlights */
+    --accent: 175 60% 40%;
+    --accent-foreground: 0 0% 100%;
+
+    --success: 152 55% 42%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 90%;
+    --input: 220 13% 90%;
+    --ring: 220 55% 35%;
+
+    /* Modern rounded corners */
+    --radius: 0.75rem;
+
+    /* Soft shadows with depth */
+    --shadow-xs: 0 1px 2px hsl(220 30% 20% / 0.04);
+    --shadow-sm: 0 1px 3px hsl(220 30% 20% / 0.06), 0 1px 2px hsl(220 30% 20% / 0.04);
+    --shadow-md: 0 4px 6px -1px hsl(220 30% 20% / 0.08), 0 2px 4px -1px hsl(220 30% 20% / 0.04);
+    --shadow-lg: 0 10px 15px -3px hsl(220 30% 20% / 0.08), 0 4px 6px -2px hsl(220 30% 20% / 0.04);
+    --shadow-xl: 0 20px 25px -5px hsl(220 30% 20% / 0.1), 0 10px 10px -5px hsl(220 30% 20% / 0.04);
+  }
+
+  .dark {
+    /* Kabejja Navy Brand Palette - Dark Mode */
+    --background: 220 25% 7%;
+    --foreground: 210 20% 94%;
+
+    --card: 220 25% 10%;
+    --card-foreground: 210 20% 94%;
+
+    --popover: 220 25% 10%;
+    --popover-foreground: 210 20% 94%;
+
+    /* Primary - Lighter navy for dark mode */
+    --primary: 220 60% 60%;
+    --primary-foreground: 220 25% 7%;
+
+    --secondary: 220 25% 14%;
+    --secondary-foreground: 210 20% 88%;
+
+    --muted: 220 25% 14%;
+    --muted-foreground: 210 15% 55%;
+
+    /* Accent - Bright teal */
+    --accent: 175 65% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --success: 152 55% 48%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 58%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 25% 18%;
+    --input: 220 25% 18%;
+    --ring: 220 60% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Typography scale optimized for mobile */
+  h1 {
+    @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight;
+  }
+  
+  h2 {
+    @apply text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight;
+  }
+  
+  h3 {
+    @apply text-lg sm:text-xl font-semibold tracking-tight;
+  }
+  
+  h4 {
+    @apply text-base sm:text-lg font-medium;
+  }
+
+  /* Improved focus states for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer components {
+  /* Touch-friendly tap targets */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Card with modern shadow */
+  .card-elevated {
+    box-shadow: var(--shadow-md);
+    @apply transition-shadow duration-200;
+  }
+
+  .card-elevated:hover {
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Glass effect for overlays */
+  .glass {
+    @apply bg-background/80 backdrop-blur-md;
+  }
+
+  /* Gradient text utility */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+
+  /* Smooth page transitions */
+  .page-enter {
+    @apply animate-fade-in;
+  }
+
+  /* Mobile-optimized spacing utilities */
+  .section-padding {
+    @apply px-4 py-8 sm:px-6 sm:py-12 md:px-8 md:py-16 lg:py-20;
+  }
+
+  .container-narrow {
+    @apply max-w-md mx-auto px-4;
+  }
+
+  .container-medium {
+    @apply max-w-2xl mx-auto px-4;
+  }
+
+  /* Button touch feedback */
+  .btn-press {
+    @apply active:scale-[0.98] transition-transform duration-75;
+  }
+}
+
+/* Keyframe animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-bottom {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Utility classes for animations */
+@layer utilities {
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .animate-fade-up {
+    animation: fade-up 0.4s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.2s ease-out;
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.3s ease-out;
+  }
+
+  .animate-slide-in-bottom {
+    animation: slide-in-bottom 0.3s ease-out;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-soft 2s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s linear infinite;
+    background: linear-gradient(90deg, transparent, hsl(var(--muted)), transparent);
+    background-size: 200% 100%;
+  }
+
+  /* Staggered animation delays */
+  .delay-75 { animation-delay: 75ms; }
+  .delay-150 { animation-delay: 150ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-500 { animation-delay: 500ms; }
+  .delay-700 { animation-delay: 700ms; }
+
+  /* Safe area insets for modern phones */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-x {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
