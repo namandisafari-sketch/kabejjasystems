@@ -289,6 +289,57 @@ export type Database = {
         }
         Relationships: []
       }
+      business_packages: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          features: Json | null
+          id: string
+          included_users: number
+          is_active: boolean
+          max_branches: number
+          max_products: number | null
+          max_users: number
+          monthly_price: number
+          name: string
+          price_per_additional_user: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          features?: Json | null
+          id?: string
+          included_users?: number
+          is_active?: boolean
+          max_branches?: number
+          max_products?: number | null
+          max_users?: number
+          monthly_price?: number
+          name: string
+          price_per_additional_user?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          features?: Json | null
+          id?: string
+          included_users?: number
+          is_active?: boolean
+          max_branches?: number
+          max_products?: number | null
+          max_users?: number
+          monthly_price?: number
+          name?: string
+          price_per_additional_user?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customer_favorites: {
         Row: {
           created_at: string
