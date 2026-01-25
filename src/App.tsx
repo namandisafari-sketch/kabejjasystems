@@ -95,6 +95,7 @@ import RentalPayments from "./pages/business/rental/RentalPayments";
 import RentalMaintenance from "./pages/business/rental/RentalMaintenance";
 import RentalIDCards from "./pages/business/rental/RentalIDCards";
 import RentalPaymentProofs from "./pages/business/rental/RentalPaymentProofs";
+import RentalTaxDashboard from "./pages/business/rental/RentalTaxDashboard";
 import PublicMenu from "./pages/public/PublicMenu";
 import SubmitPaymentProof from "./pages/public/SubmitPaymentProof";
 import JobStatus from "./pages/public/JobStatus";
@@ -212,6 +213,7 @@ const App = () => {
                 <Route path="send-home" element={<SendHome />} />
                 {/* Rental Management Routes */}
                 <Route path="rental-dashboard" element={<RentalDashboard />} />
+                <Route path="rental-tax-dashboard" element={<RentalTaxDashboard />} />
                 <Route path="rental-properties" element={<RentalProperties />} />
                 <Route path="rental-units" element={<RentalUnits />} />
                 <Route path="rental-tenants" element={<RentalTenants />} />
