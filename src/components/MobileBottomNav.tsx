@@ -4,7 +4,7 @@ import {
   QrCode, Wallet, Bed, CalendarDays, Package, UtensilsCrossed, Receipt, ChefHat,
   Scissors, Calendar, Pill, HeartPulse, Wrench, Cog, PackageMinus, Truck, Tags, AlertTriangle, 
   ClipboardList, CreditCard, Wallet2, Sparkles, GraduationCap, ClipboardCheck, Award, BookOpen, FileText, ScanLine,
-  ShieldAlert, Building2, DoorOpen, Calculator, MoreHorizontal
+  ShieldAlert, Building2, DoorOpen, Calculator, MoreHorizontal, Home
 } from "lucide-react";
 import { useTenantModules, moduleRoutes, ecdRouteOverrides } from "@/hooks/use-tenant-modules";
 import { useTenant } from "@/hooks/use-tenant";
@@ -58,6 +58,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Building2,
   DoorOpen,
   Calculator,
+  Home,
 };
 
 // Priority modules to show in bottom nav (max 4 + more)
