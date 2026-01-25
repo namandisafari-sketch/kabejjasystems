@@ -200,6 +200,59 @@ export type Database = {
           },
         ]
       }
+      bank_accounts: {
+        Row: {
+          account_name: string
+          account_number: string | null
+          balance: number | null
+          bank_name: string | null
+          created_at: string | null
+          currency: string | null
+          id: string
+          is_active: boolean | null
+          is_reconciled: boolean | null
+          last_reconciliation_date: string | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          account_name: string
+          account_number?: string | null
+          balance?: number | null
+          bank_name?: string | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_reconciled?: boolean | null
+          last_reconciliation_date?: string | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          account_name?: string
+          account_number?: string | null
+          balance?: number | null
+          bank_name?: string | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_reconciled?: boolean | null
+          last_reconciliation_date?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_accounts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       branches: {
         Row: {
           created_at: string | null
@@ -339,6 +392,56 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      chart_of_accounts: {
+        Row: {
+          account_code: string
+          account_name: string
+          account_type: string
+          balance: number | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          sub_type: string | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          account_code: string
+          account_name: string
+          account_type: string
+          balance?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          sub_type?: string | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          account_code?: string
+          account_name?: string
+          account_type?: string
+          balance?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          sub_type?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chart_of_accounts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customer_favorites: {
         Row: {
@@ -1685,6 +1788,47 @@ export type Database = {
           },
         ]
       }
+      financial_statements_cache: {
+        Row: {
+          created_at: string | null
+          generated_at: string | null
+          id: string
+          period_end: string
+          period_start: string
+          statement_json: Json
+          statement_type: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          generated_at?: string | null
+          id?: string
+          period_end: string
+          period_start: string
+          statement_json: Json
+          statement_type: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string | null
+          generated_at?: string | null
+          id?: string
+          period_end?: string
+          period_start?: string
+          statement_json?: Json
+          statement_type?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_statements_cache_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gate_checkins: {
         Row: {
           check_type: string
@@ -1729,6 +1873,77 @@ export type Database = {
           },
           {
             foreignKeyName: "gate_checkins_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      general_ledger: {
+        Row: {
+          approval_status: string | null
+          created_at: string | null
+          created_by: string | null
+          credit_account: string | null
+          credit_amount: number | null
+          date: string
+          debit_account: string | null
+          debit_amount: number | null
+          description: string | null
+          id: string
+          modified_at: string | null
+          modified_by: string | null
+          notes: string | null
+          reference_id: string | null
+          reference_number: string | null
+          tenant_id: string
+          timestamp: string | null
+          transaction_type: string
+        }
+        Insert: {
+          approval_status?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          credit_account?: string | null
+          credit_amount?: number | null
+          date: string
+          debit_account?: string | null
+          debit_amount?: number | null
+          description?: string | null
+          id?: string
+          modified_at?: string | null
+          modified_by?: string | null
+          notes?: string | null
+          reference_id?: string | null
+          reference_number?: string | null
+          tenant_id: string
+          timestamp?: string | null
+          transaction_type: string
+        }
+        Update: {
+          approval_status?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          credit_account?: string | null
+          credit_amount?: number | null
+          date?: string
+          debit_account?: string | null
+          debit_amount?: number | null
+          description?: string | null
+          id?: string
+          modified_at?: string | null
+          modified_by?: string | null
+          notes?: string | null
+          reference_id?: string | null
+          reference_number?: string | null
+          tenant_id?: string
+          timestamp?: string | null
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "general_ledger_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -2039,6 +2254,57 @@ export type Database = {
           },
           {
             foreignKeyName: "internal_stock_usage_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_valuation: {
+        Row: {
+          as_of_date: string
+          created_at: string | null
+          id: string
+          product_id: string | null
+          quantity_on_hand: number | null
+          tenant_id: string
+          total_value: number | null
+          unit_cost: number | null
+          valuation_method: string | null
+        }
+        Insert: {
+          as_of_date: string
+          created_at?: string | null
+          id?: string
+          product_id?: string | null
+          quantity_on_hand?: number | null
+          tenant_id: string
+          total_value?: number | null
+          unit_cost?: number | null
+          valuation_method?: string | null
+        }
+        Update: {
+          as_of_date?: string
+          created_at?: string | null
+          id?: string
+          product_id?: string | null
+          quantity_on_hand?: number | null
+          tenant_id?: string
+          total_value?: number | null
+          unit_cost?: number | null
+          valuation_method?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_valuation_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_valuation_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -6904,6 +7170,65 @@ export type Database = {
           },
         ]
       }
+      tax_tracking: {
+        Row: {
+          created_at: string | null
+          id: string
+          payment_date: string | null
+          period_end: string
+          period_start: string
+          reference_number: string | null
+          status: string | null
+          tax_amount: number
+          tax_base: number
+          tax_rate: number
+          tax_type: string
+          tenant_id: string
+          transaction_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          payment_date?: string | null
+          period_end: string
+          period_start: string
+          reference_number?: string | null
+          status?: string | null
+          tax_amount: number
+          tax_base: number
+          tax_rate: number
+          tax_type: string
+          tenant_id: string
+          transaction_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          payment_date?: string | null
+          period_end?: string
+          period_start?: string
+          reference_number?: string | null
+          status?: string | null
+          tax_amount?: number
+          tax_base?: number
+          tax_rate?: number
+          tax_type?: string
+          tenant_id?: string
+          transaction_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_tracking_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenant_backups: {
         Row: {
           backup_data: Json
@@ -7207,6 +7532,57 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "testimonials_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transaction_audit_trail: {
+        Row: {
+          action: string
+          created_at: string | null
+          general_ledger_id: string | null
+          id: string
+          ip_address: string | null
+          new_values: Json | null
+          old_values: Json | null
+          tenant_id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          general_ledger_id?: string | null
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          old_values?: Json | null
+          tenant_id: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          general_ledger_id?: string | null
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          old_values?: Json | null
+          tenant_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_audit_trail_general_ledger_id_fkey"
+            columns: ["general_ledger_id"]
+            isOneToOne: false
+            referencedRelation: "general_ledger"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaction_audit_trail_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
