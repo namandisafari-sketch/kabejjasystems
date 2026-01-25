@@ -2,36 +2,24 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerFooter,
+} from "@/components/ui/drawer";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, Package, Trash2 } from "lucide-react";
+import { Plus, Package, Trash2, Search } from "lucide-react";
 import { useTenant } from "@/hooks/use-tenant";
+import { Badge } from "@/components/ui/badge";
 
 const USAGE_REASONS = [
   { value: "staff_meal", label: "Staff Meal" },
@@ -46,7 +34,8 @@ const USAGE_REASONS = [
 export default function InternalUsage() {
   const { data: tenantData } = useTenant();
   const queryClient = useQueryClient();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedProduct, setSelectedProduct] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [reason, setReason] = useState("");
@@ -56,12 +45,7 @@ export default function InternalUsage() {
     queryKey: ["products", tenantData?.tenantId],
     queryFn: async () => {
       if (!tenantData?.tenantId) return [];
-      const { data, error } = await supabase
-        .from("products")
-        .select("id, name, stock_quantity")
-        .eq("tenant_id", tenantData.tenantId)
-        .eq("is_active", true)
-        .order("name");
+      const { data, error } = await supabase.from("products").select("id, name, stock_quantity").eq("tenant_id", tenantData.tenantId).eq("is_active", true).order("name");
       if (error) throw error;
       return data;
     },
@@ -72,15 +56,7 @@ export default function InternalUsage() {
     queryKey: ["internal-usage", tenantData?.tenantId],
     queryFn: async () => {
       if (!tenantData?.tenantId) return [];
-      const { data, error } = await supabase
-        .from("internal_stock_usage")
-        .select(`
-          *,
-          products(name)
-        `)
-        .eq("tenant_id", tenantData.tenantId)
-        .order("usage_date", { ascending: false })
-        .limit(100);
+      const { data, error } = await supabase.from("internal_stock_usage").select(`*, products(name)`).eq("tenant_id", tenantData.tenantId).order("usage_date", { ascending: false }).limit(100);
       if (error) throw error;
       return data;
     },
@@ -90,56 +66,38 @@ export default function InternalUsage() {
   const recordUsageMutation = useMutation({
     mutationFn: async () => {
       if (!tenantData?.tenantId) throw new Error("No tenant");
-      
-      // Insert usage record
-      const { error: usageError } = await supabase
-        .from("internal_stock_usage")
-        .insert({
-          tenant_id: tenantData.tenantId,
-          product_id: selectedProduct,
-          quantity,
-          reason,
-          notes: notes || null,
-        });
+      const { error: usageError } = await supabase.from("internal_stock_usage").insert({ tenant_id: tenantData.tenantId, product_id: selectedProduct, quantity, reason, notes: notes || null });
       if (usageError) throw usageError;
-
-      // Deduct stock
       const product = products?.find((p) => p.id === selectedProduct);
       if (product) {
         const newStock = Math.max(0, (product.stock_quantity || 0) - quantity);
-        const { error: stockError } = await supabase
-          .from("products")
-          .update({ stock_quantity: newStock })
-          .eq("id", selectedProduct);
+        const { error: stockError } = await supabase.from("products").update({ stock_quantity: newStock }).eq("id", selectedProduct);
         if (stockError) throw stockError;
       }
     },
     onSuccess: () => {
-      toast.success("Usage recorded and stock updated");
+      toast.success("Usage recorded");
       queryClient.invalidateQueries({ queryKey: ["internal-usage"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       resetForm();
-      setIsDialogOpen(false);
+      setIsDrawerOpen(false);
     },
     onError: (error) => {
-      toast.error("Failed to record usage: " + error.message);
+      toast.error("Failed: " + error.message);
     },
   });
 
   const deleteUsageMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("internal_stock_usage")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from("internal_stock_usage").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Record deleted");
+      toast.success("Deleted");
       queryClient.invalidateQueries({ queryKey: ["internal-usage"] });
     },
     onError: (error) => {
-      toast.error("Failed to delete: " + error.message);
+      toast.error("Failed: " + error.message);
     },
   });
 
@@ -159,37 +117,87 @@ export default function InternalUsage() {
     recordUsageMutation.mutate();
   };
 
-  const getReasonLabel = (value: string) => {
-    return USAGE_REASONS.find((r) => r.value === value)?.label || value;
-  };
+  const getReasonLabel = (value: string) => USAGE_REASONS.find((r) => r.value === value)?.label || value;
+
+  const filteredRecords = usageRecords?.filter(r => 
+    r.products?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    r.reason.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Internal Stock Usage</h1>
-          <p className="text-muted-foreground">
-            Track stock used internally (staff meals, damaged, samples, etc.)
-          </p>
+    <div className="flex flex-col h-full">
+      {/* HEADER */}
+      <div className="p-4 border-b bg-background sticky top-0 z-10">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h1 className="text-xl font-bold">Internal Usage</h1>
+            <p className="text-xs text-muted-foreground">Track stock used internally</p>
+          </div>
+          <Button size="sm" onClick={() => { resetForm(); setIsDrawerOpen(true); }}>
+            <Plus className="h-4 w-4 mr-1" />
+            Record
+          </Button>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Record Usage
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 h-10" />
+        </div>
+      </div>
+
+      {/* USAGE LIST */}
+      <ScrollArea className="flex-1 px-4 py-4 pb-20">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+          </div>
+        ) : !filteredRecords?.length ? (
+          <div className="text-center py-12">
+            <Package className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+            <p className="text-muted-foreground">No usage records</p>
+            <Button variant="outline" className="mt-4" onClick={() => setIsDrawerOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" /> Record Usage
             </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Record Internal Usage</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="product">Product *</Label>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {filteredRecords.map((record: any) => (
+              <Card key={record.id} className="p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium truncate">{record.products?.name}</p>
+                      <Badge variant="secondary" className="text-xs">{getReasonLabel(record.reason)}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {format(new Date(record.usage_date), "MMM d, yyyy h:mm a")}
+                    </p>
+                    {record.notes && <p className="text-xs text-muted-foreground truncate mt-1">{record.notes}</p>}
+                  </div>
+                  <div className="flex items-center gap-2 ml-2">
+                    <p className="font-semibold">-{record.quantity}</p>
+                    <Button variant="ghost" size="sm" onClick={() => deleteUsageMutation.mutate(record.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </ScrollArea>
+
+      {/* RECORD DRAWER */}
+      <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+        <DrawerContent className="max-h-[90vh]">
+          <DrawerHeader>
+            <DrawerTitle>Record Usage</DrawerTitle>
+          </DrawerHeader>
+          <ScrollArea className="flex-1 px-4 max-h-[60vh]">
+            <form id="usage-form" onSubmit={handleSubmit} className="space-y-4 pb-4">
+              <div>
+                <Label>Product *</Label>
                 <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a product" />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select product" /></SelectTrigger>
                   <SelectContent>
                     {products?.map((product) => (
                       <SelectItem key={product.id} value={product.id}>
@@ -199,115 +207,33 @@ export default function InternalUsage() {
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="quantity">Quantity *</Label>
-                <Input
-                  id="quantity"
-                  type="number"
-                  min="1"
-                  value={quantity}
-                  onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                />
+              <div>
+                <Label>Quantity *</Label>
+                <Input type="number" min="1" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value) || 1)} />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="reason">Reason *</Label>
+              <div>
+                <Label>Reason *</Label>
                 <Select value={reason} onValueChange={setReason}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select reason" />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select reason" /></SelectTrigger>
                   <SelectContent>
-                    {USAGE_REASONS.map((r) => (
-                      <SelectItem key={r.value} value={r.value}>
-                        {r.label}
-                      </SelectItem>
-                    ))}
+                    {USAGE_REASONS.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes (optional)</Label>
-                <Textarea
-                  id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Additional details..."
-                />
-              </div>
-
-              <div className="flex gap-2 justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={recordUsageMutation.isPending}>
-                  {recordUsageMutation.isPending ? "Recording..." : "Record Usage"}
-                </Button>
+              <div>
+                <Label>Notes</Label>
+                <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Additional details..." rows={2} />
               </div>
             </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Usage History
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p className="text-muted-foreground">Loading...</p>
-          ) : usageRecords?.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">
-              No usage records yet. Click "Record Usage" to add one.
-            </p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Reason</TableHead>
-                  <TableHead>Notes</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {usageRecords?.map((record: any) => (
-                  <TableRow key={record.id}>
-                    <TableCell>
-                      {format(new Date(record.usage_date), "MMM d, yyyy h:mm a")}
-                    </TableCell>
-                    <TableCell>{record.products?.name || "Unknown"}</TableCell>
-                    <TableCell>{record.quantity}</TableCell>
-                    <TableCell>{getReasonLabel(record.reason)}</TableCell>
-                    <TableCell className="text-muted-foreground max-w-[200px] truncate">
-                      {record.notes || "-"}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteUsageMutation.mutate(record.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+          </ScrollArea>
+          <DrawerFooter className="flex-row gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => setIsDrawerOpen(false)}>Cancel</Button>
+            <Button type="submit" form="usage-form" className="flex-1" disabled={recordUsageMutation.isPending}>
+              {recordUsageMutation.isPending ? "Recording..." : "Record"}
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }
