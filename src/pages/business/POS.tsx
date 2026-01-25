@@ -10,8 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Search, Plus, Minus, ShoppingCart, Trash2, CreditCard, Banknote, 
   Loader2, User, X, UserPlus, SplitSquareHorizontal, Calendar, 
-  History, Receipt, Users, BarChart3
+  History, Receipt, Users, BarChart3, ChevronUp
 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import {
@@ -91,6 +92,7 @@ export default function POS() {
   const tenantId = tenantQuery.data?.tenantId;
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -114,6 +116,7 @@ export default function POS() {
   const [showCustomPriceDialog, setShowCustomPriceDialog] = useState(false);
   const [pendingServiceItem, setPendingServiceItem] = useState<any>(null);
   const [customPriceValue, setCustomPriceValue] = useState("");
+  const [mobileCartOpen, setMobileCartOpen] = useState(false);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['products', tenantId],
@@ -564,32 +567,33 @@ export default function POS() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)]">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-3.5rem)]">
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         {/* Tab Navigation */}
-        <div className="border-b px-4 py-2">
+        <div className="border-b px-2 sm:px-4 py-2">
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-            <TabsList>
-              <TabsTrigger value="pos" className="flex items-center gap-2">
-                <ShoppingCart className="h-4 w-4" />
-                POS
+            <TabsList className="w-full md:w-auto">
+              <TabsTrigger value="pos" className="flex-1 md:flex-none flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>POS</span>
               </TabsTrigger>
-              <TabsTrigger value="queue" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Queue
+              <TabsTrigger value="queue" className="flex-1 md:flex-none flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>Queue</span>
               </TabsTrigger>
-              <TabsTrigger value="dashboard" className="flex items-center gap-2">
-                <BarChart3 className="h-4 w-4" />
-                Live Stats
+              <TabsTrigger value="dashboard" className="flex-1 md:flex-none flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Live Stats</span>
+                <span className="sm:hidden">Stats</span>
               </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
 
         {activeTab === "pos" && (
-          <div className="flex-1 p-4 overflow-hidden flex flex-col">
-            <div className="mb-4">
+          <div className="flex-1 p-2 sm:p-4 overflow-hidden flex flex-col pb-20 md:pb-4">
+            <div className="mb-3 sm:mb-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -602,7 +606,7 @@ export default function POS() {
             </div>
 
             <ScrollArea className="flex-1">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
                 {filteredProducts?.map((product) => {
                   const isService = product.product_type === 'service';
                   return (
@@ -611,26 +615,27 @@ export default function POS() {
                       className="cursor-pointer hover:border-primary transition-colors"
                       onClick={() => handleServiceClick(product)}
                     >
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium truncate flex-1">{product.name}</h3>
+                      <CardContent className="p-2 sm:p-4">
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <h3 className="font-medium truncate flex-1 text-xs sm:text-sm">{product.name}</h3>
                           {isService && (
-                            <Badge variant="secondary" className="text-xs">Service</Badge>
+                            <Badge variant="secondary" className="text-2xs sm:text-xs shrink-0">Service</Badge>
                           )}
                         </div>
-                        <div className="flex justify-between items-center mt-2">
-                          <span className="text-lg font-bold text-primary">
-                            {product.unit_price.toLocaleString()} UGX
-                            {product.allow_custom_price && <span className="text-xs font-normal text-muted-foreground ml-1">+</span>}
+                        <div className="flex justify-between items-center mt-1 sm:mt-2">
+                          <span className="text-sm sm:text-lg font-bold text-primary">
+                            {product.unit_price.toLocaleString()}
+                            <span className="text-2xs sm:text-xs font-normal text-muted-foreground ml-0.5">UGX</span>
+                            {product.allow_custom_price && <span className="text-2xs font-normal text-muted-foreground ml-0.5">+</span>}
                           </span>
                           {!isService && (
-                            <Badge variant={product.stock_quantity > 0 ? "secondary" : "destructive"}>
-                              {product.stock_quantity} left
+                            <Badge variant={product.stock_quantity > 0 ? "secondary" : "destructive"} className="text-2xs sm:text-xs">
+                              {product.stock_quantity}
                             </Badge>
                           )}
                         </div>
                         {product.category && (
-                          <Badge variant="outline" className="mt-2">{product.category}</Badge>
+                          <Badge variant="outline" className="mt-1 sm:mt-2 text-2xs sm:text-xs">{product.category}</Badge>
                         )}
                       </CardContent>
                     </Card>
@@ -642,175 +647,302 @@ export default function POS() {
         )}
 
         {activeTab === "queue" && tenantId && (
-          <div className="flex-1 p-4">
+          <div className="flex-1 p-2 sm:p-4 pb-20 md:pb-4">
             <POSQueuePanel tenantId={tenantId} onServeCustomer={handleServeFromQueue} />
           </div>
         )}
 
         {activeTab === "dashboard" && tenantId && (
-          <div className="flex-1 p-4 overflow-auto">
+          <div className="flex-1 p-2 sm:p-4 overflow-auto pb-20 md:pb-4">
             <LiveSalesWidget tenantId={tenantId} />
           </div>
         )}
       </div>
 
-      {/* Cart Section */}
-      <div className="w-80 border-l bg-card flex flex-col">
-        <div className="p-4 border-b">
-          <h2 className="font-bold flex items-center gap-2">
-            <ShoppingCart className="h-5 w-5" />
-            Cart ({cart.length})
-          </h2>
-        </div>
-
-        {/* Customer Selection */}
-        <div className="p-4 border-b">
-          <Label className="text-sm text-muted-foreground mb-2 block">Customer</Label>
-          {selectedCustomer ? (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between bg-muted/50 p-2 rounded-lg">
-                <div>
-                  <p className="font-medium">{selectedCustomer.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Credit: {availableCredit.toLocaleString()} UGX available
-                  </p>
-                </div>
-                <Button size="icon" variant="ghost" onClick={() => setSelectedCustomer(null)}>
-                  <X className="h-4 w-4" />
-                </Button>
+      {/* Mobile Cart Toggle Button - Fixed at bottom */}
+      {isMobile && (
+        <div 
+          className="fixed bottom-0 left-0 right-0 bg-card border-t shadow-lg z-40 safe-bottom"
+          onClick={() => setMobileCartOpen(!mobileCartOpen)}
+        >
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <ShoppingCart className="h-5 w-5" />
+                {cart.length > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-accent text-accent-foreground text-2xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                    {cart.length}
+                  </span>
+                )}
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full"
-                onClick={() => setShowCustomerHistory(true)}
-              >
-                <History className="h-4 w-4 mr-2" />
-                View History & Favorites
-              </Button>
+              <span className="font-medium text-sm">Cart ({cart.length})</span>
             </div>
-          ) : (
-            <div className="flex gap-2">
-              <Popover open={customerSearchOpen} onOpenChange={setCustomerSearchOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="flex-1 justify-start">
-                    <User className="h-4 w-4 mr-2" />
-                    Select Customer
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="p-0 w-80">
-                  <Command>
-                    <CommandInput placeholder="Search customers..." />
-                    <CommandList>
-                      <CommandEmpty>No customers found.</CommandEmpty>
-                      <CommandGroup>
-                        {customers?.map((customer) => (
-                          <CommandItem
-                            key={customer.id}
-                            onSelect={() => {
-                              setSelectedCustomer(customer);
-                              setCustomerSearchOpen(false);
-                            }}
-                          >
-                            <div className="flex-1">
-                              <p className="font-medium">{customer.name}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {customer.phone || 'No phone'} • Credit: {customer.credit_limit.toLocaleString()} UGX
-                              </p>
-                            </div>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              <Button variant="outline" size="icon" onClick={() => setShowQuickCustomer(true)} title="Add new customer">
-                <UserPlus className="h-4 w-4" />
-              </Button>
+            <div className="flex items-center gap-3">
+              <span className="font-bold text-primary">{cartTotal.toLocaleString()} UGX</span>
+              <ChevronUp className={`h-5 w-5 transition-transform ${mobileCartOpen ? 'rotate-180' : ''}`} />
             </div>
-          )}
+          </div>
         </div>
+      )}
 
-        <ScrollArea className="flex-1 p-4">
-          {cart.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">Cart is empty</p>
-          ) : (
-            <div className="space-y-3">
-              {cart.map((item) => (
-                <div key={item.id} className="flex items-center gap-2 bg-muted/50 p-2 rounded-lg">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{item.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {item.price.toLocaleString()} × {item.quantity}
+      {/* Mobile Cart Sheet */}
+      {isMobile && mobileCartOpen && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm" onClick={() => setMobileCartOpen(false)}>
+          <div 
+            className="fixed bottom-0 left-0 right-0 bg-card border-t rounded-t-xl max-h-[80vh] flex flex-col animate-slide-in-bottom safe-bottom"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Cart Header */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="font-bold flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5" />
+                Cart ({cart.length})
+              </h2>
+              <Button variant="ghost" size="icon" onClick={() => setMobileCartOpen(false)}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+
+            {/* Customer Selection */}
+            <div className="p-3 border-b">
+              <Label className="text-xs text-muted-foreground mb-2 block">Customer</Label>
+              {selectedCustomer ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between bg-muted/50 p-2 rounded-lg">
+                    <div>
+                      <p className="font-medium text-sm">{selectedCustomer.name}</p>
+                      <p className="text-2xs text-muted-foreground">
+                        Credit: {availableCredit.toLocaleString()} UGX
+                      </p>
+                    </div>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setSelectedCustomer(null)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Popover open={customerSearchOpen} onOpenChange={setCustomerSearchOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="flex-1 justify-start text-sm">
+                        <User className="h-4 w-4 mr-2" />
+                        Select Customer
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-[calc(100vw-2rem)]" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search customers..." />
+                        <CommandList>
+                          <CommandEmpty>No customers found.</CommandEmpty>
+                          <CommandGroup>
+                            {customers?.map((customer) => (
+                              <CommandItem
+                                key={customer.id}
+                                onSelect={() => {
+                                  setSelectedCustomer(customer);
+                                  setCustomerSearchOpen(false);
+                                }}
+                              >
+                                <div className="flex-1">
+                                  <p className="font-medium">{customer.name}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {customer.phone || 'No phone'}
+                                  </p>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <Button variant="outline" size="icon" onClick={() => setShowQuickCustomer(true)}>
+                    <UserPlus className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Cart Items */}
+            <ScrollArea className="flex-1 max-h-[40vh]">
+              <div className="p-3 space-y-2">
+                {cart.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">Cart is empty</p>
+                ) : (
+                  cart.map((item) => (
+                    <div key={item.id} className="flex items-center gap-2 bg-muted/50 p-2 rounded-lg">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate text-sm">{item.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.price.toLocaleString()} × {item.quantity}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQuantity(item.id, -1)}>
+                          <Minus className="h-3 w-3" />
+                        </Button>
+                        <span className="w-6 text-center text-sm">{item.quantity}</span>
+                        <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQuantity(item.id, 1)}>
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                        <Button size="icon" variant="destructive" className="h-7 w-7" onClick={() => removeFromCart(item.id)}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+
+            {/* Cart Footer */}
+            <div className="p-4 border-t bg-card space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-base font-medium">Total:</span>
+                <span className="text-xl font-bold text-primary">{cartTotal.toLocaleString()} UGX</span>
+              </div>
+              <Button className="w-full" size="lg" disabled={cart.length === 0} onClick={() => { setShowCheckout(true); setMobileCartOpen(false); }}>
+                Checkout
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Cart Section */}
+      {!isMobile && (
+        <div className="w-80 border-l bg-card flex flex-col">
+          <div className="p-4 border-b">
+            <h2 className="font-bold flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5" />
+              Cart ({cart.length})
+            </h2>
+          </div>
+
+          {/* Customer Selection */}
+          <div className="p-4 border-b">
+            <Label className="text-sm text-muted-foreground mb-2 block">Customer</Label>
+            {selectedCustomer ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between bg-muted/50 p-2 rounded-lg">
+                  <div>
+                    <p className="font-medium">{selectedCustomer.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Credit: {availableCredit.toLocaleString()} UGX available
                     </p>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="h-7 w-7"
-                      onClick={() => updateQuantity(item.id, -1)}
-                    >
-                      <Minus className="h-3 w-3" />
-                    </Button>
-                    <span className="w-8 text-center">{item.quantity}</span>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="h-7 w-7"
-                      onClick={() => updateQuantity(item.id, 1)}
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="destructive"
-                      className="h-7 w-7"
-                      onClick={() => removeFromCart(item.id)}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
+                  <Button size="icon" variant="ghost" onClick={() => setSelectedCustomer(null)}>
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
-
-        <div className="p-4 border-t bg-card space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-lg font-medium">Total:</span>
-            <span className="text-2xl font-bold text-primary">
-              {cartTotal.toLocaleString()} UGX
-            </span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => setShowCustomerHistory(true)}
+                >
+                  <History className="h-4 w-4 mr-2" />
+                  View History & Favorites
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Popover open={customerSearchOpen} onOpenChange={setCustomerSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="flex-1 justify-start">
+                      <User className="h-4 w-4 mr-2" />
+                      Select Customer
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-0 w-80">
+                    <Command>
+                      <CommandInput placeholder="Search customers..." />
+                      <CommandList>
+                        <CommandEmpty>No customers found.</CommandEmpty>
+                        <CommandGroup>
+                          {customers?.map((customer) => (
+                            <CommandItem
+                              key={customer.id}
+                              onSelect={() => {
+                                setSelectedCustomer(customer);
+                                setCustomerSearchOpen(false);
+                              }}
+                            >
+                              <div className="flex-1">
+                                <p className="font-medium">{customer.name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {customer.phone || 'No phone'} • Credit: {customer.credit_limit.toLocaleString()} UGX
+                                </p>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <Button variant="outline" size="icon" onClick={() => setShowQuickCustomer(true)} title="Add new customer">
+                  <UserPlus className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
-          
-          {/* Quick Actions */}
-          {cart.length > 0 && selectedCustomer && (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1"
-                onClick={() => setShowLayaway(true)}
-              >
-                <Calendar className="h-4 w-4 mr-1" />
-                Layaway
-              </Button>
+
+          <ScrollArea className="flex-1 p-4">
+            {cart.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">Cart is empty</p>
+            ) : (
+              <div className="space-y-3">
+                {cart.map((item) => (
+                  <div key={item.id} className="flex items-center gap-2 bg-muted/50 p-2 rounded-lg">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{item.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {item.price.toLocaleString()} × {item.quantity}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQuantity(item.id, -1)}>
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      <span className="w-8 text-center">{item.quantity}</span>
+                      <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQuantity(item.id, 1)}>
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                      <Button size="icon" variant="destructive" className="h-7 w-7" onClick={() => removeFromCart(item.id)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+
+          <div className="p-4 border-t bg-card space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-lg font-medium">Total:</span>
+              <span className="text-2xl font-bold text-primary">
+                {cartTotal.toLocaleString()} UGX
+              </span>
             </div>
-          )}
-          
-          <Button
-            className="w-full"
-            size="lg"
-            disabled={cart.length === 0}
-            onClick={() => setShowCheckout(true)}
-          >
-            Checkout
-          </Button>
+            
+            {/* Quick Actions */}
+            {cart.length > 0 && selectedCustomer && (
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => setShowLayaway(true)}>
+                  <Calendar className="h-4 w-4 mr-1" />
+                  Layaway
+                </Button>
+              </div>
+            )}
+            
+            <Button className="w-full" size="lg" disabled={cart.length === 0} onClick={() => setShowCheckout(true)}>
+              Checkout
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Checkout Dialog */}
       <Dialog open={showCheckout} onOpenChange={setShowCheckout}>
