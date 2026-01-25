@@ -44,7 +44,7 @@ export default function PaymentPage() {
 
             const { data: profile } = await supabase
                 .from('profiles')
-                .select('email, full_name, phone')
+                .select('full_name, phone')
                 .eq('id', user.id)
                 .single();
 
@@ -53,7 +53,7 @@ export default function PaymentPage() {
                 setBillingInfo({
                     firstName,
                     lastName: lastName || firstName,
-                    email: profile.email || user.email || '',
+                    email: user.email || '',
                     phone: profile.phone || '',
                 });
             }

@@ -512,6 +512,68 @@ export type Database = {
           },
         ]
       }
+      device_fingerprints: {
+        Row: {
+          block_reason: string | null
+          blocked_at: string | null
+          created_at: string | null
+          device_id: string
+          id: string
+          is_blocked: boolean | null
+          language: string | null
+          last_seen_at: string | null
+          platform: string | null
+          screen_resolution: string | null
+          tenant_id: string | null
+          timezone: string | null
+          trial_ended_at: string | null
+          trial_started_at: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          block_reason?: string | null
+          blocked_at?: string | null
+          created_at?: string | null
+          device_id: string
+          id?: string
+          is_blocked?: boolean | null
+          language?: string | null
+          last_seen_at?: string | null
+          platform?: string | null
+          screen_resolution?: string | null
+          tenant_id?: string | null
+          timezone?: string | null
+          trial_ended_at?: string | null
+          trial_started_at?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          block_reason?: string | null
+          blocked_at?: string | null
+          created_at?: string | null
+          device_id?: string
+          id?: string
+          is_blocked?: boolean | null
+          language?: string | null
+          last_seen_at?: string | null
+          platform?: string | null
+          screen_resolution?: string | null
+          tenant_id?: string | null
+          timezone?: string | null
+          trial_ended_at?: string | null
+          trial_started_at?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_fingerprints_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       discipline_cases: {
         Row: {
           action_details: string | null
@@ -2949,6 +3011,72 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount: number
+          billing_email: string | null
+          billing_phone: string | null
+          confirmation_code: string | null
+          created_at: string | null
+          currency: string | null
+          id: string
+          package_id: string | null
+          payment_method: string | null
+          payment_status: string | null
+          pesapal_merchant_reference: string | null
+          pesapal_tracking_id: string | null
+          tenant_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          billing_email?: string | null
+          billing_phone?: string | null
+          confirmation_code?: string | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          package_id?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          pesapal_merchant_reference?: string | null
+          pesapal_tracking_id?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          billing_email?: string | null
+          billing_phone?: string | null
+          confirmation_code?: string | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          package_id?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          pesapal_merchant_reference?: string | null
+          pesapal_tracking_id?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payroll_records: {
         Row: {
           advances_deducted: number
@@ -3336,6 +3464,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string | null
+          email: string | null
           full_name: string | null
           id: string
           phone: string | null
@@ -3346,6 +3475,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string | null
+          email?: string | null
           full_name?: string | null
           id: string
           phone?: string | null
@@ -3356,6 +3486,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string | null
+          email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -6529,6 +6660,45 @@ export type Database = {
           },
         ]
       }
+      subscription_packages: {
+        Row: {
+          billing_cycle_months: number | null
+          created_at: string | null
+          description: string | null
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price_monthly: number
+          price_yearly: number
+          updated_at: string | null
+        }
+        Insert: {
+          billing_cycle_months?: number | null
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price_monthly?: number
+          price_yearly?: number
+          updated_at?: string | null
+        }
+        Update: {
+          billing_cycle_months?: number | null
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price_monthly?: number
+          price_yearly?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       suppliers: {
         Row: {
           address: string | null
@@ -7070,6 +7240,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_device_trial_status: {
+        Args: { p_device_id: string }
+        Returns: Json
+      }
       create_profile_for_signup: {
         Args: {
           p_full_name: string
@@ -7078,6 +7252,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: undefined
+      }
+      create_rental_signup_data: {
+        Args: { p_package_id: string; p_tenant_id: string }
+        Returns: string
       }
       create_school_signup_data: {
         Args: { p_package_id: string; p_tenant_id: string }

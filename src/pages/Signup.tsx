@@ -222,16 +222,14 @@ const Signup = () => {
       // Register device fingerprint for trial protection
       if (fingerprint) {
         try {
-          await supabase
+          await (supabase
             .from('device_fingerprints')
             .insert({
               device_id: fingerprint.deviceId,
-              device_model: fingerprint.model,
-              os_version: fingerprint.osVersion,
+              platform: fingerprint.platform,
+              user_agent: fingerprint.osVersion,
               tenant_id: tenantId,
-              user_id: authData.user.id,
-              is_trial_active: true,
-            });
+            } as any) as any);
         } catch (fpError) {
           // Don't fail signup if fingerprint recording fails
           console.error('Failed to record device fingerprint:', fpError);

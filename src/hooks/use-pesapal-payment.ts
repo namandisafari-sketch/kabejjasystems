@@ -64,7 +64,7 @@ export function usePesapalPayment() {
             const merchantRef = `KBJ-${profile.tenant_id.substring(0, 8)}-${Date.now()}`;
 
             // Create payment record in database
-            const { data: paymentRecord, error: dbError } = await supabase
+            const { data: paymentRecord, error: dbError } = await (supabase
                 .from('payments')
                 .insert({
                     tenant_id: profile.tenant_id,
@@ -75,9 +75,9 @@ export function usePesapalPayment() {
                     payment_status: 'pending',
                     billing_email: params.billingEmail,
                     billing_phone: params.billingPhone,
-                })
+                } as any)
                 .select()
-                .single();
+                .single() as any);
 
             if (dbError || !paymentRecord) {
                 throw new Error('Failed to create payment record');
@@ -106,12 +106,12 @@ export function usePesapalPayment() {
             const orderResponse = await pesapalService.submitOrderRequest(orderRequest);
 
             // Update payment record with tracking ID
-            await supabase
+            await (supabase
                 .from('payments')
                 .update({
                     pesapal_tracking_id: orderResponse.order_tracking_id,
-                })
-                .eq('id', paymentRecord.id);
+                } as any)
+                .eq('id', paymentRecord.id) as any);
 
             return {
                 paymentId: paymentRecord.id,
@@ -145,14 +145,14 @@ export function usePesapalPayment() {
             if (!profile?.tenant_id) return null;
 
             // Get latest pending payment
-            const { data: payment } = await supabase
+            const { data: payment } = await (supabase
                 .from('payments')
                 .select('*')
                 .eq('tenant_id', profile.tenant_id)
                 .eq('payment_status', 'pending')
                 .order('created_at', { ascending: false })
                 .limit(1)
-                .single();
+                .single() as any) as { data: any };
 
             if (!payment?.pesapal_tracking_id) return null;
 
@@ -163,15 +163,15 @@ export function usePesapalPayment() {
 
                 // Update local database if status changed
                 if (paymentStatus !== payment.payment_status) {
-                    await supabase
+                    await (supabase
                         .from('payments')
                         .update({
                             payment_status: paymentStatus,
                             payment_method: status.payment_method,
                             confirmation_code: status.confirmation_code,
                             updated_at: new Date().toISOString(),
-                        })
-                        .eq('id', payment.id);
+                        } as any)
+                        .eq('id', payment.id) as any);
 
                     // If payment completed, update tenant subscription
                     if (paymentStatus === 'completed') {
@@ -205,11 +205,11 @@ export function usePesapalPayment() {
 // Helper function to update tenant subscription after successful payment
 async function updateTenantSubscription(tenantId: string, packageId: string) {
     // Get package details
-    const { data: pkg } = await supabase
+    const { data: pkg } = await (supabase
         .from('subscription_packages')
         .select('billing_cycle_months')
         .eq('id', packageId)
-        .single();
+        .single() as any) as { data: { billing_cycle_months: number } | null };
 
     if (!pkg) return;
 

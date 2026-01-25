@@ -41,7 +41,7 @@ const Dashboard = () => {
 
       // Check for dev mode - admins can view as a tenant
       const devTenantId = localStorage.getItem('dev_tenant_id');
-      const isAdmin = profileData.role === 'super admin' || profileData.role === 'admin';
+      const isAdmin = profileData.role === 'superadmin' || profileData.role === 'admin';
 
       // If admin is in dev mode with a tenant selected, go to business portal
       if (isAdmin && devTenantId) {
