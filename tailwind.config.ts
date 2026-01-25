@@ -63,6 +63,22 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        /* Kabejja brand colors for direct use */
+        navy: {
+          DEFAULT: "hsl(213 70% 16%)",
+          light: "hsl(213 70% 25%)",
+          dark: "hsl(213 70% 10%)",
+        },
+        teal: {
+          DEFAULT: "hsl(166 58% 41%)",
+          light: "hsl(166 58% 50%)",
+          dark: "hsl(166 58% 32%)",
+        },
+        "shop-green": {
+          DEFAULT: "hsl(145 55% 42%)",
+          light: "hsl(145 55% 52%)",
+          dark: "hsl(145 55% 32%)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
