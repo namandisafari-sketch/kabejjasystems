@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CreditCard, Package, Settings, LogOut, MessageSquare, GraduationCap, Wrench, UserCheck, Calendar, Shield, Megaphone, TicketCheck, Download, Building2 } from "lucide-react";
+import { LayoutDashboard, Users, CreditCard, Package, Settings, LogOut, MessageSquare, GraduationCap, Wrench, UserCheck, Calendar, Shield, Megaphone, TicketCheck, Download, Building2, ClipboardList } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,7 @@ const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Tenants", url: "/admin/tenants", icon: Users },
   { title: "Installations", url: "/admin/installations", icon: Wrench },
+  { title: "Subscription Requests", url: "/admin/subscription-requests", icon: ClipboardList },
   { title: "Subscriptions", url: "/admin/subscriptions", icon: Calendar },
   { title: "Marketers", url: "/admin/marketers", icon: UserCheck },
   { title: "Payments", url: "/admin/payments", icon: CreditCard },

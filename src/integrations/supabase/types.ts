@@ -6699,6 +6699,75 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_requests: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          billing_cycle: string
+          billing_email: string
+          billing_phone: string
+          created_at: string
+          first_name: string
+          id: string
+          last_name: string
+          package_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount: number
+          billing_cycle: string
+          billing_email: string
+          billing_phone: string
+          created_at?: string
+          first_name: string
+          id?: string
+          last_name: string
+          package_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          billing_cycle?: string
+          billing_email?: string
+          billing_phone?: string
+          created_at?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          package_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_requests_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_requests_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           address: string | null

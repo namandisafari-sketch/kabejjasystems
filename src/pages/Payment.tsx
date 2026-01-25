@@ -1,32 +1,25 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { usePesapalPayment } from '@/hooks/use-pesapal-payment';
 import { PaymentPackageSelector } from '@/components/payment/PaymentPackageSelector';
-import { PesapalCheckout } from '@/components/payment/PesapalCheckout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, CheckCircle, Send } from 'lucide-react';
 import type { SubscriptionPackage } from '@/types/payment-types';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-type PaymentStep = 'select-package' | 'billing-info' | 'checkout';
+type PaymentStep = 'select-package' | 'billing-info' | 'submitted';
 
 export default function PaymentPage() {
     const navigate = useNavigate();
-    const { initiatePayment, isInitiating } = usePesapalPayment();
+    const queryClient = useQueryClient();
 
     const [step, setStep] = useState<PaymentStep>('select-package');
     const [selectedPackage, setSelectedPackage] = useState<SubscriptionPackage | null>(null);
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
-    const [checkoutData, setCheckoutData] = useState<{
-        redirectUrl: string;
-        merchantReference: string;
-        trackingId: string;
-        amount: number;
-    } | null>(null);
 
     const [billingInfo, setBillingInfo] = useState({
         firstName: '',
@@ -44,7 +37,7 @@ export default function PaymentPage() {
 
             const { data: profile } = await supabase
                 .from('profiles')
-                .select('full_name, phone')
+                .select('full_name, phone, tenant_id')
                 .eq('id', user.id)
                 .single();
 
@@ -58,7 +51,56 @@ export default function PaymentPage() {
                 });
             }
 
-            return profile;
+            return { ...profile, email: user.email };
+        },
+    });
+
+    // Submit subscription request mutation
+    const submitRequest = useMutation({
+        mutationFn: async (data: {
+            packageId: string;
+            amount: number;
+            billingCycle: 'monthly' | 'yearly';
+            billingEmail: string;
+            billingPhone: string;
+            firstName: string;
+            lastName: string;
+        }) => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not authenticated');
+
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('tenant_id')
+                .eq('id', user.id)
+                .single();
+
+            if (!profile?.tenant_id) throw new Error('No tenant found');
+
+            const { error } = await (supabase
+                .from('subscription_requests')
+                .insert({
+                    tenant_id: profile.tenant_id,
+                    package_id: data.packageId,
+                    billing_cycle: data.billingCycle,
+                    amount: data.amount,
+                    billing_email: data.billingEmail,
+                    billing_phone: data.billingPhone,
+                    first_name: data.firstName,
+                    last_name: data.lastName,
+                    status: 'pending',
+                }) as any);
+
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['subscription-requests'] });
+            toast.success('Subscription request submitted!');
+            setStep('submitted');
+        },
+        onError: (error) => {
+            console.error('Failed to submit request:', error);
+            toast.error('Failed to submit request. Please try again.');
         },
     });
 
@@ -75,36 +117,15 @@ export default function PaymentPage() {
 
         const amount = billingCycle === 'monthly' ? selectedPackage.price_monthly : selectedPackage.price_yearly;
 
-        try {
-            const result = await initiatePayment.mutateAsync({
-                packageId: selectedPackage.id,
-                amount,
-                billingEmail: billingInfo.email,
-                billingPhone: billingInfo.phone,
-                firstName: billingInfo.firstName,
-                lastName: billingInfo.lastName,
-            });
-
-            setCheckoutData({
-                redirectUrl: result.redirectUrl,
-                merchantReference: result.merchantReference,
-                trackingId: result.trackingId,
-                amount,
-            });
-
-            setStep('checkout');
-        } catch (error) {
-            console.error('Payment initiation failed:', error);
-        }
-    };
-
-    const handlePaymentSuccess = () => {
-        navigate('/dashboard');
-    };
-
-    const handlePaymentCancel = () => {
-        setStep('select-package');
-        setCheckoutData(null);
+        submitRequest.mutate({
+            packageId: selectedPackage.id,
+            amount,
+            billingCycle,
+            billingEmail: billingInfo.email,
+            billingPhone: billingInfo.phone,
+            firstName: billingInfo.firstName,
+            lastName: billingInfo.lastName,
+        });
     };
 
     return (
@@ -112,14 +133,11 @@ export default function PaymentPage() {
             <div className="max-w-6xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex items-center gap-4">
-                    {step !== 'select-package' && (
+                    {step === 'billing-info' && (
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => {
-                                if (step === 'billing-info') setStep('select-package');
-                                else if (step === 'checkout') setStep('billing-info');
-                            }}
+                            onClick={() => setStep('select-package')}
                         >
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
@@ -129,22 +147,24 @@ export default function PaymentPage() {
                         <p className="text-muted-foreground">
                             {step === 'select-package' && 'Choose a plan that fits your business'}
                             {step === 'billing-info' && 'Enter your billing information'}
-                            {step === 'checkout' && 'Complete your payment securely'}
+                            {step === 'submitted' && 'Your request has been submitted'}
                         </p>
                     </div>
                 </div>
 
                 {/* Progress Indicator */}
-                <div className="flex items-center gap-2">
-                    {['select-package', 'billing-info', 'checkout'].map((s, idx) => (
-                        <div key={s} className="flex items-center flex-1">
-                            <div
-                                className={`h-2 flex-1 rounded-full transition-colors ${step === s ? 'bg-primary' : idx < ['select-package', 'billing-info', 'checkout'].indexOf(step) ? 'bg-primary/50' : 'bg-muted'
-                                    }`}
-                            />
-                        </div>
-                    ))}
-                </div>
+                {step !== 'submitted' && (
+                    <div className="flex items-center gap-2">
+                        {['select-package', 'billing-info'].map((s, idx) => (
+                            <div key={s} className="flex items-center flex-1">
+                                <div
+                                    className={`h-2 flex-1 rounded-full transition-colors ${step === s ? 'bg-primary' : idx < ['select-package', 'billing-info'].indexOf(step) ? 'bg-primary/50' : 'bg-muted'
+                                        }`}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                )}
 
                 {/* Step Content */}
                 {step === 'select-package' && (
@@ -160,7 +180,7 @@ export default function PaymentPage() {
                         <CardHeader>
                             <CardTitle>Billing Information</CardTitle>
                             <CardDescription>
-                                Complete your purchase of {selectedPackage.name} (
+                                Submit your request for {selectedPackage.name} (
                                 {billingCycle === 'monthly' ? 'Monthly' : 'Yearly'})
                             </CardDescription>
                         </CardHeader>
@@ -209,7 +229,7 @@ export default function PaymentPage() {
                                         required
                                     />
                                     <p className="text-sm text-muted-foreground">
-                                        Use your MTN MoMo or Airtel Money number for payment
+                                        Admin will contact you on this number for payment details
                                     </p>
                                 </div>
 
@@ -227,14 +247,17 @@ export default function PaymentPage() {
                                         </span>
                                     </div>
 
-                                    <Button type="submit" className="w-full" disabled={isInitiating}>
-                                        {isInitiating ? (
+                                    <Button type="submit" className="w-full" disabled={submitRequest.isPending}>
+                                        {submitRequest.isPending ? (
                                             <>
                                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                                Processing...
+                                                Submitting...
                                             </>
                                         ) : (
-                                            'Proceed to Payment'
+                                            <>
+                                                <Send className="h-4 w-4 mr-2" />
+                                                Submit Request for Approval
+                                            </>
                                         )}
                                     </Button>
                                 </div>
@@ -243,16 +266,40 @@ export default function PaymentPage() {
                     </Card>
                 )}
 
-                {step === 'checkout' && checkoutData && (
-                    <div className="max-w-4xl mx-auto">
-                        <PesapalCheckout
-                            redirectUrl={checkoutData.redirectUrl}
-                            merchantReference={checkoutData.merchantReference}
-                            amount={checkoutData.amount}
-                            onSuccess={handlePaymentSuccess}
-                            onCancel={handlePaymentCancel}
-                        />
-                    </div>
+                {step === 'submitted' && (
+                    <Card className="max-w-2xl mx-auto">
+                        <CardContent className="pt-8 text-center space-y-6">
+                            <div className="mx-auto w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                                <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+                            </div>
+                            <div className="space-y-2">
+                                <h2 className="text-2xl font-bold">Request Submitted!</h2>
+                                <p className="text-muted-foreground">
+                                    Your subscription request has been sent to the admin for approval.
+                                </p>
+                            </div>
+                            <div className="bg-muted/50 rounded-lg p-4 text-sm text-left space-y-2">
+                                <p><strong>Package:</strong> {selectedPackage?.name}</p>
+                                <p><strong>Billing Cycle:</strong> {billingCycle === 'monthly' ? 'Monthly' : 'Yearly'}</p>
+                                <p><strong>Amount:</strong> {selectedPackage && new Intl.NumberFormat('en-UG', {
+                                    style: 'currency',
+                                    currency: 'UGX',
+                                    minimumFractionDigits: 0,
+                                }).format(billingCycle === 'monthly' ? selectedPackage.price_monthly : selectedPackage.price_yearly)}</p>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                The admin will review your request and contact you within <strong>24-48 hours</strong> with payment instructions.
+                            </p>
+                            <div className="flex gap-3 justify-center pt-4">
+                                <Button variant="outline" onClick={() => navigate('/dashboard')}>
+                                    Go to Dashboard
+                                </Button>
+                                <Button onClick={() => navigate('/pending-approval')}>
+                                    View Status
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
                 )}
             </div>
         </div>

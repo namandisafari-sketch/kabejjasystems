@@ -30,6 +30,7 @@ import AdminTestimonials from "./pages/admin/AdminTestimonials";
 import AdminInstallations from "./pages/admin/AdminInstallations";
 import AdminMarketers from "./pages/admin/AdminMarketers";
 import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
+import AdminSubscriptionRequests from "./pages/admin/AdminSubscriptionRequests";
 import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
 import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
 import AdminSupportTickets from "./pages/admin/AdminSupportTickets";
@@ -150,6 +151,7 @@ const App = () => {
                 <Route path="tenants" element={<AdminTenants />} />
                 <Route path="tenants/:id" element={<AdminTenantDetails />} />
                 <Route path="installations" element={<AdminInstallations />} />
+                <Route path="subscription-requests" element={<AdminSubscriptionRequests />} />
                 <Route path="subscriptions" element={<AdminSubscriptions />} />
                 <Route path="marketers" element={<AdminMarketers />} />
                 <Route path="payments" element={<AdminPayments />} />
