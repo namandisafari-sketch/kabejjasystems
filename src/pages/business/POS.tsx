@@ -1,4 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+// File: src/pages/business/POS.tsx
+// MOBILE-FIRST RESPONSIVE DESIGN
+
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/use-tenant";
@@ -10,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Search, Plus, Minus, ShoppingCart, Trash2, CreditCard, Banknote, 
   Loader2, User, X, UserPlus, SplitSquareHorizontal, Calendar, 
-  History, Receipt, Users, BarChart3, ChevronUp
+  History, Receipt, Users, BarChart3, Menu
 } from "lucide-react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,6 +26,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerFooter,
+} from "@/components/ui/drawer";
+import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -30,12 +40,8 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { QuickCustomerDialog } from "@/components/pos/QuickCustomerDialog";
 import { SplitPaymentDialog } from "@/components/pos/SplitPaymentDialog";
 import { LayawayDialog } from "@/components/pos/LayawayDialog";
@@ -111,13 +117,15 @@ export default function POS() {
     customerName?: string,
     receiptNumber?: string
   } | null>(null);
+  
   const [activeTab, setActiveTab] = useState<"pos" | "queue" | "dashboard">("pos");
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
   const [showCustomPriceDialog, setShowCustomPriceDialog] = useState(false);
   const [pendingServiceItem, setPendingServiceItem] = useState<any>(null);
   const [customPriceValue, setCustomPriceValue] = useState("");
-  const [mobileCartOpen, setMobileCartOpen] = useState(false);
 
+  // Queries
   const { data: products, isLoading } = useQuery({
     queryKey: ['products', tenantId],
     queryFn: async () => {
@@ -149,7 +157,6 @@ export default function POS() {
     enabled: !!tenantId,
   });
 
-  // Fetch tenant info for receipt
   const { data: tenantInfo } = useQuery({
     queryKey: ['tenant-info', tenantId],
     queryFn: async () => {
@@ -165,7 +172,6 @@ export default function POS() {
     enabled: !!tenantId,
   });
 
-  // Fetch receipt settings
   const { data: receiptSettings } = useQuery({
     queryKey: ['receipt-settings', tenantId],
     queryFn: async () => {
@@ -182,12 +188,12 @@ export default function POS() {
   });
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
   const availableCredit = selectedCustomer 
     ? (selectedCustomer.credit_limit - selectedCustomer.current_balance)
     : 0;
   const canUseCredit = selectedCustomer && availableCredit >= cartTotal;
 
+  // Process Sale Function
   const processSale = async (paymentMethod: string, payments?: PaymentSplit[]): Promise<{ sale: any, receiptNumber: string }> => {
     if (!tenantId || cart.length === 0) throw new Error("Invalid checkout");
     
@@ -201,17 +207,11 @@ export default function POS() {
       throw new Error("Customer has insufficient credit limit");
     }
 
-    // Get receipt number
-    const { data: receiptNumberData, error: receiptError } = await supabase
+    const { data: receiptNumberData } = await supabase
       .rpc('get_next_receipt_number', { p_tenant_id: tenantId });
-    
-    if (receiptError) {
-      console.error("Receipt number error:", receiptError);
-    }
     
     const receiptNumber = receiptNumberData || `RCP-${Date.now()}`;
 
-    // Create sale
     const { data: sale, error: saleError } = await supabase
       .from('sales')
       .insert({
@@ -228,7 +228,6 @@ export default function POS() {
 
     if (saleError) throw saleError;
 
-    // Create sale items
     const saleItems = cart.map(item => ({
       sale_id: sale.id,
       product_id: item.id,
@@ -243,7 +242,6 @@ export default function POS() {
 
     if (itemsError) throw itemsError;
 
-    // Record split payments if applicable
     if (payments && payments.length > 0) {
       const paymentRecords = payments.map(p => ({
         sale_id: sale.id,
@@ -255,12 +253,9 @@ export default function POS() {
       await supabase.from('sale_payments').insert(paymentRecords);
     }
 
-    // Update stock (only for products, not services)
     for (const item of cart) {
-      // Skip stock update for services (they have no stock)
       if (item.isService) continue;
       
-      // Get the base product ID (remove timestamp suffix if custom priced)
       const productId = item.customPrice ? item.id.split('-')[0] : item.id;
       const product = products?.find(p => p.id === productId);
       if (product && product.product_type !== 'service') {
@@ -273,10 +268,8 @@ export default function POS() {
       }
     }
 
-    // Update customer favorites
     if (selectedCustomer) {
       for (const item of cart) {
-        // Check if favorite exists
         const { data: existing } = await supabase
           .from('customer_favorites')
           .select('id, times_purchased')
@@ -302,7 +295,6 @@ export default function POS() {
       }
     }
 
-    // If credit sale, update customer balance
     if (isCredit && selectedCustomer) {
       const newBalance = selectedCustomer.current_balance + cartTotal;
       await supabase
@@ -334,21 +326,18 @@ export default function POS() {
       };
       setLastSaleData(saleData);
       
-      // Store customer phone before clearing
       const customerPhone = selectedCustomer?.phone;
       
       setCart([]);
       setShowCheckout(false);
       setPaymentMethod("");
       
-      // Auto-print receipt after a short delay to allow state update
       setTimeout(() => {
         if (receiptRef.current) {
           printReceipt(receiptRef.current);
         }
       }, 100);
       
-      // Show digital receipt option if customer has phone
       if (customerPhone) {
         setTimeout(() => setShowDigitalReceipt(true), 1000);
       }
@@ -382,7 +371,6 @@ export default function POS() {
       setShowSplitPayment(false);
       setShowCheckout(false);
       
-      // Auto-print receipt
       setTimeout(() => {
         if (receiptRef.current) {
           printReceipt(receiptRef.current);
@@ -413,7 +401,6 @@ export default function POS() {
         throw new Error("Invalid layaway setup");
       }
 
-      // Create layaway plan
       const { data: layaway, error: layawayError } = await supabase
         .from('layaway_plans')
         .insert({
@@ -432,7 +419,6 @@ export default function POS() {
 
       if (layawayError) throw layawayError;
 
-      // Create layaway items
       const layawayItems = cart.map(item => ({
         layaway_id: layaway.id,
         product_id: item.id,
@@ -444,7 +430,6 @@ export default function POS() {
 
       await supabase.from('layaway_items').insert(layawayItems);
 
-      // Record initial deposit payment
       if (data.depositAmount > 0) {
         await supabase.from('installment_payments').insert({
           layaway_id: layaway.id,
@@ -476,10 +461,9 @@ export default function POS() {
     const priceToUse = customPrice ?? product.unit_price;
     
     setCart(prev => {
-      // For services with custom price, always add as new item
       if (isService && customPrice) {
         return [...prev, { 
-          id: `${product.id}-${Date.now()}`, // Unique ID for custom priced service
+          id: `${product.id}-${Date.now()}`,
           name: product.name, 
           price: priceToUse, 
           quantity: 1,
@@ -513,6 +497,7 @@ export default function POS() {
       setShowCustomPriceDialog(true);
     } else {
       addToCart(product);
+      toast({ title: `Added ${product.name}` });
     }
   };
 
@@ -521,6 +506,7 @@ export default function POS() {
       const price = parseFloat(customPriceValue) || 0;
       if (price > 0) {
         addToCart(pendingServiceItem, price);
+        toast({ title: `Added ${pendingServiceItem.name}` });
       }
       setShowCustomPriceDialog(false);
       setPendingServiceItem(null);
@@ -543,9 +529,7 @@ export default function POS() {
   };
 
   const handleServeFromQueue = (items: any[], customerName: string) => {
-    // If queue item has items, add them to cart
     if (items && items.length > 0) {
-      // Items from queue would be product objects
       items.forEach((item: any) => {
         if (item.id) addToCart(item);
       });
@@ -566,183 +550,101 @@ export default function POS() {
     );
   }
 
+  // ========== MOBILE-FIRST LAYOUT ==========
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] md:flex-row overflow-hidden">
-      {/* Main Content Area - Full width on mobile */}
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        {/* Tab Navigation */}
-        <div className="border-b px-2 sm:px-4 py-2 shrink-0">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-            <TabsList className="w-full md:w-auto grid grid-cols-3 md:flex">
-              <TabsTrigger value="pos" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
-                <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span>POS</span>
-              </TabsTrigger>
-              <TabsTrigger value="queue" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
-                <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span>Queue</span>
-              </TabsTrigger>
-              <TabsTrigger value="dashboard" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
-                <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Live Stats</span>
-                <span className="sm:hidden">Stats</span>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+    <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden bg-background">
+
+      {/* HEADER WITH CART INFO */}
+      <div className="flex items-center justify-between px-4 py-3 border-b bg-card shrink-0">
+        <div className="flex items-center gap-3">
+          <h1 className="font-bold text-lg">POS</h1>
+          {selectedCustomer && (
+            <Badge variant="secondary" className="text-xs">
+              {selectedCustomer.name}
+            </Badge>
+          )}
         </div>
-
-        {activeTab === "pos" && (
-          <div className="flex-1 p-2 sm:p-4 overflow-hidden flex flex-col pb-16 md:pb-4">
-            <div className="mb-2 sm:mb-4 shrink-0">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search products..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-10"
-                />
-              </div>
+        
+        <div className="flex items-center gap-2">
+          {/* Cart Badge */}
+          {cart.length > 0 && (
+            <div className="flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5 text-primary" />
+              <Badge className="bg-primary text-primary-foreground">
+                {cart.length}
+              </Badge>
             </div>
-
-            <ScrollArea className="flex-1 -mx-2 px-2">
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 pb-2">
-                {filteredProducts?.map((product) => {
-                  const isService = product.product_type === 'service';
-                  return (
-                    <Card
-                      key={product.id}
-                      className="cursor-pointer hover:border-primary transition-colors active:scale-[0.98]"
-                      onClick={() => handleServiceClick(product)}
-                    >
-                      <CardContent className="p-2 sm:p-3">
-                        <h3 className="font-medium truncate text-xs sm:text-sm leading-tight">{product.name}</h3>
-                        <div className="flex justify-between items-center mt-1.5">
-                          <span className="text-sm sm:text-base font-bold text-primary">
-                            {product.unit_price.toLocaleString()}
-                          </span>
-                          {isService ? (
-                            <Badge variant="secondary" className="text-2xs px-1">Svc</Badge>
-                          ) : (
-                            <Badge variant={product.stock_quantity > 0 ? "outline" : "destructive"} className="text-2xs px-1">
-                              {product.stock_quantity}
-                            </Badge>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </ScrollArea>
-          </div>
-        )}
-
-        {activeTab === "queue" && tenantId && (
-          <div className="flex-1 p-2 sm:p-4 pb-16 md:pb-4 overflow-auto">
-            <POSQueuePanel tenantId={tenantId} onServeCustomer={handleServeFromQueue} />
-          </div>
-        )}
-
-        {activeTab === "dashboard" && tenantId && (
-          <div className="flex-1 p-2 sm:p-4 overflow-auto pb-16 md:pb-4">
-            <LiveSalesWidget tenantId={tenantId} />
-          </div>
-        )}
-      </div>
-
-      {/* Mobile Cart Bottom Bar - CSS controlled visibility */}
-      <div 
-        className="fixed bottom-0 left-0 right-0 bg-card border-t shadow-lg z-40 md:hidden safe-bottom"
-        onClick={() => setMobileCartOpen(!mobileCartOpen)}
-      >
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <ShoppingCart className="h-5 w-5" />
-              {cart.length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-accent text-accent-foreground text-2xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                  {cart.length}
-                </span>
-              )}
-            </div>
-            <span className="font-medium text-sm">Cart ({cart.length})</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="font-bold text-primary">{cartTotal.toLocaleString()} UGX</span>
-            <ChevronUp className={`h-5 w-5 transition-transform ${mobileCartOpen ? 'rotate-180' : ''}`} />
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Cart Sheet - Only show on mobile when cart is open */}
-      {mobileCartOpen && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm md:hidden" onClick={() => setMobileCartOpen(false)}>
-          <div 
-            className="fixed bottom-0 left-0 right-0 bg-card border-t rounded-t-xl max-h-[80vh] flex flex-col animate-slide-in-bottom safe-bottom"
-            onClick={(e) => e.stopPropagation()}
+          )}
+          
+          {/* Total */}
+          {cart.length > 0 && (
+            <span className="font-bold text-primary text-sm">
+              {cartTotal.toLocaleString()}
+            </span>
+          )}
+          
+          {/* Menu Button */}
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
           >
-            {/* Cart Header */}
-            <div className="flex items-center justify-between p-4 border-b shrink-0">
-              <h2 className="font-bold flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5" />
-                Cart ({cart.length})
-              </h2>
-              <Button variant="ghost" size="icon" onClick={() => setMobileCartOpen(false)}>
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
+            <Menu className="h-5 w-5" />
+          </Button>
+        </div>
+      </div>
 
-            {/* Customer Selection */}
-            <div className="p-3 border-b shrink-0">
-              <Label className="text-xs text-muted-foreground mb-2 block">Customer</Label>
+      {/* MOBILE MENU DRAWER */}
+      <Drawer open={showMobileMenu} onOpenChange={setShowMobileMenu}>
+        <DrawerContent className="max-h-[85vh]">
+          <DrawerHeader>
+            <DrawerTitle>Menu</DrawerTitle>
+          </DrawerHeader>
+          
+          <ScrollArea className="flex-1 px-4">
+            {/* Customer Info */}
+            <div className="mb-4">
+              <p className="text-xs font-medium text-muted-foreground mb-2">CUSTOMER</p>
               {selectedCustomer ? (
-                <div className="flex items-center justify-between bg-muted/50 p-2 rounded-lg">
+                <div className="flex items-center justify-between bg-muted/50 p-3 rounded-lg">
                   <div>
-                    <p className="font-medium text-sm">{selectedCustomer.name}</p>
-                    <p className="text-2xs text-muted-foreground">
+                    <p className="font-medium">{selectedCustomer.name}</p>
+                    <p className="text-xs text-muted-foreground">
                       Credit: {availableCredit.toLocaleString()} UGX
                     </p>
                   </div>
-                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setSelectedCustomer(null)}>
-                    <X className="h-4 w-4" />
+                  <Button 
+                    size="sm" 
+                    variant="ghost"
+                    onClick={() => {
+                      setSelectedCustomer(null);
+                      setShowMobileMenu(false);
+                    }}
+                  >
+                    Clear
                   </Button>
                 </div>
               ) : (
                 <div className="flex gap-2">
-                  <Popover open={customerSearchOpen} onOpenChange={setCustomerSearchOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="flex-1 justify-start text-sm h-9">
-                        <User className="h-4 w-4 mr-2" />
-                        Select Customer
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-0 w-[calc(100vw-2rem)]" align="start">
-                      <Command>
-                        <CommandInput placeholder="Search customers..." />
-                        <CommandList>
-                          <CommandEmpty>No customers found.</CommandEmpty>
-                          <CommandGroup>
-                            {customers?.map((customer) => (
-                              <CommandItem
-                                key={customer.id}
-                                onSelect={() => {
-                                  setSelectedCustomer(customer);
-                                  setCustomerSearchOpen(false);
-                                }}
-                              >
-                                <div className="flex-1">
-                                  <p className="font-medium">{customer.name}</p>
-                                  <p className="text-xs text-muted-foreground">{customer.phone || 'No phone'}</p>
-                                </div>
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setShowQuickCustomer(true)}>
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => {
+                      setCustomerSearchOpen(true);
+                      setShowMobileMenu(false);
+                    }}
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Select Customer
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => {
+                      setShowQuickCustomer(true);
+                      setShowMobileMenu(false);
+                    }}
+                  >
                     <UserPlus className="h-4 w-4" />
                   </Button>
                 </div>
@@ -750,266 +652,301 @@ export default function POS() {
             </div>
 
             {/* Cart Items */}
-            <ScrollArea className="flex-1 max-h-[35vh]">
-              <div className="p-3 space-y-2">
-                {cart.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-6 text-sm">Cart is empty</p>
-                ) : (
-                  cart.map((item) => (
-                    <div key={item.id} className="flex items-center gap-2 bg-muted/50 p-2 rounded-lg">
+            {cart.length > 0 && (
+              <div className="mb-4">
+                <p className="text-xs font-medium text-muted-foreground mb-2">CART ({cart.length})</p>
+                <div className="space-y-2">
+                  {cart.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between bg-muted/50 p-2 rounded-lg">
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate text-sm">{item.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {item.price.toLocaleString()} × {item.quantity}
-                        </p>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-6 w-6"
+                          onClick={() => removeFromCart(item.id)}
+                        >
+                          <X className="h-3 w-3 text-destructive" />
+                        </Button>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQuantity(item.id, -1)}>
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        <span className="w-5 text-center text-sm">{item.quantity}</span>
-                        <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQuantity(item.id, 1)}>
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                        <Button size="icon" variant="destructive" className="h-7 w-7" onClick={() => removeFromCart(item.id)}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="text-xs text-muted-foreground">
+                          {item.price.toLocaleString()} × {item.quantity}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <Button 
+                            size="icon" 
+                            variant="outline" 
+                            className="h-6 w-6"
+                            onClick={() => updateQuantity(item.id, -1)}
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="w-6 text-center text-sm">{item.quantity}</span>
+                          <Button 
+                            size="icon" 
+                            variant="outline" 
+                            className="h-6 w-6"
+                            onClick={() => updateQuantity(item.id, 1)}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
-
-            {/* Cart Footer */}
-            <div className="p-4 border-t bg-card space-y-3 shrink-0">
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Total:</span>
-                <span className="text-xl font-bold text-primary">{cartTotal.toLocaleString()} UGX</span>
-              </div>
-              <Button className="w-full" size="lg" disabled={cart.length === 0} onClick={() => { setShowCheckout(true); setMobileCartOpen(false); }}>
-                Checkout
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Desktop Cart Section - Hidden on mobile, shown on md+ */}
-      <div className="hidden md:flex w-80 border-l bg-card flex-col">
-        <div className="p-4 border-b shrink-0">
-          <h2 className="font-bold flex items-center gap-2">
-            <ShoppingCart className="h-5 w-5" />
-            Cart ({cart.length})
-          </h2>
-        </div>
-
-        {/* Customer Selection */}
-        <div className="p-4 border-b shrink-0">
-          <Label className="text-sm text-muted-foreground mb-2 block">Customer</Label>
-          {selectedCustomer ? (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between bg-muted/50 p-2 rounded-lg">
-                <div>
-                  <p className="font-medium">{selectedCustomer.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Credit: {availableCredit.toLocaleString()} UGX available
-                  </p>
+                  ))}
                 </div>
-                <Button size="icon" variant="ghost" onClick={() => setSelectedCustomer(null)}>
-                  <X className="h-4 w-4" />
+              </div>
+            )}
+
+            {/* Quick Actions */}
+            <div className="mb-4">
+              <p className="text-xs font-medium text-muted-foreground mb-2">ACTIONS</p>
+              {selectedCustomer && cart.length > 0 && (
+                <Button 
+                  variant="outline" 
+                  className="w-full mb-2"
+                  onClick={() => {
+                    setShowLayaway(true);
+                    setShowMobileMenu(false);
+                  }}
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Layaway Plan
                 </Button>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full"
-                onClick={() => setShowCustomerHistory(true)}
-              >
-                <History className="h-4 w-4 mr-2" />
-                View History & Favorites
-              </Button>
+              )}
+              {selectedCustomer && (
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => {
+                    setShowCustomerHistory(true);
+                    setShowMobileMenu(false);
+                  }}
+                >
+                  <History className="h-4 w-4 mr-2" />
+                  History & Favorites
+                </Button>
+              )}
             </div>
-          ) : (
-            <div className="flex gap-2">
-              <Popover open={customerSearchOpen} onOpenChange={setCustomerSearchOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="flex-1 justify-start">
-                    <User className="h-4 w-4 mr-2" />
-                    Select Customer
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="p-0 w-80">
-                  <Command>
-                    <CommandInput placeholder="Search customers..." />
-                    <CommandList>
-                      <CommandEmpty>No customers found.</CommandEmpty>
-                      <CommandGroup>
-                        {customers?.map((customer) => (
-                          <CommandItem
-                            key={customer.id}
-                            onSelect={() => {
-                              setSelectedCustomer(customer);
-                              setCustomerSearchOpen(false);
-                            }}
-                          >
-                            <div className="flex-1">
-                              <p className="font-medium">{customer.name}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {customer.phone || 'No phone'} • Credit: {customer.credit_limit.toLocaleString()} UGX
-                              </p>
-                            </div>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              <Button variant="outline" size="icon" onClick={() => setShowQuickCustomer(true)} title="Add new customer">
-                <UserPlus className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
+          </ScrollArea>
+
+          <DrawerFooter>
+            <Button 
+              className="w-full" 
+              size="lg"
+              disabled={cart.length === 0}
+              onClick={() => {
+                setShowCheckout(true);
+                setShowMobileMenu(false);
+              }}
+            >
+              <Receipt className="h-4 w-4 mr-2" />
+              Checkout {cartTotal > 0 && `(${cartTotal.toLocaleString()})`}
+            </Button>
+            <Button variant="outline" onClick={() => setShowMobileMenu(false)}>
+              Continue Shopping
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      {/* MAIN CONTENT AREA */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* TAB NAVIGATION */}
+        <div className="px-2 py-2 border-b shrink-0">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+            <TabsList className="w-full grid grid-cols-3">
+              <TabsTrigger value="pos" className="flex items-center gap-1.5 text-xs">
+                <ShoppingCart className="h-4 w-4" />
+                POS
+              </TabsTrigger>
+              <TabsTrigger value="queue" className="flex items-center gap-1.5 text-xs">
+                <Users className="h-4 w-4" />
+                Queue
+              </TabsTrigger>
+              <TabsTrigger value="dashboard" className="flex items-center gap-1.5 text-xs">
+                <BarChart3 className="h-4 w-4" />
+                Stats
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
-        <ScrollArea className="flex-1 p-4">
-          {cart.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">Cart is empty</p>
-          ) : (
-            <div className="space-y-3">
-              {cart.map((item) => (
-                <div key={item.id} className="flex items-center gap-2 bg-muted/50 p-2 rounded-lg">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{item.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {item.price.toLocaleString()} × {item.quantity}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQuantity(item.id, -1)}>
-                      <Minus className="h-3 w-3" />
-                    </Button>
-                    <span className="w-8 text-center">{item.quantity}</span>
-                    <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQuantity(item.id, 1)}>
-                      <Plus className="h-3 w-3" />
-                    </Button>
-                    <Button size="icon" variant="destructive" className="h-7 w-7" onClick={() => removeFromCart(item.id)}>
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
+        {/* TAB CONTENT */}
+        <div className="flex-1 overflow-hidden">
+          {/* POS TAB */}
+          {activeTab === "pos" && (
+            <div className="flex flex-col h-full">
+              {/* Search */}
+              <div className="p-2 shrink-0">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search products..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 h-11 text-base"
+                  />
                 </div>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
+              </div>
 
-        <div className="p-4 border-t bg-card space-y-3 shrink-0">
-          <div className="flex justify-between items-center">
-            <span className="text-lg font-medium">Total:</span>
-            <span className="text-2xl font-bold text-primary">
-              {cartTotal.toLocaleString()} UGX
-            </span>
-          </div>
-          
-          {/* Quick Actions */}
-          {cart.length > 0 && selectedCustomer && (
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1" onClick={() => setShowLayaway(true)}>
-                <Calendar className="h-4 w-4 mr-1" />
-                Layaway
-              </Button>
+              {/* Product Grid - MOBILE OPTIMIZED */}
+              <ScrollArea className="flex-1 px-2 pb-20">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                  {filteredProducts?.map((product) => {
+                    const isService = product.product_type === 'service';
+                    return (
+                      <Card
+                        key={product.id}
+                        className="cursor-pointer hover:border-primary active:scale-[0.98] transition-all"
+                        onClick={() => handleServiceClick(product)}
+                      >
+                        <CardContent className="p-3">
+                          <p className="font-medium text-sm truncate leading-tight mb-2">
+                            {product.name}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-primary text-sm">
+                              {(product.unit_price / 1000).toFixed(0)}K
+                            </span>
+                            {isService ? (
+                              <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5">
+                                Svc
+                              </Badge>
+                            ) : (
+                              <Badge 
+                                variant={product.stock_quantity > 0 ? "outline" : "destructive"} 
+                                className="text-xs px-1.5 py-0 h-5"
+                              >
+                                {product.stock_quantity}
+                              </Badge>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
             </div>
           )}
-          
-          <Button className="w-full" size="lg" disabled={cart.length === 0} onClick={() => setShowCheckout(true)}>
-            Checkout
-          </Button>
+
+          {/* QUEUE TAB */}
+          {activeTab === "queue" && tenantId && (
+            <div className="h-full overflow-auto p-2 pb-20">
+              <POSQueuePanel tenantId={tenantId} onServeCustomer={handleServeFromQueue} />
+            </div>
+          )}
+
+          {/* DASHBOARD TAB */}
+          {activeTab === "dashboard" && tenantId && (
+            <div className="h-full overflow-auto p-2 pb-20">
+              <LiveSalesWidget tenantId={tenantId} />
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Checkout Dialog */}
+      {/* CHECKOUT DIALOG - MOBILE OPTIMIZED */}
       <Dialog open={showCheckout} onOpenChange={setShowCheckout}>
-        <DialogContent>
+        <DialogContent className="max-w-md mx-auto">
           <DialogHeader>
             <DialogTitle>Complete Payment</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <p className="text-center text-3xl font-bold mb-6">
-              {cartTotal.toLocaleString()} UGX
-            </p>
-            
+          
+          <div className="space-y-4">
+            {/* Amount */}
+            <div className="text-center py-4 bg-muted/50 rounded-lg">
+              <p className="text-xs text-muted-foreground mb-1">Total Amount</p>
+              <p className="text-3xl font-bold text-primary">
+                {cartTotal.toLocaleString()}
+              </p>
+              <p className="text-sm text-muted-foreground">UGX</p>
+            </div>
+
+            {/* Customer Info */}
             {selectedCustomer && (
-              <div className="bg-muted/50 p-3 rounded-lg mb-4">
-                <p className="text-sm text-muted-foreground">Customer</p>
+              <div className="p-3 bg-muted/30 rounded-lg">
+                <p className="text-xs text-muted-foreground">Customer</p>
                 <p className="font-medium">{selectedCustomer.name}</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Available credit: {availableCredit.toLocaleString()} UGX
                 </p>
               </div>
             )}
-            
-            <p className="text-sm text-muted-foreground mb-4 text-center">Select payment method</p>
-            <div className="grid grid-cols-2 gap-4">
-              <Button
+
+            {/* Payment Methods */}
+            <div className="space-y-2">
+              <Label className="text-sm">Payment Method</Label>
+              
+              {/* Cash */}
+              <Button 
                 variant={paymentMethod === 'cash' ? 'default' : 'outline'}
-                className="h-20 flex-col gap-2"
+                className="w-full justify-start h-12"
                 onClick={() => setPaymentMethod('cash')}
               >
-                <Banknote className="h-6 w-6" />
+                <Banknote className="h-5 w-5 mr-3" />
                 Cash
               </Button>
-              <Button
+
+              {/* Mobile Money */}
+              <Button 
                 variant={paymentMethod === 'mobile_money' ? 'default' : 'outline'}
-                className="h-20 flex-col gap-2"
+                className="w-full justify-start h-12"
                 onClick={() => setPaymentMethod('mobile_money')}
               >
-                <CreditCard className="h-6 w-6" />
+                <CreditCard className="h-5 w-5 mr-3" />
                 Mobile Money
               </Button>
-            </div>
-            
-            <Button
-              variant="outline"
-              className="w-full h-16 flex-col gap-1 mt-4"
-              onClick={() => {
-                setShowCheckout(false);
-                setShowSplitPayment(true);
-              }}
-            >
-              <SplitSquareHorizontal className="h-5 w-5" />
-              <span className="text-xs">Split Payment (Cash + Mobile Money)</span>
-            </Button>
-            
-            {selectedCustomer && (
-              <Button
-                variant={paymentMethod === 'credit' ? 'default' : 'outline'}
-                className={`w-full h-16 flex-col gap-1 mt-4 ${!canUseCredit ? 'opacity-50' : ''}`}
-                onClick={() => setPaymentMethod('credit')}
-                disabled={!canUseCredit}
+
+              {/* Split Payment */}
+              <Button 
+                variant="outline"
+                className="w-full justify-start h-12"
+                onClick={() => {
+                  setShowCheckout(false);
+                  setShowSplitPayment(true);
+                }}
               >
-                <User className="h-5 w-5" />
-                Credit Sale
-                {!canUseCredit && (
-                  <span className="text-xs">Insufficient credit limit</span>
-                )}
+                <SplitSquareHorizontal className="h-5 w-5 mr-3" />
+                Split Payment
               </Button>
-            )}
+
+              {/* Credit Sale */}
+              {selectedCustomer && (
+                <Button 
+                  variant={paymentMethod === 'credit' ? 'default' : 'outline'}
+                  className="w-full justify-start h-12"
+                  onClick={() => setPaymentMethod('credit')}
+                  disabled={!canUseCredit}
+                >
+                  <User className="h-5 w-5 mr-3" />
+                  Credit Sale
+                  {!canUseCredit && (
+                    <span className="ml-auto text-xs text-destructive">Insufficient limit</span>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCheckout(false)}>Cancel</Button>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowCheckout(false)}>
+              Cancel
+            </Button>
             <Button 
-              onClick={() => checkoutMutation.mutate()} 
+              onClick={() => checkoutMutation.mutate()}
               disabled={!paymentMethod || checkoutMutation.isPending}
             >
-              {checkoutMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Complete Sale
+              {checkoutMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Complete
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Split Payment Dialog */}
+      {/* SPLIT PAYMENT DIALOG */}
       <SplitPaymentDialog
         open={showSplitPayment}
         onOpenChange={setShowSplitPayment}
@@ -1018,7 +955,7 @@ export default function POS() {
         isProcessing={splitPaymentMutation.isPending}
       />
 
-      {/* Layaway Dialog */}
+      {/* LAYAWAY DIALOG */}
       {selectedCustomer && (
         <LayawayDialog
           open={showLayaway}
@@ -1031,7 +968,7 @@ export default function POS() {
         />
       )}
 
-      {/* Customer History Dialog */}
+      {/* CUSTOMER HISTORY DIALOG */}
       {selectedCustomer && tenantId && (
         <CustomerHistoryDialog
           open={showCustomerHistory}
@@ -1049,12 +986,12 @@ export default function POS() {
         />
       )}
 
-      {/* Hidden Print Receipt Component */}
+      {/* PRINT RECEIPT */}
       {lastSaleData && (
         <div className="hidden">
           <PrintReceipt
             ref={receiptRef}
-            businessName={tenantInfo?.name || "Kabejja Systems"}
+            businessName={tenantInfo?.name || "Business"}
             businessPhone={tenantInfo?.phone || undefined}
             businessEmail={tenantInfo?.email || undefined}
             businessAddress={tenantInfo?.address || undefined}
@@ -1068,7 +1005,7 @@ export default function POS() {
         </div>
       )}
 
-      {/* Digital Receipt Dialog */}
+      {/* DIGITAL RECEIPT DIALOG */}
       {lastSaleData && (
         <DigitalReceiptDialog
           open={showDigitalReceipt}
@@ -1091,7 +1028,7 @@ export default function POS() {
         />
       )}
 
-      {/* Quick Customer Dialog */}
+      {/* QUICK CUSTOMER DIALOG */}
       {tenantId && (
         <QuickCustomerDialog
           open={showQuickCustomer}
@@ -1101,31 +1038,33 @@ export default function POS() {
         />
       )}
 
-      {/* Custom Price Dialog for Services */}
+      {/* CUSTOM PRICE DIALOG */}
       <Dialog open={showCustomPriceDialog} onOpenChange={setShowCustomPriceDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Set Service Price</DialogTitle>
+            <DialogTitle>Service Price</DialogTitle>
           </DialogHeader>
+          
           <div className="space-y-4">
             <div>
-              <Label>Service: {pendingServiceItem?.name}</Label>
+              <p className="font-medium">{pendingServiceItem?.name}</p>
               <p className="text-sm text-muted-foreground">
-                Default price: {pendingServiceItem?.unit_price?.toLocaleString()} UGX
+                Default: {pendingServiceItem?.unit_price?.toLocaleString()} UGX
               </p>
             </div>
+            
             <div>
-              <Label htmlFor="custom-price">Custom Price (UGX)</Label>
+              <Label>Custom Price (UGX)</Label>
               <Input
-                id="custom-price"
                 type="number"
                 value={customPriceValue}
                 onChange={(e) => setCustomPriceValue(e.target.value)}
                 placeholder="Enter price"
-                className="mt-1"
+                className="mt-2 h-11 text-base"
               />
             </div>
           </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCustomPriceDialog(false)}>
               Cancel
@@ -1134,6 +1073,40 @@ export default function POS() {
               Add to Cart
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* CUSTOMER SEARCH DIALOG */}
+      <Dialog open={customerSearchOpen} onOpenChange={setCustomerSearchOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select Customer</DialogTitle>
+          </DialogHeader>
+          <Command className="rounded-lg border">
+            <CommandInput placeholder="Search customers..." />
+            <CommandList className="max-h-[300px]">
+              <CommandEmpty>No customers found</CommandEmpty>
+              <CommandGroup>
+                {customers?.map((customer) => (
+                  <CommandItem
+                    key={customer.id}
+                    onSelect={() => {
+                      setSelectedCustomer(customer);
+                      setCustomerSearchOpen(false);
+                    }}
+                    className="px-4 py-3 cursor-pointer"
+                  >
+                    <div>
+                      <p className="font-medium">{customer.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {customer.phone || 'No phone'} • Credit: {customer.credit_limit.toLocaleString()}
+                      </p>
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
         </DialogContent>
       </Dialog>
     </div>
