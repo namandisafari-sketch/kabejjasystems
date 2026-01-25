@@ -11,32 +11,33 @@
 @layer base {
   :root {
     /* Kabejja Systems Brand Palette - Light Mode
-       Deep Navy (#0D2847) + Teal (#28A68E) + Fresh Green (#4CAF50) */
-    --background: 210 20% 98%;
-    --foreground: 213 45% 17%;
+       Deep Navy (#0D2847) + Teal Ring (#28A68E) + Fresh Green Shops (#4CAF50)
+       Inspired by the POS terminal logo with connected network */
+    --background: 210 25% 98%;
+    --foreground: 213 70% 16%;
 
     --card: 0 0% 100%;
-    --card-foreground: 213 45% 17%;
+    --card-foreground: 213 70% 16%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 213 45% 17%;
+    --popover-foreground: 213 70% 16%;
 
-    /* Primary - Deep Navy Blue (#0D2847) from logo */
-    --primary: 213 65% 17%;
+    /* Primary - Deep Navy Blue from POS terminal */
+    --primary: 213 70% 16%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 210 20% 94%;
-    --secondary-foreground: 213 45% 20%;
+    --secondary: 210 25% 95%;
+    --secondary-foreground: 213 70% 20%;
 
-    --muted: 210 18% 96%;
-    --muted-foreground: 213 15% 45%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 213 20% 45%;
 
-    /* Accent - Teal (#28A68E) from logo network ring */
-    --accent: 166 60% 40%;
+    /* Accent - Teal from logo network ring */
+    --accent: 166 58% 41%;
     --accent-foreground: 0 0% 100%;
 
-    /* Success - Fresh Green (#4CAF50) from logo shops */
-    --success: 122 39% 49%;
+    /* Success - Fresh Green from shop icons */
+    --success: 145 55% 42%;
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
@@ -45,48 +46,52 @@
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 213 15% 88%;
-    --input: 213 15% 88%;
-    --ring: 166 60% 40%;
+    --border: 213 20% 88%;
+    --input: 213 20% 88%;
+    --ring: 166 58% 41%;
 
     /* Modern rounded corners */
-    --radius: 0.75rem;
+    --radius: 0.625rem;
 
-    /* Soft shadows with navy depth */
-    --shadow-xs: 0 1px 2px hsl(213 45% 17% / 0.04);
-    --shadow-sm: 0 1px 3px hsl(213 45% 17% / 0.06), 0 1px 2px hsl(213 45% 17% / 0.04);
-    --shadow-md: 0 4px 6px -1px hsl(213 45% 17% / 0.08), 0 2px 4px -1px hsl(213 45% 17% / 0.04);
-    --shadow-lg: 0 10px 15px -3px hsl(213 45% 17% / 0.08), 0 4px 6px -2px hsl(213 45% 17% / 0.04);
-    --shadow-xl: 0 20px 25px -5px hsl(213 45% 17% / 0.1), 0 10px 10px -5px hsl(213 45% 17% / 0.04);
+    /* Refined shadows with navy depth */
+    --shadow-xs: 0 1px 2px hsl(213 70% 16% / 0.03);
+    --shadow-sm: 0 1px 3px hsl(213 70% 16% / 0.05), 0 1px 2px hsl(213 70% 16% / 0.03);
+    --shadow-md: 0 4px 6px -1px hsl(213 70% 16% / 0.07), 0 2px 4px -1px hsl(213 70% 16% / 0.03);
+    --shadow-lg: 0 10px 15px -3px hsl(213 70% 16% / 0.07), 0 4px 6px -2px hsl(213 70% 16% / 0.03);
+    --shadow-xl: 0 20px 25px -5px hsl(213 70% 16% / 0.08), 0 10px 10px -5px hsl(213 70% 16% / 0.03);
+
+    /* Gradient utilities */
+    --gradient-primary: linear-gradient(135deg, hsl(213 70% 16%), hsl(213 70% 25%));
+    --gradient-accent: linear-gradient(135deg, hsl(166 58% 41%), hsl(145 55% 42%));
   }
 
   .dark {
     /* Kabejja Systems Brand Palette - Dark Mode */
-    --background: 213 35% 8%;
-    --foreground: 210 20% 94%;
+    --background: 213 40% 7%;
+    --foreground: 210 25% 95%;
 
-    --card: 213 30% 11%;
-    --card-foreground: 210 20% 94%;
+    --card: 213 35% 10%;
+    --card-foreground: 210 25% 95%;
 
-    --popover: 213 30% 11%;
-    --popover-foreground: 210 20% 94%;
+    --popover: 213 35% 10%;
+    --popover-foreground: 210 25% 95%;
 
-    /* Primary - Lighter navy for dark mode */
-    --primary: 166 60% 55%;
-    --primary-foreground: 213 35% 8%;
+    /* Primary - Teal accent for dark mode readability */
+    --primary: 166 55% 50%;
+    --primary-foreground: 213 40% 7%;
 
-    --secondary: 213 25% 15%;
-    --secondary-foreground: 210 20% 88%;
+    --secondary: 213 30% 14%;
+    --secondary-foreground: 210 20% 90%;
 
-    --muted: 213 25% 15%;
+    --muted: 213 30% 14%;
     --muted-foreground: 210 15% 55%;
 
     /* Accent - Bright teal */
-    --accent: 166 65% 50%;
+    --accent: 166 60% 48%;
     --accent-foreground: 0 0% 100%;
 
     /* Success - Fresh Green */
-    --success: 122 39% 55%;
+    --success: 145 50% 50%;
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 55%;
@@ -95,9 +100,13 @@
     --destructive: 0 72% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 213 25% 20%;
-    --input: 213 25% 20%;
-    --ring: 166 60% 50%;
+    --border: 213 30% 18%;
+    --input: 213 30% 18%;
+    --ring: 166 55% 50%;
+
+    /* Dark mode gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(166 55% 50%), hsl(166 55% 40%));
+    --gradient-accent: linear-gradient(135deg, hsl(166 60% 48%), hsl(145 50% 50%));
   }
 }
 
@@ -145,24 +154,39 @@
     @apply min-h-[44px] min-w-[44px];
   }
 
-  /* Card with modern shadow */
+  /* Card with modern shadow and navy depth */
   .card-elevated {
     box-shadow: var(--shadow-md);
-    @apply transition-shadow duration-200;
+    @apply transition-all duration-200 border-border/50;
   }
 
   .card-elevated:hover {
     box-shadow: var(--shadow-lg);
+    @apply border-accent/20;
   }
 
   /* Glass effect for overlays */
   .glass {
-    @apply bg-background/80 backdrop-blur-md;
+    @apply bg-background/85 backdrop-blur-lg border border-border/30;
   }
 
-  /* Gradient text utility */
+  /* Gradient backgrounds inspired by logo */
+  .bg-gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .bg-gradient-accent {
+    background: var(--gradient-accent);
+  }
+
+  /* Gradient text utility - navy to teal */
   .text-gradient {
     @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+
+  /* Network ring inspired border */
+  .border-network {
+    @apply border-2 border-accent/40 rounded-full;
   }
 
   /* Smooth page transitions */
@@ -186,6 +210,24 @@
   /* Button touch feedback */
   .btn-press {
     @apply active:scale-[0.98] transition-transform duration-75;
+  }
+
+  /* Kabejja primary button style */
+  .btn-kabejja {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 
+           shadow-sm hover:shadow-md transition-all duration-200;
+  }
+
+  /* Accent/teal button style */
+  .btn-accent {
+    @apply bg-accent text-accent-foreground hover:bg-accent/90 
+           shadow-sm hover:shadow-md transition-all duration-200;
+  }
+
+  /* Success/green button style */
+  .btn-success {
+    @apply bg-success text-success-foreground hover:bg-success/90 
+           shadow-sm hover:shadow-md transition-all duration-200;
   }
 }
 
