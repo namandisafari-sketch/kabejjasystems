@@ -47,18 +47,7 @@
 </head>
 
 <body>
-  <div id="root">
-    <!-- Visible for debugging if JS fails or takes long to load -->
-    <div
-      style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; background-color: #1e3a5f; color: white; text-align: center; padding: 20px;">
-      <h2 style="margin-bottom: 10px;">Kabejja Biz Track</h2>
-      <p id="debug-status">Initializing Application...</p>
-      <noscript>
-        <p style="color: #ff4d4d; font-weight: bold; margin-top: 20px;">Error: JavaScript is required to run this app.
-        </p>
-      </noscript>
-    </div>
-  </div>
+  <div id="root"></div>
   <script
     nomodule>!function () { var e = document, t = e.createElement("script"); if (!("noModule" in t) && "onbeforeload" in t) { var n = !1; e.addEventListener("beforeload", (function (e) { if (e.target === t) n = !0; else if (!e.target.hasAttribute("nomodule") || !n) return; e.preventDefault() }), !0), t.type = "module", t.src = ".", e.head.appendChild(t), t.remove() } }();</script>
   <script type="module" src="/src/main.tsx"></script>
