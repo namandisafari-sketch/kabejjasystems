@@ -90,10 +90,13 @@ export function MobileBottomNav({ businessType, devMode }: MobileBottomNavProps)
         ? ecdRouteOverrides[module.code] 
         : moduleRoutes[module.code].url;
       
+      // Use icon from moduleRoutes config (consistent with BusinessSidebar)
+      const iconName = moduleRoutes[module.code]?.icon || module.icon || 'Package';
+      
       return {
         title: module.name,
         url,
-        icon: iconMap[module.icon || 'Package'] || Package,
+        icon: iconMap[iconName] || Package,
         code: module.code,
       };
     })
