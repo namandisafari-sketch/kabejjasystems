@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Search, Plus, Minus, ShoppingCart, Trash2, CreditCard, Banknote, 
   Loader2, User, X, UserPlus, SplitSquareHorizontal, Calendar, 
-  History, Receipt, Users, BarChart3, Menu
+  History, Receipt, Users, BarChart3, Menu, ScanLine
 } from "lucide-react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -50,6 +50,7 @@ import { DigitalReceiptDialog } from "@/components/pos/DigitalReceiptDialog";
 import { POSQueuePanel } from "@/components/pos/POSQueuePanel";
 import { LiveSalesWidget } from "@/components/pos/LiveSalesWidget";
 import { PrintReceipt, printReceipt } from "@/components/pos/PrintReceipt";
+import { ScanTriggerButton } from "@/components/pos/BarcodeScanner";
 
 interface CartItem {
   id: string;
@@ -778,15 +779,38 @@ export default function POS() {
           {/* POS TAB */}
           {activeTab === "pos" && (
             <div className="flex flex-col h-full">
-              {/* Search */}
+              {/* Search with Scan Button */}
               <div className="p-2 shrink-0">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search products..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 h-11 text-base"
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search products..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 h-11 text-base"
+                    />
+                  </div>
+                  {/* Barcode Scanner Button */}
+                  <ScanTriggerButton 
+                    onScan={(barcode) => {
+                      // Search for product by barcode/SKU
+                      const product = products?.find(
+                        p => p.sku === barcode || p.barcode === barcode || p.name.toLowerCase().includes(barcode.toLowerCase())
+                      );
+                      if (product) {
+                        addToCart(product);
+                        toast({ title: `Added: ${product.name}` });
+                      } else {
+                        setSearchTerm(barcode);
+                        toast({ 
+                          title: "Product not found", 
+                          description: `No product found with code: ${barcode}`,
+                          variant: "destructive"
+                        });
+                      }
+                    }}
+                    className="h-11 w-11"
                   />
                 </div>
               </div>
