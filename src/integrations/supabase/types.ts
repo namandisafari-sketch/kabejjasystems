@@ -3352,15 +3352,22 @@ export type Database = {
           created_by: string | null
           deductions: number
           employee_id: string
+          gross_pay: number | null
           id: string
+          net_pay: number | null
           net_salary: number
           notes: string | null
+          nssf_employee: number | null
+          nssf_employer: number | null
+          other_deductions: number | null
           pay_period_end: string
           pay_period_start: string
+          paye_tax: number | null
           payment_date: string | null
           payment_method: string | null
           status: string
           tenant_id: string
+          total_employer_cost: number | null
           updated_at: string
         }
         Insert: {
@@ -3371,15 +3378,22 @@ export type Database = {
           created_by?: string | null
           deductions?: number
           employee_id: string
+          gross_pay?: number | null
           id?: string
+          net_pay?: number | null
           net_salary?: number
           notes?: string | null
+          nssf_employee?: number | null
+          nssf_employer?: number | null
+          other_deductions?: number | null
           pay_period_end: string
           pay_period_start: string
+          paye_tax?: number | null
           payment_date?: string | null
           payment_method?: string | null
           status?: string
           tenant_id: string
+          total_employer_cost?: number | null
           updated_at?: string
         }
         Update: {
@@ -3390,15 +3404,22 @@ export type Database = {
           created_by?: string | null
           deductions?: number
           employee_id?: string
+          gross_pay?: number | null
           id?: string
+          net_pay?: number | null
           net_salary?: number
           notes?: string | null
+          nssf_employee?: number | null
+          nssf_employer?: number | null
+          other_deductions?: number | null
           pay_period_end?: string
           pay_period_start?: string
+          paye_tax?: number | null
           payment_date?: string | null
           payment_method?: string | null
           status?: string
           tenant_id?: string
+          total_employer_cost?: number | null
           updated_at?: string
         }
         Relationships: [
