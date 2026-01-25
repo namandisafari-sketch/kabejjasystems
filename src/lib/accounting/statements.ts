@@ -93,12 +93,12 @@ export async function generateIncomeStatement(
   const end = endDate.toISOString().split('T')[0];
 
   // Get all ledger entries for the period
-  const { data: entries } = await supabase
+  const { data: entries } = await (supabase
     .from('general_ledger')
     .select('*')
     .eq('tenant_id', tenantId)
     .gte('date', start)
-    .lte('date', end);
+    .lte('date', end) as any);
 
   // Calculate totals by account
   const totals: Record<string, { debit: number; credit: number }> = {};
@@ -195,14 +195,14 @@ export async function generateIncomeStatement(
   };
 
   // Cache the statement
-  await supabase.from('financial_statements_cache').insert({
+  await (supabase.from('financial_statements_cache').insert({
     tenant_id: tenantId,
     statement_type: 'INCOME_STATEMENT',
     period_start: start,
     period_end: end,
-    statement_json: statement,
+    statement_json: statement as any,
     generated_at: new Date().toISOString()
-  });
+  } as any) as any);
 
   return statement;
 }
@@ -212,11 +212,11 @@ export async function generateBalanceSheet(
   asOfDate: Date
 ): Promise<BalanceSheet> {
   // Get account balances from chart of accounts
-  const { data: accounts } = await supabase
+  const { data: accounts } = await (supabase
     .from('chart_of_accounts')
     .select('*')
     .eq('tenant_id', tenantId)
-    .eq('is_active', true);
+    .eq('is_active', true) as any);
 
   const balances: Record<string, number> = {};
   for (const acc of accounts || []) {
@@ -306,14 +306,14 @@ export async function generateBalanceSheet(
 
   // Cache the balance sheet
   const dateStr = asOfDate.toISOString().split('T')[0];
-  await supabase.from('financial_statements_cache').insert({
+  await (supabase.from('financial_statements_cache').insert({
     tenant_id: tenantId,
     statement_type: 'BALANCE_SHEET',
     period_start: dateStr,
     period_end: dateStr,
-    statement_json: balanceSheet,
+    statement_json: balanceSheet as any,
     generated_at: new Date().toISOString()
-  });
+  } as any) as any);
 
   return balanceSheet;
 }
@@ -324,7 +324,7 @@ export async function getCachedStatement(
   periodStart: Date,
   periodEnd: Date
 ) {
-  const { data } = await supabase
+  const { data } = await (supabase
     .from('financial_statements_cache')
     .select('*')
     .eq('tenant_id', tenantId)
@@ -333,7 +333,7 @@ export async function getCachedStatement(
     .eq('period_end', periodEnd.toISOString().split('T')[0])
     .order('generated_at', { ascending: false })
     .limit(1)
-    .maybeSingle();
+    .maybeSingle() as any);
 
   return data?.statement_json;
 }
