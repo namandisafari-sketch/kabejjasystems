@@ -60,6 +60,7 @@ import PurchaseOrders from "./pages/business/PurchaseOrders";
 import BusinessCards from "./pages/business/BusinessCards";
 import StockAlerts from "./pages/business/StockAlerts";
 import Payroll from "./pages/business/Payroll";
+import Accounting from "./pages/business/Accounting";
 import Services from "./pages/business/Services";
 import Jobs from "./pages/business/Jobs";
 import SpareParts from "./pages/business/SpareParts";
@@ -187,6 +188,7 @@ const App = () => {
                 <Route path="purchase-orders" element={<PurchaseOrders />} />
                 <Route path="business-cards" element={<BusinessCards />} />
                 <Route path="payroll" element={<Payroll />} />
+                <Route path="accounting" element={<Accounting />} />
                 <Route path="services" element={<Services />} />
                 <Route path="jobs" element={<Jobs />} />
                 <Route path="spare-parts" element={<SpareParts />} />
