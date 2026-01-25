@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import kabejjaLogo from "@/assets/kabejja-logo.png";
+import tennahubLogo from "@/assets/tennahub-logo.png";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -82,7 +82,7 @@ const Login = () => {
           <Card className="card-elevated border-0 shadow-elevated">
             <CardHeader className="text-center pb-4 pt-6">
               <div className="flex justify-center mb-4">
-                <img src={kabejjaLogo} alt="Kabejja Systems" className="h-16 w-auto" />
+                <img src={tennahubLogo} alt="TennaHub" className="h-16 w-auto" />
               </div>
               <CardTitle className="text-2xl">Welcome Back</CardTitle>
               <CardDescription>Sign in to your account</CardDescription>

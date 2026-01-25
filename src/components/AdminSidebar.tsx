@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import kabejjaLogo from "@/assets/kabejja-logo.png";
+import tennahubLogo from "@/assets/tennahub-logo.png";
 
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
@@ -54,16 +54,16 @@ export function AdminSidebar() {
       <SidebarHeader className="border-b border-border p-4">
         {!isCollapsed && (
           <div className="flex items-center gap-3">
-            <img src={kabejjaLogo} alt="Kabejja" className="h-8 w-auto" />
+            <img src={tennahubLogo} alt="TennaHub" className="h-8 w-auto" />
             <div>
               <h2 className="text-sm font-bold text-foreground">Admin Portal</h2>
-              <p className="text-xs text-muted-foreground">Kabejja Systems</p>
+              <p className="text-xs text-muted-foreground">TennaHub</p>
             </div>
           </div>
         )}
         {isCollapsed && (
           <div className="flex justify-center">
-            <img src={kabejjaLogo} alt="K" className="h-8 w-auto" />
+            <img src={tennahubLogo} alt="TennaHub" className="h-8 w-auto" />
           </div>
         )}
       </SidebarHeader>
