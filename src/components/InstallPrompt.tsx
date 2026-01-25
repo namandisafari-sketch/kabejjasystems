@@ -70,7 +70,7 @@ export function InstallPrompt() {
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
                             <Download className="h-5 w-5 text-primary" />
-                            <CardTitle className="text-lg">Install TennaHub</CardTitle>
+                            <CardTitle className="text-lg">Install Kabejja Systems</CardTitle>
                         </div>
                         <Button
                             variant="ghost"

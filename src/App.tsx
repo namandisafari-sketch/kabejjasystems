@@ -116,7 +116,7 @@ const App = () => {
   useWelcomeNotifications();
 
   return (
-    <ThemeProvider defaultTheme="light" storageKey="tennahub-ui-theme">
+    <ThemeProvider defaultTheme="light" storageKey="kabejja-ui-theme">
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />

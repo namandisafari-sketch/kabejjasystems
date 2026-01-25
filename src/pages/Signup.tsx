@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import tennahubLogo from "@/assets/tennahub-logo.png";
+import kabejjaLogo from "@/assets/kabejja-logo.png";
 import { getBusinessTypeConfig, getBusinessTypesByCategory, categoryLabels } from "@/config/businessTypes";
 import { useDeviceFingerprint } from "@/hooks/use-device-fingerprint";
 
@@ -322,7 +322,7 @@ const Signup = () => {
           <Card className="card-elevated border-0 shadow-elevated">
             <CardHeader className="text-center pb-4 pt-6">
               <div className="flex justify-center mb-3">
-                <img src={tennahubLogo} alt="TennaHub" className="h-14 w-auto" />
+                <img src={kabejjaLogo} alt="Kabejja Systems" className="h-14 w-auto" />
               </div>
               <CardTitle className="text-xl sm:text-2xl">Create Your Account</CardTitle>
               <CardDescription className="text-sm">
