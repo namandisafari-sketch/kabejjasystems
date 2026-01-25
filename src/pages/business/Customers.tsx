@@ -1,3 +1,6 @@
+// File: src/pages/business/Customers.tsx
+// MOBILE-FIRST RESPONSIVE DESIGN
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,10 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Users, Search, Edit, Trash2, Banknote, AlertCircle, History } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Plus, Users, Search, Edit, Trash2, Banknote, AlertCircle, History, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { z } from "zod";
 import { CollectPaymentDialog } from "@/components/customers/CollectPaymentDialog";
 import { format } from "date-fns";
@@ -28,11 +33,13 @@ const customerSchema = z.object({
 const Customers = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
   const [paymentCustomer, setPaymentCustomer] = useState<any>(null);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -75,17 +82,14 @@ const Customers = () => {
     enabled: !!profile?.tenant_id,
   });
 
-  const { data: payments, isLoading: paymentsLoading } = useQuery({
+  const { data: payments } = useQuery({
     queryKey: ['customer-payments', profile?.tenant_id],
     queryFn: async () => {
       if (!profile?.tenant_id) return [];
 
       const { data, error } = await supabase
         .from('customer_payments')
-        .select(`
-          *,
-          customers (name)
-        `)
+        .select(`*, customers (name)`)
         .eq('tenant_id', profile.tenant_id)
         .order('payment_date', { ascending: false });
 
@@ -212,87 +216,191 @@ const Customers = () => {
     saveCustomerMutation.mutate(formData);
   };
 
-  const CustomerTable = ({ data, showBalance = false }: { data: any[]; showBalance?: boolean }) => (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Phone</TableHead>
-            {showBalance && <TableHead>Credit Limit</TableHead>}
-            {showBalance && <TableHead>Balance</TableHead>}
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map((customer) => (
-            <TableRow key={customer.id}>
-              <TableCell>
-                <div>
-                  <p className="font-medium">{customer.name}</p>
-                  {customer.email && <p className="text-sm text-muted-foreground">{customer.email}</p>}
-                </div>
-              </TableCell>
-              <TableCell>{customer.phone || '-'}</TableCell>
-              {showBalance && (
-                <TableCell>{(customer.credit_limit || 0).toLocaleString()} UGX</TableCell>
-              )}
-              {showBalance && (
-                <TableCell>
-                  {(customer.current_balance || 0) > 0 ? (
-                    <Badge variant="destructive">
-                      {(customer.current_balance || 0).toLocaleString()} UGX
-                    </Badge>
-                  ) : (
-                    <Badge variant="secondary">Paid</Badge>
-                  )}
-                </TableCell>
-              )}
-              <TableCell className="text-right">
-                {(customer.current_balance || 0) > 0 && (
-                  <Button
-                    size="sm"
-                    variant="default"
-                    className="mr-2"
-                    onClick={() => handleCollectPayment(customer)}
-                  >
-                    <Banknote className="h-4 w-4 mr-1" />
-                    Collect
-                  </Button>
-                )}
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => handleEdit(customer)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    if (confirm('Are you sure you want to delete this customer?')) {
-                      deleteCustomerMutation.mutate(customer.id);
-                    }
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+  const formatCompact = (amount: number) => {
+    if (amount >= 1000000) {
+      return (amount / 1000000).toFixed(1) + 'M';
+    } else if (amount >= 1000) {
+      return (amount / 1000).toFixed(0) + 'K';
+    }
+    return amount.toString();
+  };
+
+  const CustomerForm = () => (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="name">Name *</Label>
+        <Input
+          id="name"
+          value={formData.name}
+          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+          required
+          className="mt-1.5 h-11"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label htmlFor="phone">Phone</Label>
+          <Input
+            id="phone"
+            value={formData.phone}
+            onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+            className="mt-1.5 h-11"
+          />
+        </div>
+        <div>
+          <Label htmlFor="credit_limit">Credit Limit</Label>
+          <Input
+            id="credit_limit"
+            type="number"
+            min="0"
+            value={formData.credit_limit}
+            onChange={(e) => setFormData(prev => ({ ...prev, credit_limit: e.target.value }))}
+            className="mt-1.5 h-11"
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          value={formData.email}
+          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+          className="mt-1.5 h-11"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="address">Address</Label>
+        <Textarea
+          id="address"
+          value={formData.address}
+          onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+          rows={2}
+          className="mt-1.5"
+        />
+      </div>
+
+      <div className="flex gap-2 pt-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setIsDialogOpen(false);
+            setEditingCustomer(null);
+            resetForm();
+          }}
+          className="flex-1 h-11"
+        >
+          Cancel
+        </Button>
+        <Button type="submit" disabled={saveCustomerMutation.isPending} className="flex-1 h-11">
+          {saveCustomerMutation.isPending ? "Saving..." : "Save"}
+        </Button>
+      </div>
+    </form>
+  );
+
+  const CustomerCard = ({ customer, showBalance = false }: { customer: any; showBalance?: boolean }) => (
+    <div className="flex items-center justify-between p-3 border rounded-lg">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="font-medium truncate">{customer.name}</p>
+          {showBalance && (customer.current_balance || 0) > 0 && (
+            <Badge variant="destructive" className="text-xs">
+              {formatCompact(customer.current_balance)} UGX
+            </Badge>
+          )}
+        </div>
+        <p className="text-sm text-muted-foreground truncate">
+          {customer.phone || customer.email || 'No contact info'}
+        </p>
+        {showBalance && customer.credit_limit > 0 && (
+          <p className="text-xs text-muted-foreground">
+            Limit: {formatCompact(customer.credit_limit)} UGX
+          </p>
+        )}
+      </div>
+      <div className="flex items-center gap-1 ml-2">
+        {(customer.current_balance || 0) > 0 && (
+          <Button
+            size="sm"
+            variant="default"
+            onClick={() => handleCollectPayment(customer)}
+            className="h-8 px-2"
+          >
+            <Banknote className="h-4 w-4" />
+          </Button>
+        )}
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => handleEdit(customer)}
+          className="h-8 w-8 p-0"
+        >
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => {
+            if (confirm('Delete this customer?')) {
+              deleteCustomerMutation.mutate(customer.id);
+            }
+          }}
+          className="h-8 w-8 p-0 text-destructive"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Customers</h1>
-          <p className="text-muted-foreground">Manage your customer database and credit accounts</p>
+    <div className="min-h-screen bg-background">
+      {/* HEADER */}
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold">Customers</h1>
+            <p className="text-xs text-muted-foreground">{customers?.length || 0} total</p>
+          </div>
+          <Button onClick={() => setIsDialogOpen(true)} size={isMobile ? "icon" : "default"}>
+            <Plus className="h-4 w-4" />
+            {!isMobile && <span className="ml-2">Add Customer</span>}
+          </Button>
         </div>
+      </header>
+
+      {/* ADD/EDIT CUSTOMER DRAWER/DIALOG */}
+      {isMobile ? (
+        <Drawer open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) {
+            setEditingCustomer(null);
+            resetForm();
+          }
+        }}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>{editingCustomer ? "Edit Customer" : "Add Customer"}</DrawerTitle>
+            </DrawerHeader>
+            <div className="p-4">
+              <CustomerForm />
+            </div>
+          </DrawerContent>
+        </Drawer>
+      ) : (
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);
           if (!open) {
@@ -300,263 +408,145 @@ const Customers = () => {
             resetForm();
           }
         }}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Customer
-            </Button>
-          </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{editingCustomer ? "Edit Customer" : "Add New Customer"}</DialogTitle>
-              <DialogDescription>
-                Fill in the customer details
-              </DialogDescription>
+              <DialogTitle>{editingCustomer ? "Edit Customer" : "Add Customer"}</DialogTitle>
+              <DialogDescription>Fill in the customer details</DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Name *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="credit_limit">Credit Limit (UGX)</Label>
-                <Input
-                  id="credit_limit"
-                  type="number"
-                  min="0"
-                  value={formData.credit_limit}
-                  onChange={(e) => setFormData(prev => ({ ...prev, credit_limit: e.target.value }))}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Maximum amount this customer can owe. Set to 0 to disable credit.
-                </p>
-              </div>
-
-              <div>
-                <Label htmlFor="address">Address</Label>
-                <Textarea
-                  id="address"
-                  value={formData.address}
-                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                  rows={2}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  rows={2}
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setIsDialogOpen(false);
-                    setEditingCustomer(null);
-                    resetForm();
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={saveCustomerMutation.isPending}>
-                  {saveCustomerMutation.isPending ? "Saving..." : "Save Customer"}
-                </Button>
-              </div>
-            </form>
+            <CustomerForm />
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* MAIN CONTENT */}
+      <div className="p-4 space-y-4">
+        {/* STATS CARDS */}
+        <div className="grid grid-cols-3 gap-3">
+          <Card>
+            <CardContent className="p-3">
+              <div className="flex flex-col">
+                <Users className="h-4 w-4 text-muted-foreground mb-1" />
+                <p className="text-xs text-muted-foreground">Total</p>
+                <p className="text-lg font-bold">{customers?.length || 0}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-3">
+              <div className="flex flex-col">
+                <AlertCircle className="h-4 w-4 text-destructive mb-1" />
+                <p className="text-xs text-muted-foreground">With Balance</p>
+                <p className="text-lg font-bold">{customersWithBalance.length}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-3">
+              <div className="flex flex-col">
+                <Banknote className="h-4 w-4 text-destructive mb-1" />
+                <p className="text-xs text-muted-foreground">Outstanding</p>
+                <p className="text-lg font-bold text-destructive">{formatCompact(totalOutstanding)}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* SEARCH */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search customers..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 h-11"
+          />
+        </div>
+
+        {/* TABS */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="w-full grid grid-cols-3">
+            <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
+            <TabsTrigger value="credit" className="text-xs">
+              Credit
+              {customersWithBalance.length > 0 && (
+                <Badge variant="destructive" className="ml-1 text-xs px-1">
+                  {customersWithBalance.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="text-xs">
+              <History className="h-3 w-3 mr-1" />
+              History
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all" className="mt-4">
+            {filteredCustomers?.length === 0 ? (
+              <div className="text-center py-12">
+                <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                <p className="text-muted-foreground">No customers found</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filteredCustomers?.map((customer) => (
+                  <CustomerCard key={customer.id} customer={customer} showBalance />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="credit" className="mt-4">
+            {customersWithBalance.length === 0 ? (
+              <div className="text-center py-12">
+                <Banknote className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                <p className="text-muted-foreground">No outstanding balances</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {customersWithBalance.map((customer) => (
+                  <CustomerCard key={customer.id} customer={customer} showBalance />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="payments" className="mt-4">
+            {!payments || payments.length === 0 ? (
+              <div className="text-center py-12">
+                <History className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                <p className="text-muted-foreground">No payment history</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {payments.map((payment) => (
+                  <div key={payment.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <p className="font-medium">{payment.customers?.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(payment.payment_date), 'dd MMM yyyy')} • {payment.payment_method}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-green-600">+{Number(payment.amount).toLocaleString()}</p>
+                      <p className="text-xs text-muted-foreground">UGX</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Customers</p>
-                <p className="text-2xl font-bold">{customers?.length || 0}</p>
-              </div>
-              <Users className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">With Outstanding Balance</p>
-                <p className="text-2xl font-bold">{customersWithBalance.length}</p>
-              </div>
-              <AlertCircle className="h-8 w-8 text-destructive" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Outstanding</p>
-                <p className="text-2xl font-bold text-destructive">{totalOutstanding.toLocaleString()} UGX</p>
-              </div>
-              <Banknote className="h-8 w-8 text-destructive" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Customer List</CardTitle>
-              <CardDescription>{filteredCustomers?.length || 0} customers</CardDescription>
-            </div>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search customers..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="all">
-            <TabsList className="mb-4">
-              <TabsTrigger value="all">All Customers</TabsTrigger>
-              <TabsTrigger value="credit">
-                Credit Accounts
-                {customersWithBalance.length > 0 && (
-                  <Badge variant="destructive" className="ml-2">{customersWithBalance.length}</Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="payments">
-                <History className="h-4 w-4 mr-1" />
-                Payment History
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="all">
-              {isLoading ? (
-                <p>Loading customers...</p>
-              ) : filteredCustomers?.length === 0 ? (
-                <div className="text-center py-12">
-                  <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-muted-foreground">No customers found</p>
-                </div>
-              ) : (
-                <CustomerTable data={filteredCustomers || []} showBalance />
-              )}
-            </TabsContent>
-            
-            <TabsContent value="credit">
-              {customersWithBalance.length === 0 ? (
-                <div className="text-center py-12">
-                  <Banknote className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-muted-foreground">No outstanding balances</p>
-                </div>
-              ) : (
-                <CustomerTable data={customersWithBalance} showBalance />
-              )}
-            </TabsContent>
-
-            <TabsContent value="payments">
-              {paymentsLoading ? (
-                <p>Loading payments...</p>
-              ) : payments?.length === 0 ? (
-                <div className="text-center py-12">
-                  <History className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-muted-foreground">No payment history yet</p>
-                </div>
-              ) : (
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Method</TableHead>
-                        <TableHead>Reference</TableHead>
-                        <TableHead>Notes</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {payments?.map((payment: any) => (
-                        <TableRow key={payment.id}>
-                          <TableCell>
-                            {payment.payment_date 
-                              ? format(new Date(payment.payment_date), 'MMM dd, yyyy HH:mm')
-                              : '-'}
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {payment.customers?.name || 'Unknown'}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary" className="bg-green-100 text-green-800">
-                              +{payment.amount.toLocaleString()} UGX
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="capitalize">
-                            {payment.payment_method || '-'}
-                          </TableCell>
-                          <TableCell>
-                            {payment.reference_number || '-'}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground max-w-[200px] truncate">
-                            {payment.notes || '-'}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-
-      <CollectPaymentDialog
-        open={showPaymentDialog}
-        onOpenChange={setShowPaymentDialog}
-        customer={paymentCustomer}
-        tenantId={profile?.tenant_id || ""}
-      />
+      {/* Collect Payment Dialog */}
+      {paymentCustomer && profile?.tenant_id && (
+        <CollectPaymentDialog
+          open={showPaymentDialog}
+          onOpenChange={setShowPaymentDialog}
+          customer={paymentCustomer}
+          tenantId={profile.tenant_id}
+        />
+      )}
     </div>
   );
 };

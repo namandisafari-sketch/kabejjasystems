@@ -6,9 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { InstallPrompt } from "@/components/InstallPrompt";
-import { usePWAMode } from "@/hooks/use-pwa-mode";
 import { useWelcomeNotifications } from "@/hooks/use-welcome-notifications";
-import Landing from "./pages/Landing";
 import PWAHome from "./pages/PWAHome";
 import Signup from "./pages/Signup";
 import AdminSignup from "./pages/AdminSignup";
@@ -112,14 +110,6 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-// Smart Home component that shows different UI based on PWA vs browser
-function SmartHome() {
-  const { isPWA } = usePWAMode();
-
-  // PWA users see category cards, browser users see full landing page
-  return isPWA ? <PWAHome /> : <Landing />;
-}
-
 const App = () => {
   // Initialize welcome notifications (requests permission & sends greet)
   useWelcomeNotifications();
@@ -134,8 +124,7 @@ const App = () => {
           <InstallPrompt />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<SmartHome />} />
-              <Route path="/home" element={<PWAHome />} />
+              <Route path="/" element={<PWAHome />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/admin-signup" element={<AdminSignup />} />
               <Route path="/login" element={<Login />} />
