@@ -1,7 +1,10 @@
 import { NavLink } from "@/components/NavLink";
 import { 
-  LayoutDashboard, ShoppingCart, Users, BarChart3, Settings, 
-  Package, Building2, MoreHorizontal
+  LayoutDashboard, ShoppingCart, Users, UserCircle, BarChart3, MapPin, Settings, 
+  QrCode, Wallet, Bed, CalendarDays, Package, UtensilsCrossed, Receipt, ChefHat,
+  Scissors, Calendar, Pill, HeartPulse, Wrench, Cog, PackageMinus, Truck, Tags, AlertTriangle, 
+  ClipboardList, CreditCard, Wallet2, Sparkles, GraduationCap, ClipboardCheck, Award, BookOpen, FileText, ScanLine,
+  ShieldAlert, Building2, DoorOpen, Calculator, MoreHorizontal
 } from "lucide-react";
 import { useTenantModules, moduleRoutes, ecdRouteOverrides } from "@/hooks/use-tenant-modules";
 import { useTenant } from "@/hooks/use-tenant";
@@ -14,15 +17,47 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
-// Icon mapping for bottom nav
+// Icon mapping for bottom nav - matches BusinessSidebar
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard,
   ShoppingCart,
   Package,
+  Receipt,
   Users,
+  UserCircle,
+  Wallet,
   BarChart3,
   Settings,
+  UtensilsCrossed,
+  MapPin,
+  QrCode,
+  ChefHat,
+  Bed,
+  CalendarDays,
+  Scissors,
+  Calendar,
+  Pill,
+  HeartPulse,
+  Wrench,
+  Cog,
+  PackageMinus,
+  Truck,
+  Tags,
+  AlertTriangle,
+  ClipboardList,
+  CreditCard,
+  Wallet2,
+  Sparkles,
+  GraduationCap,
+  ClipboardCheck,
+  Award,
+  BookOpen,
+  FileText,
+  ScanLine,
+  ShieldAlert,
   Building2,
+  DoorOpen,
+  Calculator,
 };
 
 // Priority modules to show in bottom nav (max 4 + more)
