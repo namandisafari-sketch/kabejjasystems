@@ -82,22 +82,24 @@ export function useDeviceFingerprint() {
             const { data, error } = await supabase
                 .rpc('check_device_trial_status', {
                     p_device_id: fp.deviceId
-                });
+                }) as { data: { exists: boolean; blocked: boolean; tenant_id?: string; trial_started_at?: string } | null; error: any };
 
             if (error) throw error;
 
-            if (data && data.length > 0) {
-                const status = data[0];
+            if (data) {
+                const isBlocked = data.blocked || false;
+                const exists = data.exists || false;
+                
                 setTrialStatus({
-                    isValid: status.is_valid,
-                    daysRemaining: status.days_remaining,
-                    isBlocked: status.is_blocked,
-                    message: status.message,
+                    isValid: exists && !isBlocked,
+                    daysRemaining: exists ? 14 : 0, // Default 14 days trial
+                    isBlocked: isBlocked,
+                    message: exists ? (isBlocked ? 'Device blocked' : 'Trial active') : 'New device',
                     deviceFingerprint: fp,
                 });
 
                 // If device not registered yet, register it
-                if (status.message.includes('New device')) {
+                if (!exists) {
                     await registerDevice(fp);
                 } else {
                     // Update last_seen_at
@@ -117,10 +119,9 @@ export function useDeviceFingerprint() {
                 .from('device_fingerprints')
                 .insert({
                     device_id: fp.deviceId,
-                    device_model: fp.model,
-                    os_version: fp.osVersion,
-                    app_version: '1.0.0',  // TODO: Get from package.json
-                });
+                    platform: fp.platform,
+                    user_agent: fp.osVersion,
+                } as any);
 
             if (error) throw error;
             console.log('✅ Device registered for trial');
@@ -131,13 +132,12 @@ export function useDeviceFingerprint() {
 
     const updateDeviceLastSeen = async (deviceId: string) => {
         try {
-            await supabase
+            await (supabase
                 .from('device_fingerprints')
                 .update({
                     last_seen_at: new Date().toISOString(),
-                    install_count: supabase.raw('install_count + 1')
-                })
-                .eq('device_id', deviceId);
+                } as any)
+                .eq('device_id', deviceId) as any);
         } catch (error) {
             console.error('Error updating device last seen:', error);
         }
@@ -147,14 +147,12 @@ export function useDeviceFingerprint() {
         if (!fingerprint) return;
 
         try {
-            const { error } = await supabase
+            const { error } = await (supabase
                 .from('device_fingerprints')
                 .update({
-                    is_paid: true,
-                    is_trial_active: false,
                     tenant_id: tenantId,
-                })
-                .eq('device_id', fingerprint.deviceId);
+                } as any)
+                .eq('device_id', fingerprint.deviceId) as any);
 
             if (error) throw error;
 
@@ -172,13 +170,14 @@ export function useDeviceFingerprint() {
         if (!fingerprint) return;
 
         try {
-            const { error } = await supabase
+            const { error } = await (supabase
                 .from('device_fingerprints')
                 .update({
+                    is_blocked: true,
                     blocked_at: new Date().toISOString(),
-                    blocked_reason: reason,
-                })
-                .eq('device_id', fingerprint.deviceId);
+                    block_reason: reason,
+                } as any)
+                .eq('device_id', fingerprint.deviceId) as any);
 
             if (error) throw error;
 

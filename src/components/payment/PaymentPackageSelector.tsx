@@ -22,11 +22,11 @@ export function PaymentPackageSelector({
         queryFn: async () => {
             console.log('🔍 Fetching subscription packages...');
 
-            const { data, error } = await supabase
+            const { data, error } = await (supabase
                 .from('subscription_packages')
                 .select('*')
                 .eq('is_active', true)
-                .order('price_monthly', { ascending: true });
+                .order('price_monthly', { ascending: true }) as any);
 
             console.log('📦 Query result:', { data, error });
 
