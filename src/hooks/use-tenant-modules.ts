@@ -207,6 +207,7 @@ export const moduleRoutes: Record<string, { url: string; icon: string }> = {
   purchase_orders: { url: '/business/purchase-orders', icon: 'ClipboardList' },
   business_cards: { url: '/business/business-cards', icon: 'CreditCard' },
   payroll: { url: '/business/payroll', icon: 'Wallet2' },
+  accounting: { url: '/business/accounting', icon: 'Calculator' },
   // School modules
   students: { url: '/business/students', icon: 'Users' },
   classes: { url: '/business/classes', icon: 'GraduationCap' },
