@@ -109,7 +109,7 @@ export function BusinessLayout() {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        {/* Desktop sidebar - hidden on mobile */}
+        {/* Desktop sidebar - hidden on mobile (screens < 768px) */}
         <div className="hidden md:block">
           <BusinessSidebar businessName={businessName} businessType={businessType} devMode={isDevMode} />
         </div>
@@ -123,8 +123,8 @@ export function BusinessLayout() {
             <SidebarTrigger className="touch-target" />
           </header>
           
-          {/* Mobile header - shown only on mobile */}
-          <header className="md:hidden h-14 border-b border-border flex items-center px-4 bg-card/95 backdrop-blur-sm sticky top-0 z-40 safe-top">
+          {/* Mobile header - shown only on mobile (screens < 768px) */}
+          <header className="flex md:hidden h-14 border-b border-border items-center px-4 bg-card/95 backdrop-blur-sm sticky top-0 z-40 safe-top">
             <span className="font-semibold text-sm truncate">{businessName}</span>
           </header>
           
@@ -134,8 +134,10 @@ export function BusinessLayout() {
           </main>
         </div>
         
-        {/* Mobile bottom navigation */}
-        <MobileBottomNav businessType={businessType} devMode={isDevMode} />
+        {/* Mobile bottom navigation - only visible on mobile (screens < 768px) */}
+        <div className="block md:hidden">
+          <MobileBottomNav businessType={businessType} devMode={isDevMode} />
+        </div>
       </div>
     </SidebarProvider>
   );
