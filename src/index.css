@@ -333,4 +333,21 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Barcode scanner animation */
+  @keyframes scan {
+    0% {
+      top: 0;
+    }
+    50% {
+      top: calc(100% - 2px);
+    }
+    100% {
+      top: 0;
+    }
+  }
+  
+  .animate-scan {
+    animation: scan 2s ease-in-out infinite;
+  }
 }
