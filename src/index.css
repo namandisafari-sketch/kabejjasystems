@@ -10,31 +10,33 @@
 
 @layer base {
   :root {
-    /* Kabejja Navy Brand Palette - Light Mode */
-    --background: 210 25% 98%;
-    --foreground: 220 35% 15%;
+    /* Kabejja Systems Brand Palette - Light Mode
+       Deep Navy (#0D2847) + Teal (#28A68E) + Fresh Green (#4CAF50) */
+    --background: 210 20% 98%;
+    --foreground: 213 45% 17%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 35% 15%;
+    --card-foreground: 213 45% 17%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 35% 15%;
+    --popover-foreground: 213 45% 17%;
 
-    /* Primary - Deep Navy Blue from logo */
-    --primary: 220 55% 25%;
+    /* Primary - Deep Navy Blue (#0D2847) from logo */
+    --primary: 213 65% 17%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 210 25% 94%;
-    --secondary-foreground: 220 35% 25%;
+    --secondary: 210 20% 94%;
+    --secondary-foreground: 213 45% 20%;
 
-    --muted: 210 20% 96%;
-    --muted-foreground: 220 15% 45%;
+    --muted: 210 18% 96%;
+    --muted-foreground: 213 15% 45%;
 
-    /* Accent - Vibrant teal for highlights */
-    --accent: 175 60% 40%;
+    /* Accent - Teal (#28A68E) from logo network ring */
+    --accent: 166 60% 40%;
     --accent-foreground: 0 0% 100%;
 
-    --success: 152 55% 42%;
+    /* Success - Fresh Green (#4CAF50) from logo shops */
+    --success: 122 39% 49%;
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
@@ -43,47 +45,48 @@
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 90%;
-    --input: 220 13% 90%;
-    --ring: 220 55% 35%;
+    --border: 213 15% 88%;
+    --input: 213 15% 88%;
+    --ring: 166 60% 40%;
 
     /* Modern rounded corners */
     --radius: 0.75rem;
 
-    /* Soft shadows with depth */
-    --shadow-xs: 0 1px 2px hsl(220 30% 20% / 0.04);
-    --shadow-sm: 0 1px 3px hsl(220 30% 20% / 0.06), 0 1px 2px hsl(220 30% 20% / 0.04);
-    --shadow-md: 0 4px 6px -1px hsl(220 30% 20% / 0.08), 0 2px 4px -1px hsl(220 30% 20% / 0.04);
-    --shadow-lg: 0 10px 15px -3px hsl(220 30% 20% / 0.08), 0 4px 6px -2px hsl(220 30% 20% / 0.04);
-    --shadow-xl: 0 20px 25px -5px hsl(220 30% 20% / 0.1), 0 10px 10px -5px hsl(220 30% 20% / 0.04);
+    /* Soft shadows with navy depth */
+    --shadow-xs: 0 1px 2px hsl(213 45% 17% / 0.04);
+    --shadow-sm: 0 1px 3px hsl(213 45% 17% / 0.06), 0 1px 2px hsl(213 45% 17% / 0.04);
+    --shadow-md: 0 4px 6px -1px hsl(213 45% 17% / 0.08), 0 2px 4px -1px hsl(213 45% 17% / 0.04);
+    --shadow-lg: 0 10px 15px -3px hsl(213 45% 17% / 0.08), 0 4px 6px -2px hsl(213 45% 17% / 0.04);
+    --shadow-xl: 0 20px 25px -5px hsl(213 45% 17% / 0.1), 0 10px 10px -5px hsl(213 45% 17% / 0.04);
   }
 
   .dark {
-    /* Kabejja Navy Brand Palette - Dark Mode */
-    --background: 220 25% 7%;
+    /* Kabejja Systems Brand Palette - Dark Mode */
+    --background: 213 35% 8%;
     --foreground: 210 20% 94%;
 
-    --card: 220 25% 10%;
+    --card: 213 30% 11%;
     --card-foreground: 210 20% 94%;
 
-    --popover: 220 25% 10%;
+    --popover: 213 30% 11%;
     --popover-foreground: 210 20% 94%;
 
     /* Primary - Lighter navy for dark mode */
-    --primary: 220 60% 60%;
-    --primary-foreground: 220 25% 7%;
+    --primary: 166 60% 55%;
+    --primary-foreground: 213 35% 8%;
 
-    --secondary: 220 25% 14%;
+    --secondary: 213 25% 15%;
     --secondary-foreground: 210 20% 88%;
 
-    --muted: 220 25% 14%;
+    --muted: 213 25% 15%;
     --muted-foreground: 210 15% 55%;
 
     /* Accent - Bright teal */
-    --accent: 175 65% 50%;
+    --accent: 166 65% 50%;
     --accent-foreground: 0 0% 100%;
 
-    --success: 152 55% 48%;
+    /* Success - Fresh Green */
+    --success: 122 39% 55%;
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 55%;
@@ -92,9 +95,9 @@
     --destructive: 0 72% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 25% 18%;
-    --input: 220 25% 18%;
-    --ring: 220 60% 55%;
+    --border: 213 25% 20%;
+    --input: 213 25% 20%;
+    --ring: 166 60% 50%;
   }
 }
 
