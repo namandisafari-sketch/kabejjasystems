@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,10 +9,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Package, Search, Edit, Trash2 } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus, Package, Search, Edit, Trash2, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerFooter,
+} from "@/components/ui/drawer";
 import { z } from "zod";
 
 const UNITS_OF_MEASURE = [
@@ -51,7 +57,7 @@ const Products = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -75,20 +81,17 @@ const Products = () => {
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
-
       const { data } = await supabase
         .from('profiles')
         .select('tenant_id, tenants(business_type)')
         .eq('id', user.id)
         .single();
-
       return data;
     },
   });
 
   const businessType = (profile?.tenants as any)?.business_type || 'other';
 
-  // Fetch categories based on business type
   const { data: categories = [] } = useQuery({
     queryKey: ['product-categories', businessType, profile?.tenant_id],
     queryFn: async () => {
@@ -99,14 +102,12 @@ const Products = () => {
         .or(`business_type.eq.${businessType},business_type.eq.other`)
         .eq('is_active', true)
         .order('display_order');
-      
       if (error) throw error;
       return data;
     },
     enabled: !!profile?.tenant_id,
   });
 
-  // Fetch suppliers for dropdown
   const { data: suppliers = [] } = useQuery({
     queryKey: ['suppliers-list', profile?.tenant_id],
     queryFn: async () => {
@@ -117,7 +118,6 @@ const Products = () => {
         .eq('tenant_id', profile.tenant_id)
         .eq('is_active', true)
         .order('name');
-      
       if (error) throw error;
       return data;
     },
@@ -128,13 +128,11 @@ const Products = () => {
     queryKey: ['products', profile?.tenant_id],
     queryFn: async () => {
       if (!profile?.tenant_id) return [];
-
       const { data, error } = await supabase
         .from('products')
         .select('*')
         .eq('tenant_id', profile.tenant_id)
         .order('created_at', { ascending: false });
-
       if (error) throw error;
       return data;
     },
@@ -151,8 +149,6 @@ const Products = () => {
     mutationFn: async (data: any) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
-
-      // Validate
       const validated = productSchema.parse({
         ...data,
         unit_price: parseFloat(data.unit_price),
@@ -161,12 +157,8 @@ const Products = () => {
         min_stock_level: data.min_stock_level ? parseInt(data.min_stock_level) : undefined,
         expiry_date: data.expiry_date || undefined,
       });
-
       if (editingProduct) {
-        const { error } = await supabase
-          .from('products')
-          .update(validated)
-          .eq('id', editingProduct.id);
+        const { error } = await supabase.from('products').update(validated).eq('id', editingProduct.id);
         if (error) throw error;
       } else {
         const insertData = {
@@ -187,86 +179,50 @@ const Products = () => {
           tenant_id: profile!.tenant_id,
           created_by: user.id,
         };
-        const { error } = await supabase
-          .from('products')
-          .insert([insertData]);
+        const { error } = await supabase.from('products').insert([insertData]);
         if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
-      setIsDialogOpen(false);
+      setIsDrawerOpen(false);
       setEditingProduct(null);
       resetForm();
-      toast({
-        title: editingProduct ? "Product Updated" : "Product Created",
-        description: "Product has been saved successfully",
-      });
+      toast({ title: editingProduct ? "Product Updated" : "Product Created" });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
   const deleteProductMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.from('products').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
-      toast({
-        title: "Product Deleted",
-        description: "Product has been removed",
-      });
+      toast({ title: "Product Deleted" });
     },
   });
 
   const resetForm = () => {
     setFormData({
-      name: "",
-      sku: "",
-      barcode: "",
-      description: "",
-      category: "",
-      brand: "",
-      supplier: "",
-      unit_of_measure: "piece",
-      unit_price: "",
-      cost_price: "",
-      stock_quantity: "",
-      min_stock_level: "",
-      expiry_date: "",
-      is_active: true,
+      name: "", sku: "", barcode: "", description: "", category: "", brand: "", supplier: "",
+      unit_of_measure: "piece", unit_price: "", cost_price: "", stock_quantity: "", min_stock_level: "", expiry_date: "", is_active: true,
     });
   };
 
   const handleEdit = (product: any) => {
     setEditingProduct(product);
     setFormData({
-      name: product.name,
-      sku: product.sku || "",
-      barcode: product.barcode || "",
-      description: product.description || "",
-      category: product.category || "",
-      brand: product.brand || "",
-      supplier: product.supplier || "",
-      unit_of_measure: product.unit_of_measure || "piece",
-      unit_price: product.unit_price.toString(),
-      cost_price: product.cost_price?.toString() || "",
-      stock_quantity: product.stock_quantity.toString(),
-      min_stock_level: product.min_stock_level?.toString() || "",
-      expiry_date: product.expiry_date || "",
-      is_active: product.is_active ?? true,
+      name: product.name, sku: product.sku || "", barcode: product.barcode || "", description: product.description || "",
+      category: product.category || "", brand: product.brand || "", supplier: product.supplier || "",
+      unit_of_measure: product.unit_of_measure || "piece", unit_price: product.unit_price.toString(),
+      cost_price: product.cost_price?.toString() || "", stock_quantity: product.stock_quantity.toString(),
+      min_stock_level: product.min_stock_level?.toString() || "", expiry_date: product.expiry_date || "", is_active: product.is_active ?? true,
     });
-    setIsDialogOpen(true);
+    setIsDrawerOpen(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -274,335 +230,164 @@ const Products = () => {
     saveProductMutation.mutate(formData);
   };
 
+  const totalStock = products?.reduce((sum, p) => sum + (p.stock_quantity || 0), 0) || 0;
+  const lowStock = products?.filter(p => p.min_stock_level && p.stock_quantity <= p.min_stock_level).length || 0;
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Products</h1>
-          <p className="text-muted-foreground">Manage your inventory</p>
+    <div className="flex flex-col h-full">
+      {/* HEADER */}
+      <div className="p-4 border-b bg-background sticky top-0 z-10">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h1 className="text-xl font-bold">Products</h1>
+            <p className="text-xs text-muted-foreground">{products?.length || 0} items</p>
+          </div>
+          <Button size="sm" onClick={() => { resetForm(); setEditingProduct(null); setIsDrawerOpen(true); }}>
+            <Plus className="h-4 w-4 mr-1" />
+            Add
+          </Button>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) {
-            setEditingProduct(null);
-            resetForm();
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Product
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingProduct ? "Edit Product" : "Add New Product"}</DialogTitle>
-              <DialogDescription>
-                Fill in the product details below
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Basic Info Section */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium text-muted-foreground border-b pb-2">Basic Information</h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">Product Name *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="Enter product name"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="brand">Brand</Label>
-                    <Input
-                      id="brand"
-                      value={formData.brand}
-                      onChange={(e) => setFormData(prev => ({ ...prev, brand: e.target.value }))}
-                      placeholder="e.g., Nike, Samsung"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Product description..."
-                    rows={2}
-                  />
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="sku">SKU</Label>
-                    <Input
-                      id="sku"
-                      value={formData.sku}
-                      onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
-                      placeholder="Auto-generated if empty"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">Leave blank to auto-generate</p>
-                  </div>
-                  <div>
-                    <Label htmlFor="barcode">Barcode</Label>
-                    <Input
-                      id="barcode"
-                      value={formData.barcode}
-                      onChange={(e) => setFormData(prev => ({ ...prev, barcode: e.target.value }))}
-                      placeholder="UPC, EAN, etc."
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="category">Category</Label>
-                    <Select
-                      value={formData.category}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.name}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Pricing Section */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium text-muted-foreground border-b pb-2">Pricing & Inventory</h3>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="unit_price">Selling Price (UGX) *</Label>
-                    <Input
-                      id="unit_price"
-                      type="number"
-                      step="0.01"
-                      value={formData.unit_price}
-                      onChange={(e) => setFormData(prev => ({ ...prev, unit_price: e.target.value }))}
-                      placeholder="0"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="cost_price">Cost Price (UGX)</Label>
-                    <Input
-                      id="cost_price"
-                      type="number"
-                      step="0.01"
-                      value={formData.cost_price}
-                      onChange={(e) => setFormData(prev => ({ ...prev, cost_price: e.target.value }))}
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="unit_of_measure">Unit of Measure</Label>
-                    <Select
-                      value={formData.unit_of_measure}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, unit_of_measure: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select unit" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {UNITS_OF_MEASURE.map((unit) => (
-                          <SelectItem key={unit.value} value={unit.value}>
-                            {unit.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="stock_quantity">Stock Quantity *</Label>
-                    <Input
-                      id="stock_quantity"
-                      type="number"
-                      value={formData.stock_quantity}
-                      onChange={(e) => setFormData(prev => ({ ...prev, stock_quantity: e.target.value }))}
-                      placeholder="0"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="min_stock_level">Reorder Level</Label>
-                    <Input
-                      id="min_stock_level"
-                      type="number"
-                      value={formData.min_stock_level}
-                      onChange={(e) => setFormData(prev => ({ ...prev, min_stock_level: e.target.value }))}
-                      placeholder="Alert when stock is low"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="expiry_date">Expiry Date</Label>
-                    <Input
-                      id="expiry_date"
-                      type="date"
-                      value={formData.expiry_date}
-                      onChange={(e) => setFormData(prev => ({ ...prev, expiry_date: e.target.value }))}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Supplier & Status Section */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium text-muted-foreground border-b pb-2">Supplier & Status</h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="supplier">Supplier</Label>
-                    <Select
-                      value={formData.supplier || "none"}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, supplier: value === "none" ? "" : value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select supplier" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        {suppliers.map((sup) => (
-                          <SelectItem key={sup.id} value={sup.name}>
-                            {sup.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="is_active">Active Status</Label>
-                      <p className="text-xs text-muted-foreground">Product will be available for sale</p>
-                    </div>
-                    <Switch
-                      id="is_active"
-                      checked={formData.is_active}
-                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-2 pt-4 border-t">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setIsDialogOpen(false);
-                    setEditingProduct(null);
-                    resetForm();
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={saveProductMutation.isPending}>
-                  {saveProductMutation.isPending ? "Saving..." : "Save Product"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search products..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 h-10" />
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>All Products</CardTitle>
-              <CardDescription>{filteredProducts?.length || 0} products</CardDescription>
-            </div>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search products..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+      {/* STATS */}
+      <div className="grid grid-cols-3 gap-2 p-4">
+        <Card className="p-3">
+          <p className="text-xs text-muted-foreground">Total</p>
+          <p className="text-lg font-bold">{products?.length || 0}</p>
+        </Card>
+        <Card className="p-3">
+          <p className="text-xs text-muted-foreground">In Stock</p>
+          <p className="text-lg font-bold">{totalStock.toLocaleString()}</p>
+        </Card>
+        <Card className="p-3 border-destructive">
+          <p className="text-xs text-muted-foreground">Low Stock</p>
+          <p className="text-lg font-bold text-destructive">{lowStock}</p>
+        </Card>
+      </div>
+
+      {/* PRODUCT LIST */}
+      <ScrollArea className="flex-1 px-4 pb-20">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
           </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p>Loading products...</p>
-          ) : filteredProducts?.length === 0 ? (
-            <div className="text-center py-12">
-              <Package className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">No products found</p>
-            </div>
-          ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>SKU</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Stock</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredProducts?.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell>{product.sku || '-'}</TableCell>
-                      <TableCell>{product.category || '-'}</TableCell>
-                      <TableCell>
-                        {new Intl.NumberFormat('en-UG', {
-                          style: 'currency',
-                          currency: 'UGX',
-                          maximumFractionDigits: 0,
-                        }).format(product.unit_price)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={product.stock_quantity <= (product.min_stock_level || 0) ? "destructive" : "default"}>
-                          {product.stock_quantity}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEdit(product)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            if (confirm('Are you sure you want to delete this product?')) {
-                              deleteProductMutation.mutate(product.id);
-                            }
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        ) : !filteredProducts?.length ? (
+          <div className="text-center py-12">
+            <Package className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+            <p className="text-muted-foreground">No products found</p>
+            <Button variant="outline" className="mt-4" onClick={() => setIsDrawerOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" /> Add Product
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {filteredProducts.map((product) => (
+              <Card key={product.id} className="p-3" onClick={() => handleEdit(product)}>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{product.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-sm font-semibold text-primary">
+                        {(product.unit_price / 1000).toFixed(0)}K
+                      </span>
+                      {product.category && (
+                        <Badge variant="secondary" className="text-xs">{product.category}</Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right ml-2">
+                    <Badge variant={product.stock_quantity > 0 ? (product.min_stock_level && product.stock_quantity <= product.min_stock_level ? "secondary" : "outline") : "destructive"}>
+                      {product.stock_quantity} {product.unit_of_measure}
+                    </Badge>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </ScrollArea>
+
+      {/* ADD/EDIT DRAWER */}
+      <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+        <DrawerContent className="max-h-[90vh]">
+          <DrawerHeader>
+            <DrawerTitle>{editingProduct ? "Edit Product" : "Add Product"}</DrawerTitle>
+          </DrawerHeader>
+          <ScrollArea className="flex-1 px-4 max-h-[60vh]">
+            <form id="product-form" onSubmit={handleSubmit} className="space-y-4 pb-4">
+              <div>
+                <Label>Name *</Label>
+                <Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} required />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Price (UGX) *</Label>
+                  <Input type="number" value={formData.unit_price} onChange={(e) => setFormData(p => ({ ...p, unit_price: e.target.value }))} required />
+                </div>
+                <div>
+                  <Label>Stock *</Label>
+                  <Input type="number" value={formData.stock_quantity} onChange={(e) => setFormData(p => ({ ...p, stock_quantity: e.target.value }))} required />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Cost Price</Label>
+                  <Input type="number" value={formData.cost_price} onChange={(e) => setFormData(p => ({ ...p, cost_price: e.target.value }))} />
+                </div>
+                <div>
+                  <Label>Reorder Level</Label>
+                  <Input type="number" value={formData.min_stock_level} onChange={(e) => setFormData(p => ({ ...p, min_stock_level: e.target.value }))} />
+                </div>
+              </div>
+              <div>
+                <Label>Category</Label>
+                <Select value={formData.category} onValueChange={(v) => setFormData(p => ({ ...p, category: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Unit</Label>
+                <Select value={formData.unit_of_measure} onValueChange={(v) => setFormData(p => ({ ...p, unit_of_measure: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {UNITS_OF_MEASURE.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>SKU</Label>
+                <Input value={formData.sku} onChange={(e) => setFormData(p => ({ ...p, sku: e.target.value }))} />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Textarea value={formData.description} onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))} rows={2} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>Active</Label>
+                <Switch checked={formData.is_active} onCheckedChange={(c) => setFormData(p => ({ ...p, is_active: c }))} />
+              </div>
+            </form>
+          </ScrollArea>
+          <DrawerFooter className="flex-row gap-2">
+            {editingProduct && (
+              <Button variant="destructive" size="sm" onClick={() => { deleteProductMutation.mutate(editingProduct.id); setIsDrawerOpen(false); }}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+            <Button variant="outline" className="flex-1" onClick={() => setIsDrawerOpen(false)}>Cancel</Button>
+            <Button type="submit" form="product-form" className="flex-1" disabled={saveProductMutation.isPending}>
+              {saveProductMutation.isPending ? "Saving..." : "Save"}
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 };
