@@ -257,7 +257,7 @@ export default function RenterPortal() {
       <footer className="border-t py-3 sm:py-4 bg-card/50">
         <div className="container mx-auto px-3 sm:px-4 text-center">
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Powered by Kabejja Systems
+            Powered by TennaHub
           </p>
         </div>
       </footer>

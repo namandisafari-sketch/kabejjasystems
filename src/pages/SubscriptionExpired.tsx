@@ -96,7 +96,7 @@ export default function SubscriptionExpired() {
                 <Phone className="h-4 w-4" />
                 +256 700 000 000
               </a>
-              <a href="mailto:support@kabejja.com" className="flex items-center gap-1 hover:text-primary">
+              <a href="mailto:support@tennahub.com" className="flex items-center gap-1 hover:text-primary">
                 <Mail className="h-4 w-4" />
                 Email Support
               </a>

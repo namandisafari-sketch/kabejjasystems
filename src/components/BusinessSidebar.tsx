@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import kabejjaLogo from "@/assets/kabejja-logo.png";
+import tennahubLogo from "@/assets/tennahub-logo.png";
 import { useTenantModules, moduleRoutes, ecdRouteOverrides, ecdNameOverrides } from "@/hooks/use-tenant-modules";
 import { useTenant } from "@/hooks/use-tenant";
 import { useStaffPermissions } from "@/hooks/use-staff-permissions";
@@ -131,16 +131,16 @@ export function BusinessSidebar({ businessName, businessType, devMode }: { busin
       <SidebarHeader className="border-b border-border p-4">
         {!isCollapsed && (
           <div className="flex items-center gap-3">
-            <img src={kabejjaLogo} alt="Kabejja" className="h-8 w-auto" />
+            <img src={tennahubLogo} alt="TennaHub" className="h-8 w-auto" />
             <div>
               <h2 className="text-sm font-bold text-foreground truncate">{businessName || "Business"}</h2>
-              <p className="text-xs text-muted-foreground">Management Portal</p>
+              <p className="text-xs text-muted-foreground">TennaHub</p>
             </div>
           </div>
         )}
         {isCollapsed && (
           <div className="flex justify-center">
-            <img src={kabejjaLogo} alt="K" className="h-8 w-auto" />
+            <img src={tennahubLogo} alt="TennaHub" className="h-8 w-auto" />
           </div>
         )}
       </SidebarHeader>
