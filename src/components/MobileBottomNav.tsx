@@ -112,7 +112,7 @@ export function MobileBottomNav({ businessType, devMode }: MobileBottomNavProps)
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border safe-bottom md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border safe-bottom">
       <div className="flex items-center overflow-x-auto scrollbar-hide h-16 px-1 gap-1">
         {allMenuItems.map((item) => (
           <NavLink
