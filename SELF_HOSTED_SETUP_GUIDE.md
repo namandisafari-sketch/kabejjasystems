@@ -38,7 +38,15 @@ The script is designed to run **without errors** by:
 - Using `DO $$ ... EXCEPTION ... END $$` blocks for type creations to handle duplicates
 - Using `DROP TRIGGER IF EXISTS` before creating triggers
 - Using `ON CONFLICT DO NOTHING/UPDATE` for seed data
-- Creating dependencies in the correct order (extensions → types → functions → tables → triggers → indexes)
+- Creating dependencies in the correct order:
+  1. Extensions (uuid-ossp, pgcrypto)
+  2. Custom enum types (app_role, asset_category, asset_condition)
+  3. Basic helper functions (update_updated_at_column)
+  4. **Core tables** (packages → tenants → profiles → branches, etc.)
+  5. **Table-dependent functions** (is_admin, has_role, generate_codes - AFTER tables)
+  6. Triggers (AFTER both tables and functions exist)
+  7. Indexes for performance
+  8. Seed data for modules and packages
 
 **No RLS Issues**: The migration does NOT include Row Level Security policies, eliminating RLS-related errors.
 
@@ -48,6 +56,62 @@ The script will create:
 - Custom enum types (app_role, asset_category, asset_condition)
 - Indexes for better performance
 - Seed initial package and module data
+
+---
+
+## Step 3: Post-Migration Verification Checklist
+
+After running the migration, verify success with these checks:
+
+### ✅ Quick Verification (Run in SQL Editor)
+
+```sql
+-- 1. Check tables exist (should return 85+ rows)
+SELECT COUNT(*) as table_count FROM information_schema.tables 
+WHERE table_schema = 'public';
+
+-- 2. Verify key tables
+SELECT table_name FROM information_schema.tables 
+WHERE table_schema = 'public' 
+AND table_name IN ('tenants', 'profiles', 'user_roles', 'packages', 
+                   'products', 'sales', 'students', 'school_assets');
+
+-- 3. Verify custom types exist
+SELECT typname FROM pg_type 
+WHERE typname IN ('app_role', 'asset_category', 'asset_condition');
+
+-- 4. Verify functions (should return 7+ rows)
+SELECT proname FROM pg_proc 
+WHERE pronamespace = 'public'::regnamespace 
+AND proname IN ('is_admin', 'has_role', 'get_user_tenant_info', 
+                'generate_asset_code', 'generate_referral_code');
+
+-- 5. Verify seed data
+SELECT COUNT(*) as module_count FROM business_modules; -- Should be 40+
+SELECT COUNT(*) as package_count FROM packages; -- Should be 3+
+
+-- 6. Verify NO RLS policies (should return 0 rows)
+SELECT COUNT(*) as rls_count FROM pg_policies WHERE schemaname = 'public';
+```
+
+### ✅ Expected Results
+
+| Check | Expected Result |
+|-------|-----------------|
+| Table count | 85+ tables |
+| Key tables | 8 rows returned |
+| Custom types | 3 types (app_role, asset_category, asset_condition) |
+| Functions | 7+ functions |
+| Modules | 40+ rows |
+| Packages | 3+ rows |
+| RLS policies | 0 rows |
+
+### ❌ If Any Check Fails
+
+- **Missing tables**: Re-run the migration, check for errors in output
+- **Missing functions**: Ensure you ran the COMPLETE script
+- **Missing types**: Check for "duplicate_object" warnings (safe to ignore)
+- **RLS policies found**: This script shouldn't create any - check if you ran wrong file
 
 ---
 

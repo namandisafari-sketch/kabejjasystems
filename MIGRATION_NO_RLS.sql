@@ -18,7 +18,7 @@ EXCEPTION
 END $$;
 
 -- =============================================
--- HELPER FUNCTIONS (Create before tables)
+-- HELPER FUNCTIONS (Basic functions - NO table dependencies)
 -- =============================================
 
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
@@ -29,60 +29,9 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.generate_referral_code()
-RETURNS TEXT LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE
-  code TEXT;
-  exists BOOLEAN;
-BEGIN
-  LOOP
-    code := 'KBT' || UPPER(substring(md5(random()::text) from 1 for 6));
-    SELECT EXISTS(SELECT 1 FROM tenants WHERE referral_code = code) INTO exists;
-    EXIT WHEN NOT exists;
-  END LOOP;
-  RETURN code;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.generate_business_code()
-RETURNS TEXT LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE
-  new_code TEXT;
-  code_exists BOOLEAN;
-BEGIN
-  LOOP
-    new_code := upper(substring(md5(random()::text) from 1 for 6));
-    SELECT EXISTS(SELECT 1 FROM public.tenants WHERE business_code = new_code) INTO code_exists;
-    EXIT WHEN NOT code_exists;
-  END LOOP;
-  RETURN new_code;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.generate_parent_login_code()
-RETURNS TEXT LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE
-  code TEXT;
-  code_exists BOOLEAN;
-BEGIN
-  LOOP
-    code := UPPER(substring(md5(random()::text || clock_timestamp()::text) from 1 for 6));
-    SELECT EXISTS(SELECT 1 FROM tenants WHERE parent_login_code = code) INTO code_exists;
-    EXIT WHEN NOT code_exists;
-  END LOOP;
-  RETURN code;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.is_admin(user_id UUID)
-RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
-  SELECT EXISTS (SELECT 1 FROM profiles WHERE id = user_id AND role IN ('superadmin', 'admin'));
-$$;
-
-CREATE OR REPLACE FUNCTION public.get_user_tenant_info(user_id UUID)
-RETURNS TABLE(tenant_id UUID, role TEXT) LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
-  SELECT p.tenant_id, p.role::text FROM public.profiles p WHERE p.id = user_id
-$$;
+-- NOTE: Functions that reference tables (is_admin, get_user_tenant_info, 
+-- generate_referral_code, etc.) are created AFTER tables exist.
+-- See "TABLE-DEPENDENT FUNCTIONS" section below.
 
 -- =============================================
 -- CORE TABLES
@@ -2041,10 +1990,217 @@ CREATE INDEX IF NOT EXISTS idx_asset_maintenance_asset ON public.asset_maintenan
 CREATE INDEX IF NOT EXISTS idx_asset_assignments_asset ON public.asset_assignments(asset_id);
 
 -- =============================================
+-- TABLE-DEPENDENT FUNCTIONS (After tables exist)
+-- =============================================
+
+CREATE OR REPLACE FUNCTION public.generate_referral_code()
+RETURNS TEXT LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  code TEXT;
+  exists BOOLEAN;
+BEGIN
+  LOOP
+    code := 'KBT' || UPPER(substring(md5(random()::text) from 1 for 6));
+    SELECT EXISTS(SELECT 1 FROM tenants WHERE referral_code = code) INTO exists;
+    EXIT WHEN NOT exists;
+  END LOOP;
+  RETURN code;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.generate_business_code()
+RETURNS TEXT LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  new_code TEXT;
+  code_exists BOOLEAN;
+BEGIN
+  LOOP
+    new_code := upper(substring(md5(random()::text) from 1 for 6));
+    SELECT EXISTS(SELECT 1 FROM public.tenants WHERE business_code = new_code) INTO code_exists;
+    EXIT WHEN NOT code_exists;
+  END LOOP;
+  RETURN new_code;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.generate_parent_login_code()
+RETURNS TEXT LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  code TEXT;
+  code_exists BOOLEAN;
+BEGIN
+  LOOP
+    code := UPPER(substring(md5(random()::text || clock_timestamp()::text) from 1 for 6));
+    SELECT EXISTS(SELECT 1 FROM tenants WHERE parent_login_code = code) INTO code_exists;
+    EXIT WHEN NOT code_exists;
+  END LOOP;
+  RETURN code;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_admin(user_id UUID)
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT EXISTS (SELECT 1 FROM profiles WHERE id = user_id AND role IN ('superadmin', 'admin'));
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_user_tenant_info(user_id UUID)
+RETURNS TABLE(tenant_id UUID, role TEXT) LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT p.tenant_id, p.role::text FROM public.profiles p WHERE p.id = user_id
+$$;
+
+CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role app_role)
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.user_roles
+    WHERE user_id = _user_id AND role = _role
+  )
+$$;
+
+-- =============================================
+-- TENANT TRIGGERS (After functions exist)
+-- =============================================
+
+CREATE OR REPLACE FUNCTION public.set_tenant_referral_code()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF NEW.referral_code IS NULL THEN
+    NEW.referral_code := generate_referral_code();
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.set_tenant_business_code()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF NEW.business_code IS NULL THEN
+    NEW.business_code := public.generate_business_code();
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.set_tenant_parent_login_code()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF NEW.parent_login_code IS NULL THEN
+    NEW.parent_login_code := generate_parent_login_code();
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS set_referral_code ON public.tenants;
+CREATE TRIGGER set_referral_code BEFORE INSERT ON public.tenants
+FOR EACH ROW EXECUTE FUNCTION public.set_tenant_referral_code();
+
+DROP TRIGGER IF EXISTS set_business_code ON public.tenants;
+CREATE TRIGGER set_business_code BEFORE INSERT ON public.tenants
+FOR EACH ROW EXECUTE FUNCTION public.set_tenant_business_code();
+
+DROP TRIGGER IF EXISTS set_parent_login_code ON public.tenants;
+CREATE TRIGGER set_parent_login_code BEFORE INSERT ON public.tenants
+FOR EACH ROW EXECUTE FUNCTION public.set_tenant_parent_login_code();
+
+-- =============================================
 -- STORAGE BUCKETS (Run in Supabase Dashboard)
 -- =============================================
 
 -- Create storage bucket for business logos
 -- INSERT INTO storage.buckets (id, name, public) VALUES ('business-logos', 'business-logos', true);
 
+-- =============================================
+-- MIGRATION COMPLETE
+-- =============================================
 SELECT 'Migration complete! Database created WITHOUT RLS policies.' as status;
+
+-- =============================================
+-- POST-MIGRATION VERIFICATION CHECKLIST
+-- Run these queries to verify successful setup
+-- =============================================
+
+/*
+== POST-MIGRATION CHECKLIST ==
+
+Run these verification queries after migration:
+
+1. VERIFY CORE TABLES EXIST:
+----------------------------
+SELECT table_name FROM information_schema.tables 
+WHERE table_schema = 'public' 
+ORDER BY table_name;
+
+Expected: 85+ tables including packages, tenants, profiles, user_roles, 
+products, sales, students, school_assets, etc.
+
+
+2. VERIFY CUSTOM TYPES:
+-----------------------
+SELECT typname FROM pg_type WHERE typname IN ('app_role', 'asset_category', 'asset_condition');
+
+Expected: 3 rows
+
+
+3. VERIFY KEY FUNCTIONS:
+------------------------
+SELECT proname FROM pg_proc 
+WHERE pronamespace = 'public'::regnamespace 
+AND proname IN ('is_admin', 'has_role', 'get_user_tenant_info', 
+                'generate_asset_code', 'calculate_asset_depreciation',
+                'generate_referral_code', 'generate_business_code');
+
+Expected: 7+ rows
+
+
+4. VERIFY TRIGGERS:
+-------------------
+SELECT trigger_name, event_object_table 
+FROM information_schema.triggers 
+WHERE trigger_schema = 'public';
+
+Expected: Triggers for tenants, products, sales, school_assets, etc.
+
+
+5. VERIFY SEED DATA:
+--------------------
+SELECT COUNT(*) FROM business_modules; -- Expected: 40+ modules
+SELECT COUNT(*) FROM packages; -- Expected: 3+ packages
+
+
+6. VERIFY SCHOOL ASSETS TABLES:
+-------------------------------
+SELECT column_name FROM information_schema.columns 
+WHERE table_name = 'school_assets' AND table_schema = 'public';
+
+Expected: Columns including asset_code, category, condition, current_book_value
+
+
+7. CREATE STORAGE BUCKET (Manual Step):
+---------------------------------------
+Go to Supabase Dashboard > Storage > Create bucket named "business-logos" (public)
+
+
+8. CREATE FIRST ADMIN USER:
+---------------------------
+After signing up in the app, run:
+UPDATE profiles SET role = 'superadmin' 
+WHERE id = (SELECT id FROM auth.users WHERE email = 'your-admin@email.com');
+
+INSERT INTO user_roles (user_id, role) VALUES 
+((SELECT id FROM auth.users WHERE email = 'your-admin@email.com'), 'superadmin');
+
+
+9. VERIFY NO RLS POLICIES:
+--------------------------
+SELECT tablename, policyname FROM pg_policies WHERE schemaname = 'public';
+
+Expected: 0 rows (no RLS policies)
+
+
+10. TEST BASIC QUERIES:
+-----------------------
+SELECT * FROM packages LIMIT 1;
+SELECT * FROM business_modules LIMIT 5;
+
+Expected: Data returned without permission errors
+*/
