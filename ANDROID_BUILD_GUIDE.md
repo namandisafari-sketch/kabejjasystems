@@ -14,6 +14,36 @@ Before you begin, ensure you have:
 3. **Java Development Kit (JDK 17)**
 4. **Git** for version control
 
+---
+
+## IMPORTANT: Database Setup Order
+
+Before running the app, you must set up the database. Follow this exact order:
+
+### Option A: Using Supabase Cloud (Recommended)
+The database is already configured via Lovable Cloud - no action needed.
+
+### Option B: Self-Hosted Supabase
+If using a self-hosted instance, run the migration file **BEFORE** building the app:
+
+```bash
+# 1. Connect to your Supabase PostgreSQL
+psql -h YOUR_SUPABASE_HOST -U postgres -d postgres
+
+# 2. Run the migration (in correct order - the file handles dependencies)
+\i MIGRATION_NO_RLS.sql
+```
+
+**The migration file handles all dependencies automatically:**
+- Extensions are enabled first
+- Custom types (enums) are created with duplicate handling
+- Helper functions are created before tables that use them
+- Tables are created in dependency order (packages → tenants → profiles → etc.)
+- Triggers are created after their referenced tables and functions exist
+- Indexes are created last for performance
+
+> ⚠️ **No RLS Issues**: The migration file does NOT include Row Level Security policies, so there are no RLS-related errors during execution.
+
 ## Step 1: Export Project to GitHub
 
 1. In Lovable, click the **"Export to GitHub"** button in the top-right menu
