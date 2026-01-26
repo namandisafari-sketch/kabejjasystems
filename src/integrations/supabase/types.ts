@@ -114,6 +114,136 @@ export type Database = {
           },
         ]
       }
+      asset_assignments: {
+        Row: {
+          asset_id: string
+          assigned_by: string | null
+          assigned_date: string
+          assigned_to_id: string | null
+          assigned_to_name: string | null
+          assigned_to_type: string
+          created_at: string
+          id: string
+          notes: string | null
+          quantity: number | null
+          returned_date: string | null
+          tenant_id: string
+        }
+        Insert: {
+          asset_id: string
+          assigned_by?: string | null
+          assigned_date?: string
+          assigned_to_id?: string | null
+          assigned_to_name?: string | null
+          assigned_to_type: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          quantity?: number | null
+          returned_date?: string | null
+          tenant_id: string
+        }
+        Update: {
+          asset_id?: string
+          assigned_by?: string | null
+          assigned_date?: string
+          assigned_to_id?: string | null
+          assigned_to_name?: string | null
+          assigned_to_type?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          quantity?: number | null
+          returned_date?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_assignments_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "school_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_assignments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asset_maintenance: {
+        Row: {
+          asset_id: string
+          condition_after: Database["public"]["Enums"]["asset_condition"] | null
+          condition_before:
+            | Database["public"]["Enums"]["asset_condition"]
+            | null
+          cost: number | null
+          created_at: string
+          description: string
+          id: string
+          maintenance_type: string
+          notes: string | null
+          performed_by: string | null
+          performed_date: string
+          tenant_id: string
+        }
+        Insert: {
+          asset_id: string
+          condition_after?:
+            | Database["public"]["Enums"]["asset_condition"]
+            | null
+          condition_before?:
+            | Database["public"]["Enums"]["asset_condition"]
+            | null
+          cost?: number | null
+          created_at?: string
+          description: string
+          id?: string
+          maintenance_type: string
+          notes?: string | null
+          performed_by?: string | null
+          performed_date?: string
+          tenant_id: string
+        }
+        Update: {
+          asset_id?: string
+          condition_after?:
+            | Database["public"]["Enums"]["asset_condition"]
+            | null
+          condition_before?:
+            | Database["public"]["Enums"]["asset_condition"]
+            | null
+          cost?: number | null
+          created_at?: string
+          description?: string
+          id?: string
+          maintenance_type?: string
+          notes?: string | null
+          performed_by?: string | null
+          performed_date?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_maintenance_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "school_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_maintenance_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance: {
         Row: {
           check_in: string | null
@@ -5727,6 +5857,151 @@ export type Database = {
           },
         ]
       }
+      school_assets: {
+        Row: {
+          asset_code: string
+          assigned_date: string | null
+          assigned_to_class_id: string | null
+          assigned_to_teacher_id: string | null
+          barcode: string | null
+          category: Database["public"]["Enums"]["asset_category"]
+          condition: Database["public"]["Enums"]["asset_condition"]
+          created_at: string
+          created_by: string | null
+          current_book_value: number | null
+          depreciation_method: string | null
+          description: string | null
+          disposal_date: string | null
+          disposal_reason: string | null
+          disposal_value: number | null
+          id: string
+          invoice_number: string | null
+          is_active: boolean | null
+          last_inspection_date: string | null
+          location: string | null
+          maintenance_notes: string | null
+          name: string
+          next_maintenance_date: string | null
+          notes: string | null
+          photo_url: string | null
+          purchase_date: string | null
+          quantity: number
+          salvage_value: number | null
+          serial_number: string | null
+          sub_category: string | null
+          supplier: string | null
+          tenant_id: string
+          total_value: number | null
+          unit_cost: number | null
+          updated_at: string
+          useful_life_years: number | null
+          warranty_expiry: string | null
+          warranty_notes: string | null
+        }
+        Insert: {
+          asset_code: string
+          assigned_date?: string | null
+          assigned_to_class_id?: string | null
+          assigned_to_teacher_id?: string | null
+          barcode?: string | null
+          category?: Database["public"]["Enums"]["asset_category"]
+          condition?: Database["public"]["Enums"]["asset_condition"]
+          created_at?: string
+          created_by?: string | null
+          current_book_value?: number | null
+          depreciation_method?: string | null
+          description?: string | null
+          disposal_date?: string | null
+          disposal_reason?: string | null
+          disposal_value?: number | null
+          id?: string
+          invoice_number?: string | null
+          is_active?: boolean | null
+          last_inspection_date?: string | null
+          location?: string | null
+          maintenance_notes?: string | null
+          name: string
+          next_maintenance_date?: string | null
+          notes?: string | null
+          photo_url?: string | null
+          purchase_date?: string | null
+          quantity?: number
+          salvage_value?: number | null
+          serial_number?: string | null
+          sub_category?: string | null
+          supplier?: string | null
+          tenant_id: string
+          total_value?: number | null
+          unit_cost?: number | null
+          updated_at?: string
+          useful_life_years?: number | null
+          warranty_expiry?: string | null
+          warranty_notes?: string | null
+        }
+        Update: {
+          asset_code?: string
+          assigned_date?: string | null
+          assigned_to_class_id?: string | null
+          assigned_to_teacher_id?: string | null
+          barcode?: string | null
+          category?: Database["public"]["Enums"]["asset_category"]
+          condition?: Database["public"]["Enums"]["asset_condition"]
+          created_at?: string
+          created_by?: string | null
+          current_book_value?: number | null
+          depreciation_method?: string | null
+          description?: string | null
+          disposal_date?: string | null
+          disposal_reason?: string | null
+          disposal_value?: number | null
+          id?: string
+          invoice_number?: string | null
+          is_active?: boolean | null
+          last_inspection_date?: string | null
+          location?: string | null
+          maintenance_notes?: string | null
+          name?: string
+          next_maintenance_date?: string | null
+          notes?: string | null
+          photo_url?: string | null
+          purchase_date?: string | null
+          quantity?: number
+          salvage_value?: number | null
+          serial_number?: string | null
+          sub_category?: string | null
+          supplier?: string | null
+          tenant_id?: string
+          total_value?: number | null
+          unit_cost?: number | null
+          updated_at?: string
+          useful_life_years?: number | null
+          warranty_expiry?: string | null
+          warranty_notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_assets_assigned_to_class_id_fkey"
+            columns: ["assigned_to_class_id"]
+            isOneToOne: false
+            referencedRelation: "school_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_assets_assigned_to_teacher_id_fkey"
+            columns: ["assigned_to_teacher_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_assets_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       school_classes: {
         Row: {
           capacity: number | null
@@ -7858,6 +8133,25 @@ export type Database = {
         | "accountant"
         | "marketer"
         | "customer"
+      asset_category:
+        | "furniture"
+        | "equipment"
+        | "books"
+        | "sports"
+        | "electronics"
+        | "musical_instruments"
+        | "lab_equipment"
+        | "teaching_aids"
+        | "vehicles"
+        | "other"
+      asset_condition:
+        | "excellent"
+        | "good"
+        | "fair"
+        | "poor"
+        | "needs_repair"
+        | "damaged"
+        | "disposed"
       payment_status: "pending" | "approved" | "rejected"
       tenant_status: "pending" | "active" | "suspended" | "rejected"
     }
@@ -7996,6 +8290,27 @@ export const Constants = {
         "accountant",
         "marketer",
         "customer",
+      ],
+      asset_category: [
+        "furniture",
+        "equipment",
+        "books",
+        "sports",
+        "electronics",
+        "musical_instruments",
+        "lab_equipment",
+        "teaching_aids",
+        "vehicles",
+        "other",
+      ],
+      asset_condition: [
+        "excellent",
+        "good",
+        "fair",
+        "poor",
+        "needs_repair",
+        "damaged",
+        "disposed",
       ],
       payment_status: ["pending", "approved", "rejected"],
       tenant_status: ["pending", "active", "suspended", "rejected"],

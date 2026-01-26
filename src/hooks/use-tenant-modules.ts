@@ -224,6 +224,7 @@ export const moduleRoutes: Record<string, { url: string; icon: string }> = {
   term_requirements: { url: '/business/term-requirements', icon: 'ClipboardList' },
   report_cards: { url: '/business/report-cards', icon: 'FileText' },
   parents: { url: '/business/parents', icon: 'Users' },
+  assets: { url: '/business/assets', icon: 'Package' },
   // ECD/Kindergarten modules
   ecd_pupils: { url: '/business/ecd-pupils', icon: 'Users' },
   ecd_progress: { url: '/business/ecd-progress', icon: 'Award' },
