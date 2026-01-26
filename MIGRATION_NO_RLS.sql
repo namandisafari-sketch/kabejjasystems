@@ -1877,11 +1877,168 @@ VALUES
   ('rental_tenants', 'Tenants', 'Users', 'rental', false, ARRAY['rental'], 73),
   ('rental_leases', 'Leases', 'FileText', 'rental', false, ARRAY['rental'], 74),
   ('rental_payments', 'Payments', 'CreditCard', 'rental', false, ARRAY['rental'], 75),
-  ('rental_maintenance', 'Maintenance', 'Wrench', 'rental', false, ARRAY['rental'], 76)
+  ('rental_maintenance', 'Maintenance', 'Wrench', 'rental', false, ARRAY['rental'], 76),
+  ('assets', 'School Assets', 'Package', 'school', false, ARRAY['kindergarten', 'primary_school', 'secondary_school', 'school'], 69)
 ON CONFLICT (code) DO UPDATE SET
   name = EXCLUDED.name,
   icon = EXCLUDED.icon,
   applicable_business_types = EXCLUDED.applicable_business_types;
+
+-- =============================================
+-- SCHOOL ASSETS/INVENTORY MANAGEMENT
+-- =============================================
+
+-- Asset category type
+DO $$ BEGIN
+  CREATE TYPE public.asset_category AS ENUM (
+    'furniture', 'equipment', 'books', 'sports', 'electronics',
+    'musical_instruments', 'lab_equipment', 'teaching_aids', 'vehicles', 'other'
+  );
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
+
+-- Asset condition type
+DO $$ BEGIN
+  CREATE TYPE public.asset_condition AS ENUM (
+    'excellent', 'good', 'fair', 'poor', 'needs_repair', 'damaged', 'disposed'
+  );
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
+
+-- School assets table
+CREATE TABLE IF NOT EXISTS public.school_assets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+  asset_code VARCHAR(50) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  category asset_category NOT NULL DEFAULT 'other',
+  sub_category VARCHAR(100),
+  quantity INTEGER NOT NULL DEFAULT 1,
+  unit_cost NUMERIC(12,2),
+  total_value NUMERIC(12,2),
+  location VARCHAR(255),
+  assigned_to_class_id UUID REFERENCES public.school_classes(id) ON DELETE SET NULL,
+  assigned_to_teacher_id UUID REFERENCES public.employees(id) ON DELETE SET NULL,
+  assigned_date DATE,
+  purchase_date DATE,
+  supplier VARCHAR(255),
+  invoice_number VARCHAR(100),
+  warranty_expiry DATE,
+  warranty_notes TEXT,
+  condition asset_condition NOT NULL DEFAULT 'good',
+  last_inspection_date DATE,
+  next_maintenance_date DATE,
+  maintenance_notes TEXT,
+  useful_life_years INTEGER,
+  salvage_value NUMERIC(12,2),
+  depreciation_method VARCHAR(50) DEFAULT 'straight_line',
+  current_book_value NUMERIC(12,2),
+  is_active BOOLEAN DEFAULT true,
+  disposal_date DATE,
+  disposal_reason TEXT,
+  disposal_value NUMERIC(12,2),
+  photo_url TEXT,
+  barcode VARCHAR(100),
+  serial_number VARCHAR(100),
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  created_by UUID,
+  UNIQUE(tenant_id, asset_code)
+);
+
+-- Asset maintenance history
+CREATE TABLE IF NOT EXISTS public.asset_maintenance (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+  asset_id UUID NOT NULL REFERENCES public.school_assets(id) ON DELETE CASCADE,
+  maintenance_type VARCHAR(50) NOT NULL,
+  description TEXT NOT NULL,
+  cost NUMERIC(12,2),
+  performed_by VARCHAR(255),
+  performed_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  condition_before asset_condition,
+  condition_after asset_condition,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Asset assignment history
+CREATE TABLE IF NOT EXISTS public.asset_assignments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+  asset_id UUID NOT NULL REFERENCES public.school_assets(id) ON DELETE CASCADE,
+  assigned_to_type VARCHAR(20) NOT NULL,
+  assigned_to_id UUID,
+  assigned_to_name VARCHAR(255),
+  quantity INTEGER DEFAULT 1,
+  assigned_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  returned_date DATE,
+  assigned_by UUID,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Asset code generator function
+CREATE OR REPLACE FUNCTION public.generate_asset_code()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  category_prefix TEXT;
+  seq_num INTEGER;
+BEGIN
+  category_prefix := UPPER(LEFT(NEW.category::TEXT, 3));
+  SELECT COALESCE(MAX(CAST(SUBSTRING(asset_code FROM '[0-9]+$') AS INTEGER)), 0) + 1
+  INTO seq_num FROM public.school_assets
+  WHERE tenant_id = NEW.tenant_id AND asset_code LIKE category_prefix || '-%';
+  NEW.asset_code := category_prefix || '-' || LPAD(seq_num::TEXT, 5, '0');
+  RETURN NEW;
+END;
+$$;
+
+-- Depreciation calculator function
+CREATE OR REPLACE FUNCTION public.calculate_asset_depreciation()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  years_used NUMERIC;
+  annual_depreciation NUMERIC;
+BEGIN
+  IF NEW.purchase_date IS NOT NULL AND NEW.unit_cost IS NOT NULL AND NEW.useful_life_years IS NOT NULL THEN
+    years_used := EXTRACT(YEAR FROM AGE(CURRENT_DATE, NEW.purchase_date));
+    annual_depreciation := (COALESCE(NEW.unit_cost, 0) * NEW.quantity - COALESCE(NEW.salvage_value, 0)) / NULLIF(NEW.useful_life_years, 0);
+    NEW.current_book_value := GREATEST(
+      COALESCE(NEW.salvage_value, 0),
+      (COALESCE(NEW.unit_cost, 0) * NEW.quantity) - (annual_depreciation * years_used)
+    );
+  ELSE
+    NEW.current_book_value := COALESCE(NEW.unit_cost, 0) * NEW.quantity;
+  END IF;
+  NEW.total_value := COALESCE(NEW.unit_cost, 0) * NEW.quantity;
+  RETURN NEW;
+END;
+$$;
+
+-- Asset triggers
+DROP TRIGGER IF EXISTS set_asset_code ON public.school_assets;
+CREATE TRIGGER set_asset_code BEFORE INSERT ON public.school_assets
+FOR EACH ROW WHEN (NEW.asset_code IS NULL OR NEW.asset_code = '')
+EXECUTE FUNCTION public.generate_asset_code();
+
+DROP TRIGGER IF EXISTS calculate_depreciation ON public.school_assets;
+CREATE TRIGGER calculate_depreciation BEFORE INSERT OR UPDATE ON public.school_assets
+FOR EACH ROW EXECUTE FUNCTION public.calculate_asset_depreciation();
+
+DROP TRIGGER IF EXISTS update_school_assets_updated_at ON public.school_assets;
+CREATE TRIGGER update_school_assets_updated_at BEFORE UPDATE ON public.school_assets
+FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Asset indexes
+CREATE INDEX IF NOT EXISTS idx_school_assets_tenant ON public.school_assets(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_school_assets_category ON public.school_assets(tenant_id, category);
+CREATE INDEX IF NOT EXISTS idx_school_assets_condition ON public.school_assets(tenant_id, condition);
+CREATE INDEX IF NOT EXISTS idx_school_assets_assigned_class ON public.school_assets(assigned_to_class_id);
+CREATE INDEX IF NOT EXISTS idx_asset_maintenance_asset ON public.asset_maintenance(asset_id);
+CREATE INDEX IF NOT EXISTS idx_asset_assignments_asset ON public.asset_assignments(asset_id);
 
 -- =============================================
 -- STORAGE BUCKETS (Run in Supabase Dashboard)

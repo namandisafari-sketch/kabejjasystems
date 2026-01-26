@@ -33,12 +33,21 @@ psql -h YOUR_SUPABASE_HOST -U postgres -d postgres
 3. Paste into the SQL Editor
 4. Click **Run** or press `Ctrl+Enter`
 
-The script will:
-- Create all 80+ tables needed for the application
-- Set up all helper functions and triggers
-- Create indexes for better performance
-- Seed initial package data
-- **NOT** enable RLS on any tables
+The script is designed to run **without errors** by:
+- Using `IF NOT EXISTS` for all table creations
+- Using `DO $$ ... EXCEPTION ... END $$` blocks for type creations to handle duplicates
+- Using `DROP TRIGGER IF EXISTS` before creating triggers
+- Using `ON CONFLICT DO NOTHING/UPDATE` for seed data
+- Creating dependencies in the correct order (extensions → types → functions → tables → triggers → indexes)
+
+**No RLS Issues**: The migration does NOT include Row Level Security policies, eliminating RLS-related errors.
+
+The script will create:
+- All 85+ tables needed for the application (including school_assets, asset_maintenance, asset_assignments)
+- All helper functions and triggers
+- Custom enum types (app_role, asset_category, asset_condition)
+- Indexes for better performance
+- Seed initial package and module data
 
 ---
 
@@ -139,6 +148,7 @@ VALUES ('USER_UUID_HERE', 'superadmin', 'Admin Name');
 | `profiles` | User profiles linked to auth.users |
 | `packages` | Subscription packages |
 | `branches` | Business branch locations |
+| `business_modules` | Available feature modules |
 
 ### Business Modules
 | Table | Purpose |
@@ -157,6 +167,9 @@ VALUES ('USER_UUID_HERE', 'superadmin', 'Admin Name');
 | `subjects` | Academic subjects |
 | `fee_payments` | Fee collection |
 | `report_cards` | Academic reports |
+| `school_assets` | Furniture, equipment, books inventory |
+| `asset_maintenance` | Maintenance history for assets |
+| `asset_assignments` | Asset allocation tracking |
 
 ### Rental Management
 | Table | Purpose |
