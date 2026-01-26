@@ -180,7 +180,7 @@ export default function PWAHome() {
             <img 
               src={kabejjaLogo} 
               alt="Kabejja" 
-              className="h-10 w-auto"
+              className="h-14 w-auto sm:h-16"
             />
             <div>
               <h1 className="text-lg font-bold text-foreground">Kabejja</h1>
