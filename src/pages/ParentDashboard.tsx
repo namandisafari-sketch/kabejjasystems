@@ -45,7 +45,8 @@ import {
 import { toast } from "sonner";
 import { DisciplineCasesView } from "@/components/parent/DisciplineCasesView";
 import { ECDParentView } from "@/components/parent/ECDParentView";
-import { useRealtimeCheckinNotifications } from "@/hooks/use-realtime-checkin-notifications";
+import { NotificationCenter } from "@/components/parent/NotificationCenter";
+import { useParentNotifications } from "@/hooks/use-parent-notifications";
 
 interface Student {
   id: string;
@@ -191,20 +192,14 @@ export default function ParentDashboard() {
     }
   }, [students, selectedStudent]);
 
-  // Create students map for realtime notifications
-  const studentsMap = useMemo(() => {
-    const map = new Map<string, { id: string; full_name: string }>();
-    students.forEach(student => {
-      if (student?.id) {
-        map.set(student.id, { id: student.id, full_name: student.full_name });
-      }
-    });
-    return map;
-  }, [students]);
-
-  // Enable realtime check-in notifications
-  const studentIds = useMemo(() => students.map(s => s?.id).filter(Boolean) as string[], [students]);
-  useRealtimeCheckinNotifications(studentIds, studentsMap);
+  // Enable parent notifications with realtime updates
+  const { 
+    notifications, 
+    unreadCount, 
+    isLoading: notificationsLoading, 
+    markAsRead, 
+    markAllAsRead 
+  } = useParentNotifications(parentData?.id);
 
   // Calculate week dates
   const currentDate = new Date();
@@ -438,10 +433,19 @@ export default function ParentDashboard() {
               </p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={handleLogout} className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">
-            <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Logout</span>
-          </Button>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <NotificationCenter 
+              notifications={notifications}
+              unreadCount={unreadCount}
+              isLoading={notificationsLoading}
+              onMarkAsRead={markAsRead}
+              onMarkAllAsRead={markAllAsRead}
+            />
+            <Button variant="outline" size="sm" onClick={handleLogout} className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">
+              <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Logout</span>
+            </Button>
+          </div>
         </div>
       </header>
 
