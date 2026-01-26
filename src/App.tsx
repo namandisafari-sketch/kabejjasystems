@@ -78,6 +78,7 @@ import ReportCards from "./pages/business/ReportCards";
 import GateCheckin from "./pages/business/GateCheckin";
 import VisitorRegister from "./pages/business/VisitorRegister";
 import Parents from "./pages/business/Parents";
+import Assets from "./pages/business/Assets";
 import ECDPupils from "./pages/business/ECDPupils";
 import ECDProgress from "./pages/business/ECDProgress";
 import ECDRoles from "./pages/business/ECDRoles";
@@ -203,6 +204,7 @@ const App = () => {
                 <Route path="gate-checkin" element={<GateCheckin />} />
                 <Route path="visitor-register" element={<VisitorRegister />} />
                 <Route path="parents" element={<Parents />} />
+                <Route path="assets" element={<Assets />} />
                 <Route path="ecd-pupils" element={<ECDPupils />} />
                 <Route path="ecd-progress" element={<ECDProgress />} />
                 <Route path="ecd-roles" element={<ECDRoles />} />
