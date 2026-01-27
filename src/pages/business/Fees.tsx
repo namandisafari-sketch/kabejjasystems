@@ -10,13 +10,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, CreditCard, DollarSign, ScanLine, History, Search, Calendar, Receipt, Printer, Eye, Filter, TrendingUp, Users } from "lucide-react";
+import { Plus, Pencil, Trash2, CreditCard, DollarSign, ScanLine, History, Search, Calendar, Receipt, Printer, Eye, Filter, TrendingUp, Users, ShieldAlert } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FeePaymentScanner } from "@/components/fees/FeePaymentScanner";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { FeeReceiptThermal } from "@/components/fees/FeeReceiptThermal";
+import { BursarRulesManager } from "@/components/bursar/BursarRulesManager";
+import { OverrideRequestsPanel } from "@/components/bursar/OverrideRequestsPanel";
 import { format, subDays, startOfDay } from "date-fns";
 
 interface FeeStructure {
@@ -404,7 +406,7 @@ export default function Fees() {
       </div>
 
       <Tabs defaultValue="payment">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="payment" className="flex items-center gap-2">
             <ScanLine className="h-4 w-4" />
             Collect Payment
@@ -415,6 +417,10 @@ export default function Fees() {
           </TabsTrigger>
           <TabsTrigger value="structures">Fee Structures</TabsTrigger>
           <TabsTrigger value="balances">Student Balances</TabsTrigger>
+          <TabsTrigger value="bursar" className="flex items-center gap-2">
+            <ShieldAlert className="h-4 w-4 text-destructive" />
+            Bursar Rules
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="payment" className="mt-4">
@@ -918,6 +924,11 @@ export default function Fees() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="bursar" className="mt-4 space-y-6">
+          <BursarRulesManager />
+          <OverrideRequestsPanel showPendingOnly={false} maxHeight="500px" />
         </TabsContent>
       </Tabs>
     </div>

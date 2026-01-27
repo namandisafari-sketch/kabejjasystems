@@ -427,6 +427,82 @@ export type Database = {
           },
         ]
       }
+      bursar_rules: {
+        Row: {
+          alert_message: string | null
+          balance_amount: number | null
+          balance_operator: string | null
+          class_id: string | null
+          created_at: string | null
+          created_by: string | null
+          custom_conditions: Json | null
+          id: string
+          is_active: boolean | null
+          priority: number | null
+          requirement_id: string | null
+          rule_name: string
+          rule_type: string
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          alert_message?: string | null
+          balance_amount?: number | null
+          balance_operator?: string | null
+          class_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          custom_conditions?: Json | null
+          id?: string
+          is_active?: boolean | null
+          priority?: number | null
+          requirement_id?: string | null
+          rule_name: string
+          rule_type: string
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          alert_message?: string | null
+          balance_amount?: number | null
+          balance_operator?: string | null
+          class_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          custom_conditions?: Json | null
+          id?: string
+          is_active?: boolean | null
+          priority?: number | null
+          requirement_id?: string | null
+          rule_name?: string
+          rule_type?: string
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bursar_rules_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "school_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bursar_rules_requirement_id_fkey"
+            columns: ["requirement_id"]
+            isOneToOne: false
+            referencedRelation: "term_requirements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bursar_rules_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_modules: {
         Row: {
           applicable_business_types: string[] | null
@@ -2188,8 +2264,10 @@ export type Database = {
           id: string
           is_late: boolean | null
           notes: string | null
+          override_request_id: string | null
           student_id: string
           tenant_id: string
+          was_blocked: boolean | null
         }
         Insert: {
           check_type?: string
@@ -2199,8 +2277,10 @@ export type Database = {
           id?: string
           is_late?: boolean | null
           notes?: string | null
+          override_request_id?: string | null
           student_id: string
           tenant_id: string
+          was_blocked?: boolean | null
         }
         Update: {
           check_type?: string
@@ -2210,10 +2290,19 @@ export type Database = {
           id?: string
           is_late?: boolean | null
           notes?: string | null
+          override_request_id?: string | null
           student_id?: string
           tenant_id?: string
+          was_blocked?: boolean | null
         }
         Relationships: [
+          {
+            foreignKeyName: "gate_checkins_override_request_id_fkey"
+            columns: ["override_request_id"]
+            isOneToOne: false
+            referencedRelation: "gate_override_requests"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "gate_checkins_student_id_fkey"
             columns: ["student_id"]
@@ -2223,6 +2312,82 @@ export type Database = {
           },
           {
             foreignKeyName: "gate_checkins_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gate_override_requests: {
+        Row: {
+          blocking_reason: string
+          created_at: string | null
+          gate_checkin_id: string | null
+          id: string
+          override_reason: string
+          requested_at: string | null
+          requested_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_notes: string | null
+          status: string | null
+          student_id: string
+          tenant_id: string
+          updated_at: string | null
+          valid_for_date: string | null
+        }
+        Insert: {
+          blocking_reason: string
+          created_at?: string | null
+          gate_checkin_id?: string | null
+          id?: string
+          override_reason: string
+          requested_at?: string | null
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          status?: string | null
+          student_id: string
+          tenant_id: string
+          updated_at?: string | null
+          valid_for_date?: string | null
+        }
+        Update: {
+          blocking_reason?: string
+          created_at?: string | null
+          gate_checkin_id?: string | null
+          id?: string
+          override_reason?: string
+          requested_at?: string | null
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          status?: string | null
+          student_id?: string
+          tenant_id?: string
+          updated_at?: string | null
+          valid_for_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gate_override_requests_gate_checkin_id_fkey"
+            columns: ["gate_checkin_id"]
+            isOneToOne: false
+            referencedRelation: "gate_checkins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gate_override_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gate_override_requests_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -7321,6 +7486,76 @@ export type Database = {
           },
         ]
       }
+      student_red_list: {
+        Row: {
+          blocked_at: string | null
+          blocked_by: string | null
+          created_at: string | null
+          id: string
+          is_resolved: boolean | null
+          reason: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          rule_id: string | null
+          student_id: string
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          blocked_at?: string | null
+          blocked_by?: string | null
+          created_at?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          reason: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          rule_id?: string | null
+          student_id: string
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          blocked_at?: string | null
+          blocked_by?: string | null
+          created_at?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          reason?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          rule_id?: string | null
+          student_id?: string
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_red_list_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "bursar_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_red_list_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_red_list_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_report_cards: {
         Row: {
           average_score: number | null
@@ -8761,6 +8996,14 @@ export type Database = {
       check_device_trial_status: {
         Args: { p_device_id: string }
         Returns: Json
+      }
+      check_student_red_list_status: {
+        Args: { p_student_id: string; p_tenant_id: string }
+        Returns: {
+          blocking_reasons: string[]
+          is_blocked: boolean
+          rule_ids: string[]
+        }[]
       }
       create_profile_for_signup: {
         Args: {

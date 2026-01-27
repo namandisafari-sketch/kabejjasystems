@@ -42,6 +42,7 @@ import {
 import { toast } from "sonner";
 import ECDReportCardPreview from "@/components/ecd/ECDReportCardPreview";
 import { NotificationCenter } from "@/components/parent/NotificationCenter";
+import { RedListBanner } from "@/components/parent/RedListBanner";
 import { useParentNotifications } from "@/hooks/use-parent-notifications";
 
 interface Student {
@@ -404,6 +405,15 @@ export default function ECDParentDashboard() {
       </header>
 
       <main className="relative z-10 max-w-4xl mx-auto p-4 md:p-6 space-y-6">
+        {/* Red List Banner */}
+        {selectedStudent && parentData?.tenant_id && (
+          <RedListBanner 
+            studentId={selectedStudent}
+            tenantId={parentData.tenant_id}
+            studentName={selectedStudentData?.full_name || "Your child"}
+          />
+        )}
+
         {/* Attendance Alert */}
         {attendanceAlert && (
           <Card className="border-2 border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50 rounded-3xl shadow-lg">

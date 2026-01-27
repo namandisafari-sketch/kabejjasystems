@@ -46,6 +46,7 @@ import { toast } from "sonner";
 import { DisciplineCasesView } from "@/components/parent/DisciplineCasesView";
 import { ECDParentView } from "@/components/parent/ECDParentView";
 import { NotificationCenter } from "@/components/parent/NotificationCenter";
+import { RedListBanner } from "@/components/parent/RedListBanner";
 import { useParentNotifications } from "@/hooks/use-parent-notifications";
 
 interface Student {
@@ -450,6 +451,15 @@ export default function ParentDashboard() {
       </header>
 
       <main className="max-w-4xl mx-auto p-3 sm:p-4 md:p-8 space-y-4 sm:space-y-6">
+        {/* Red List Banner */}
+        {selectedStudent && parentData?.tenant_id && (
+          <RedListBanner 
+            studentId={selectedStudent}
+            tenantId={parentData.tenant_id}
+            studentName={selectedStudentData?.full_name || "Your child"}
+          />
+        )}
+
         {/* Attendance Alert */}
         {attendanceAlert && (
           <Card className="border-destructive bg-destructive/10">
