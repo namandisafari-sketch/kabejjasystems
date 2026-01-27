@@ -467,14 +467,14 @@ export function BursarRulesManager() {
             <div className="space-y-2">
               <Label>Apply to Class (Optional)</Label>
               <Select
-                value={formData.class_id}
-                onValueChange={(value) => setFormData({ ...formData, class_id: value })}
+                value={formData.class_id || "all"}
+                onValueChange={(value) => setFormData({ ...formData, class_id: value === "all" ? "" : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All classes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Classes</SelectItem>
+                  <SelectItem value="all">All Classes</SelectItem>
                   {classes.map((cls) => (
                     <SelectItem key={cls.id} value={cls.id}>
                       {cls.name}
