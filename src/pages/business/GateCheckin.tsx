@@ -27,6 +27,9 @@ import {
   Camera
 } from "lucide-react";
 import { BarcodeScanner } from "@/components/pos/BarcodeScanner";
+import { GateBlockDialog } from "@/components/gate/GateBlockDialog";
+import { OverrideRequestsPanel } from "@/components/bursar/OverrideRequestsPanel";
+import { checkStudentRedListStatus, checkTodayOverrideApproval, RedListStatus } from "@/hooks/use-red-list-check";
 import {
   Select,
   SelectContent,
@@ -225,6 +228,16 @@ export default function GateCheckin() {
   const [showEarlyDepartureDialog, setShowEarlyDepartureDialog] = useState(false);
   const [earlyDepartureReason, setEarlyDepartureReason] = useState("");
   const [pendingStudent, setPendingStudent] = useState<Student | null>(null);
+  
+  // Red list / gate block dialog state
+  const [showBlockDialog, setShowBlockDialog] = useState(false);
+  const [blockedStudent, setBlockedStudent] = useState<{
+    id: string;
+    full_name: string;
+    admission_number: string;
+    class_name?: string;
+  } | null>(null);
+  const [blockingReasons, setBlockingReasons] = useState<string[]>([]);
 
   // Check if current user is an administrator (can approve requests)
   const { data: userProfile } = useQuery({
@@ -479,6 +492,27 @@ export default function GateCheckin() {
         if (sendHomeRecord) {
           throw new Error(`BLOCKED: ${student.full_name} is not allowed to enter. Reason: ${sendHomeRecord.reason}`);
         }
+
+        // Check bursar's red list
+        const redListStatus = await checkStudentRedListStatus(student.id, tenantId!);
+        
+        if (redListStatus.isBlocked) {
+          // Check if there's an approved override for today
+          const hasApproval = await checkTodayOverrideApproval(student.id, tenantId!);
+          
+          if (!hasApproval) {
+            // Block the student and show dialog
+            setBlockedStudent({
+              id: student.id,
+              full_name: student.full_name,
+              admission_number: student.admission_number,
+              class_name: student.school_classes?.name,
+            });
+            setBlockingReasons(redListStatus.blockingReasons);
+            setShowBlockDialog(true);
+            throw new Error("RED_LIST_BLOCKED");
+          }
+        }
       }
 
       // For departures, check if it's before end time
@@ -562,7 +596,7 @@ export default function GateCheckin() {
       }, 3000);
     },
     onError: (error: Error) => {
-      if (error.message === "EARLY_DEPARTURE_REQUIRED") {
+      if (error.message === "EARLY_DEPARTURE_REQUIRED" || error.message === "RED_LIST_BLOCKED") {
         // Don't show error toast, dialog will handle it
         return;
       }
@@ -1182,9 +1216,13 @@ export default function GateCheckin() {
                 <Users className="h-3 w-3 md:h-4 md:w-4" />
                 <span className="hidden xs:inline">Today's</span> Check-ins
               </TabsTrigger>
+              <TabsTrigger value="overrides" className="flex-1 sm:flex-none flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-4">
+                <ShieldAlert className="h-3 w-3 md:h-4 md:w-4 text-destructive" />
+                <span className="hidden xs:inline">Red List</span> Overrides
+              </TabsTrigger>
               <TabsTrigger value="pending" className="flex-1 sm:flex-none flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-4">
-                <ShieldAlert className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden xs:inline">Pending</span> Approvals
+                <Clock className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden xs:inline">Early</span> Departure
                 {pendingRequests.length > 0 && (
                   <Badge variant="destructive" className="ml-1 text-2xs">{pendingRequests.length}</Badge>
                 )}
@@ -1210,6 +1248,10 @@ export default function GateCheckin() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="overrides" className="mt-4">
+            <OverrideRequestsPanel showPendingOnly={true} maxHeight="400px" />
           </TabsContent>
 
           <TabsContent value="pending" className="mt-4">
@@ -1305,6 +1347,22 @@ export default function GateCheckin() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Gate Block Dialog (Bursar Red List) */}
+      <GateBlockDialog
+        isOpen={showBlockDialog}
+        onClose={() => {
+          setShowBlockDialog(false);
+          setBlockedStudent(null);
+          setBlockingReasons([]);
+        }}
+        student={blockedStudent}
+        blockingReasons={blockingReasons}
+        tenantId={tenantId || ""}
+        onRequestSubmitted={() => {
+          queryClient.invalidateQueries({ queryKey: ["override-requests"] });
+        }}
+      />
     </div>
   );
 }
