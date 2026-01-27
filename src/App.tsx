@@ -113,6 +113,7 @@ import RenterDashboard from "./pages/RenterDashboard";
 import SubscriptionExpired from "./pages/SubscriptionExpired";
 import Payment from "./pages/Payment";
 import NotFound from "./pages/NotFound";
+import TermsAndConditions from "./pages/TermsAndConditions";
 
 const queryClient = new QueryClient();
 
@@ -249,6 +250,9 @@ const App = () => {
 
               {/* Subscription Expired */}
               <Route path="/subscription-expired" element={<SubscriptionExpired />} />
+
+              {/* Terms and Conditions */}
+              <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
 
               {/* Public Routes */}
               <Route path="/menu/:tenantId" element={<PublicMenu />} />
