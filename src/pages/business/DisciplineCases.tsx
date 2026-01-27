@@ -113,7 +113,7 @@ export default function DisciplineCases() {
 
   const tenantId = profile?.tenant_id;
 
-  // Fetch students - using any to avoid TS2589 type recursion
+  // Fetch students - using is_active column (not status)
   const { data: students = [] } = useQuery<Array<{ id: string; full_name: string; admission_number: string | null }>>({
     queryKey: ['students-for-discipline', tenantId],
     queryFn: async () => {
@@ -123,7 +123,8 @@ export default function DisciplineCases() {
         .from('students')
         .select('id, full_name, admission_number')
         .eq('tenant_id', tenantId)
-        .eq('status', 'active');
+        .eq('is_active', true)
+        .order('full_name');
       if (error) throw error;
       return (data ?? []) as Array<{ id: string; full_name: string; admission_number: string | null }>;
     },
