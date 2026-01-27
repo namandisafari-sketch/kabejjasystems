@@ -39,29 +39,46 @@ export async function checkStudentRedListStatus(
   }
 }
 
-// Check if student has an approved override for today
+// Check if student has an approved override that is still valid
 export async function checkTodayOverrideApproval(
   studentId: string,
   tenantId: string
 ): Promise<boolean> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const todayStr = today.toISOString().split("T")[0];
 
+  // Check for approved overrides that:
+  // 1. Match today's date OR
+  // 2. Have an approval_expires_at that hasn't passed yet
   const { data, error } = await supabase
     .from("gate_override_requests")
-    .select("id")
+    .select("id, valid_for_date, approval_expires_at")
     .eq("student_id", studentId)
     .eq("tenant_id", tenantId)
-    .eq("status", "approved")
-    .eq("valid_for_date", today.toISOString().split("T")[0])
-    .maybeSingle();
+    .eq("status", "approved");
 
   if (error) {
     console.error("Error checking override approval:", error);
     return false;
   }
 
-  return !!data;
+  if (!data || data.length === 0) return false;
+
+  // Check if any approval is still valid
+  return data.some((override) => {
+    // If valid_for_date matches today
+    if (override.valid_for_date === todayStr) return true;
+    
+    // If approval_expires_at exists and hasn't expired
+    if (override.approval_expires_at) {
+      const expiryDate = new Date(override.approval_expires_at);
+      expiryDate.setHours(23, 59, 59, 999); // End of day
+      return expiryDate >= today;
+    }
+    
+    return false;
+  });
 }
 
 // Create an override request

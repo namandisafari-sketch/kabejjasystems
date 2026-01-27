@@ -5,9 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, X, Clock, ShieldAlert, User, AlertTriangle } from "lucide-react";
+import { Check, X, Clock, ShieldAlert, User, AlertTriangle, CalendarIcon } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import {
@@ -18,6 +18,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 interface OverrideRequest {
   id: string;
@@ -52,6 +56,7 @@ export function OverrideRequestsPanel({
   const [reviewerNotes, setReviewerNotes] = useState("");
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
   const [actionType, setActionType] = useState<"approve" | "reject">("approve");
+  const [approvalExpiryDate, setApprovalExpiryDate] = useState<Date | undefined>(undefined);
 
   // Fetch override requests
   const { data: requests = [], isLoading } = useQuery({
@@ -92,25 +97,34 @@ export function OverrideRequestsPanel({
       requestId,
       status,
       notes,
+      expiryDate,
     }: {
       requestId: string;
       status: "approved" | "rejected";
       notes: string;
+      expiryDate?: Date;
     }) => {
       const { data: userData } = await supabase.auth.getUser();
       const request = requests.find((r) => r.id === requestId);
       
       if (!request) throw new Error("Request not found");
 
-      // Update the request status
+      // Update the request status with expiry date if approved
+      const updateData: Record<string, unknown> = {
+        status,
+        reviewed_by: userData.user?.id,
+        reviewed_at: new Date().toISOString(),
+        reviewer_notes: notes || null,
+      };
+
+      // Add expiry date if provided and approving
+      if (status === "approved" && expiryDate) {
+        updateData.approval_expires_at = format(expiryDate, 'yyyy-MM-dd');
+      }
+
       const { error: updateError } = await supabase
         .from("gate_override_requests")
-        .update({
-          status,
-          reviewed_by: userData.user?.id,
-          reviewed_at: new Date().toISOString(),
-          reviewer_notes: notes || null,
-        })
+        .update(updateData)
         .eq("id", requestId);
 
       if (updateError) throw updateError;
@@ -151,6 +165,7 @@ export function OverrideRequestsPanel({
       setIsReviewDialogOpen(false);
       setSelectedRequest(null);
       setReviewerNotes("");
+      setApprovalExpiryDate(undefined);
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -161,6 +176,8 @@ export function OverrideRequestsPanel({
     setSelectedRequest(request);
     setActionType(action);
     setReviewerNotes("");
+    // Default expiry to 1 day for approve
+    setApprovalExpiryDate(action === "approve" ? addDays(new Date(), 1) : undefined);
     setIsReviewDialogOpen(true);
   };
 
@@ -170,6 +187,7 @@ export function OverrideRequestsPanel({
       requestId: selectedRequest.id,
       status: actionType === "approve" ? "approved" : "rejected",
       notes: reviewerNotes,
+      expiryDate: actionType === "approve" ? approvalExpiryDate : undefined,
     });
   };
 
@@ -310,6 +328,39 @@ export function OverrideRequestsPanel({
                   {selectedRequest.students?.admission_number}
                 </p>
               </div>
+
+              {actionType === "approve" && (
+                <div className="space-y-2">
+                  <Label>Approval Expires On *</Label>
+                  <p className="text-xs text-muted-foreground">
+                    After this date, the student will be blocked again if the issue is not resolved.
+                  </p>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !approvalExpiryDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {approvalExpiryDate ? format(approvalExpiryDate, "PPP") : <span>Pick an expiry date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={approvalExpiryDate}
+                        onSelect={setApprovalExpiryDate}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
               
               <div className="space-y-2">
                 <Label>Notes (Optional)</Label>
@@ -318,7 +369,7 @@ export function OverrideRequestsPanel({
                   onChange={(e) => setReviewerNotes(e.target.value)}
                   placeholder={
                     actionType === "approve"
-                      ? "e.g., Payment confirmed, allow entry"
+                      ? "e.g., Payment confirmed, allow entry until Friday"
                       : "e.g., Balance too high, cannot approve"
                   }
                   rows={3}

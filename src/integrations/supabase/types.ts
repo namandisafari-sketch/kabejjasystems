@@ -2321,6 +2321,7 @@ export type Database = {
       }
       gate_override_requests: {
         Row: {
+          approval_expires_at: string | null
           blocking_reason: string
           created_at: string | null
           gate_checkin_id: string | null
@@ -2338,6 +2339,7 @@ export type Database = {
           valid_for_date: string | null
         }
         Insert: {
+          approval_expires_at?: string | null
           blocking_reason: string
           created_at?: string | null
           gate_checkin_id?: string | null
@@ -2355,6 +2357,7 @@ export type Database = {
           valid_for_date?: string | null
         }
         Update: {
+          approval_expires_at?: string | null
           blocking_reason?: string
           created_at?: string | null
           gate_checkin_id?: string | null
