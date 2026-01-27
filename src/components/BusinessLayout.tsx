@@ -4,6 +4,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { BusinessSidebar } from "@/components/BusinessSidebar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
+import { TermsFooterLink } from "@/components/TermsFooterLink";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionCheck } from "@/hooks/use-subscription-check";
@@ -138,6 +139,11 @@ export function BusinessLayout() {
         <div className="block md:hidden">
           <MobileBottomNav businessType={businessType} devMode={isDevMode} />
         </div>
+        
+        {/* Terms & Conditions link for school businesses */}
+        {(businessType === 'school' || businessType === 'kindergarten') && (
+          <TermsFooterLink />
+        )}
       </div>
     </SidebarProvider>
   );
