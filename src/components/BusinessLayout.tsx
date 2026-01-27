@@ -141,7 +141,7 @@ export function BusinessLayout() {
         </div>
         
         {/* Terms & Conditions link for school businesses - positioned fixed */}
-        {(businessType === 'school' || businessType === 'kindergarten') && (
+        {(businessType === 'school' || businessType === 'secondary_school' || businessType === 'kindergarten' || businessType === 'primary_school') && (
           <TermsFooterLink />
         )}
       </div>
