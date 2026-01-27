@@ -235,6 +235,8 @@ export const moduleRoutes: Record<string, { url: string; icon: string }> = {
   discipline: { url: '/business/discipline-cases', icon: 'ShieldAlert' },
   // Send Home module
   'send-home': { url: '/business/send-home', icon: 'Home' },
+  // Requisitions module
+  requisitions: { url: '/business/requisitions', icon: 'FileText' },
   // Rental Management modules
   rental_dashboard: { url: '/business/rental-dashboard', icon: 'LayoutDashboard' },
   rental_properties: { url: '/business/rental-properties', icon: 'Building2' },
