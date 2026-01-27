@@ -475,23 +475,8 @@ export default function GateCheckin() {
         throw new Error("Student not found with this ID");
       }
 
-      // Check if student is marked to be sent home (for arrivals)
+      // Check bursar's red list for arrivals
       if (checkType === "arrival") {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        const { data: sendHomeRecord } = await supabase
-          .from("send_home_records")
-          .select("id, reason, reason_category")
-          .eq("student_id", student.id)
-          .eq("is_active", true)
-          .eq("gate_blocked", true)
-          .gte("send_home_date", today.toISOString().split("T")[0])
-          .maybeSingle();
-
-        if (sendHomeRecord) {
-          throw new Error(`BLOCKED: ${student.full_name} is not allowed to enter. Reason: ${sendHomeRecord.reason}`);
-        }
 
         // Check bursar's red list
         const redListStatus = await checkStudentRedListStatus(student.id, tenantId!);

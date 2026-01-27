@@ -86,7 +86,6 @@ import ECDLearningAreas from "./pages/business/ECDLearningAreas";
 import ECDMarksEntry from "./pages/business/ECDMarksEntry";
 import ECDPupilCards from "./pages/business/ECDPupilCards";
 import DisciplineCases from "./pages/business/DisciplineCases";
-import SendHome from "./pages/business/SendHome";
 import Requisitions from "./pages/business/Requisitions";
 import Timetable from "./pages/business/Timetable";
 import Exams from "./pages/business/Exams";
@@ -217,7 +216,6 @@ const App = () => {
                 <Route path="ecd-marks-entry" element={<ECDMarksEntry />} />
                 <Route path="ecd-pupil-cards" element={<ECDPupilCards />} />
                 <Route path="discipline-cases" element={<DisciplineCases />} />
-                <Route path="send-home" element={<SendHome />} />
                 <Route path="requisitions" element={<Requisitions />} />
                 {/* Phase 2: Academics, Timetable & Exams */}
                 <Route path="timetable" element={<Timetable />} />

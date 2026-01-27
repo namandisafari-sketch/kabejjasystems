@@ -13,8 +13,7 @@ import {
   Sun,
   Cloud,
   Flower2,
-  Apple,
-  Home
+  Apple
 } from "lucide-react";
 import { useTenant } from "@/hooks/use-tenant";
 import { Badge } from "@/components/ui/badge";
@@ -169,26 +168,6 @@ const ECDDashboard = () => {
     enabled: !!tenant?.tenantId,
   });
 
-  // Today's send home count
-  const { data: sendHomeCount = 0 } = useQuery({
-    queryKey: ['send-home-count', tenant?.tenantId],
-    queryFn: async () => {
-      if (!tenant?.tenantId) return 0;
-      
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      const { count } = await supabase
-        .from('send_home_records')
-        .select('*', { count: 'exact', head: true })
-        .eq('tenant_id', tenant.tenantId)
-        .eq('is_active', true)
-        .gte('send_home_date', today.toISOString().split('T')[0]);
-
-      return count || 0;
-    },
-    enabled: !!tenant?.tenantId,
-  });
 
   // Classes with enrollment
   const { data: classesWithEnrollment } = useQuery({
@@ -299,14 +278,6 @@ const ECDDashboard = () => {
                   <Calendar className="h-3 w-3 mr-1" />
                   {currentTerm.name} ({currentTerm.year})
                 </Badge>
-              )}
-              {sendHomeCount > 0 && (
-                <Link to="/business/send-home">
-                  <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 shadow-md animate-pulse">
-                    <Home className="h-3 w-3 mr-1" />
-                    {sendHomeCount} to send home
-                  </Badge>
-                </Link>
               )}
             </div>
           </div>
@@ -474,12 +445,6 @@ const ECDDashboard = () => {
                 <Sun className="h-5 w-5 text-yellow-500" />
                 Outstanding Balances
               </CardTitle>
-              <Link to="/business/send-home">
-                <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100 cursor-pointer">
-                  <Home className="h-3 w-3 mr-1" />
-                  Send Home
-                </Badge>
-              </Link>
             </CardHeader>
             <CardContent>
               {pupilsWithBalances.length === 0 ? (
