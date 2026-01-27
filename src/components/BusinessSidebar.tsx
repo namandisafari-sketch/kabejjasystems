@@ -3,7 +3,7 @@ import {
   QrCode, Wallet, Bed, CalendarDays, Package, UtensilsCrossed, Receipt, ChefHat,
   Scissors, Calendar, Pill, HeartPulse, Wrench, Cog, PackageMinus, Truck, Tags, AlertTriangle, 
   ClipboardList, CreditCard, Wallet2, Sparkles, GraduationCap, ClipboardCheck, Award, BookOpen, FileText, ScanLine,
-  ShieldAlert, Building2, DoorOpen, Calculator
+  ShieldAlert, Building2, DoorOpen, Calculator, Home
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
@@ -29,7 +29,7 @@ import { useTenant } from "@/hooks/use-tenant";
 import { useStaffPermissions } from "@/hooks/use-staff-permissions";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Icon mapping
+// Icon mapping - keep in sync with MobileBottomNav
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard,
   ShoppingCart,
@@ -70,6 +70,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Building2,
   DoorOpen,
   Calculator,
+  Home,
 };
 
 export function BusinessSidebar({ businessName, businessType, devMode }: { businessName?: string; businessType?: string; devMode?: boolean }) {
@@ -107,10 +108,13 @@ export function BusinessSidebar({ businessName, businessType, devMode }: { busin
         ? ecdNameOverrides[module.code]
         : module.name;
       
+      // Use icon from moduleRoutes config for consistency with MobileBottomNav
+      const iconName = moduleRoutes[module.code]?.icon || module.icon || 'Package';
+      
       return {
         title: name,
         url,
-        icon: iconMap[module.icon || 'Package'] || Package,
+        icon: iconMap[iconName] || Package,
         code: module.code,
       };
     })
