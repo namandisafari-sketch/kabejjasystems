@@ -109,7 +109,7 @@ export function BusinessLayout() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full bg-background relative">
         {/* Desktop sidebar - hidden on mobile (screens < 768px) */}
         <div className="hidden md:block">
           <BusinessSidebar businessName={businessName} businessType={businessType} devMode={isDevMode} />
@@ -140,7 +140,7 @@ export function BusinessLayout() {
           <MobileBottomNav businessType={businessType} devMode={isDevMode} />
         </div>
         
-        {/* Terms & Conditions link for school businesses */}
+        {/* Terms & Conditions link for school businesses - positioned fixed */}
         {(businessType === 'school' || businessType === 'kindergarten') && (
           <TermsFooterLink />
         )}
