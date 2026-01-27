@@ -12,8 +12,7 @@ import {
   AlertCircle,
   School,
   UserCheck,
-  AlertTriangle,
-  Home
+  AlertTriangle
 } from "lucide-react";
 import { useTenant } from "@/hooks/use-tenant";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -285,27 +284,6 @@ const SchoolDashboard = () => {
     enabled: !!tenant?.tenantId,
   });
 
-  // Today's send home count
-  const { data: sendHomeCount = 0 } = useQuery({
-    queryKey: ['send-home-count', tenant?.tenantId],
-    queryFn: async () => {
-      if (!tenant?.tenantId) return 0;
-      
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      const { count, error } = await supabase
-        .from('send_home_records')
-        .select('*', { count: 'exact', head: true })
-        .eq('tenant_id', tenant.tenantId)
-        .eq('is_active', true)
-        .gte('send_home_date', today.toISOString().split('T')[0]);
-
-      if (error) return 0;
-      return count || 0;
-    },
-    enabled: !!tenant?.tenantId,
-  });
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -513,20 +491,6 @@ const SchoolDashboard = () => {
             <AlertTriangle className="h-5 w-5 text-destructive" />
             Students with Outstanding Balances
           </CardTitle>
-          <div className="flex items-center gap-2">
-            {sendHomeCount > 0 && (
-              <Badge variant="destructive" className="gap-1">
-                <Home className="h-3 w-3" />
-                {sendHomeCount} to send home
-              </Badge>
-            )}
-            <Link to="/business/send-home">
-              <Button size="sm" variant="outline">
-                <Home className="h-4 w-4 mr-2" />
-                Manage Send Home
-              </Button>
-            </Link>
-          </div>
         </CardHeader>
         <CardContent>
           {studentsWithBalances.length === 0 ? (

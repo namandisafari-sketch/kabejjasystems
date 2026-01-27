@@ -233,8 +233,6 @@ export const moduleRoutes: Record<string, { url: string; icon: string }> = {
   ecd_pupil_cards: { url: '/business/ecd-pupil-cards', icon: 'CreditCard' },
   // Discipline module
   discipline: { url: '/business/discipline-cases', icon: 'ShieldAlert' },
-  // Send Home module
-  'send-home': { url: '/business/send-home', icon: 'Home' },
   // Requisitions module
   requisitions: { url: '/business/requisitions', icon: 'FileText' },
   // Academics Phase 2
