@@ -1734,6 +1734,226 @@ export type Database = {
           },
         ]
       }
+      exam_results: {
+        Row: {
+          created_at: string | null
+          exam_id: string
+          grade: string | null
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          is_absent: boolean | null
+          marks_obtained: number | null
+          remarks: string | null
+          student_id: string
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          exam_id: string
+          grade?: string | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          is_absent?: boolean | null
+          marks_obtained?: number | null
+          remarks?: string | null
+          student_id: string
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          exam_id?: string
+          grade?: string | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          is_absent?: boolean | null
+          marks_obtained?: number | null
+          remarks?: string | null
+          student_id?: string
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_results_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_results_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_results_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_types: {
+        Row: {
+          code: string | null
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          tenant_id: string
+          updated_at: string | null
+          weight_percentage: number | null
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          tenant_id: string
+          updated_at?: string | null
+          weight_percentage?: number | null
+        }
+        Update: {
+          code?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          tenant_id?: string
+          updated_at?: string | null
+          weight_percentage?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_types_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exams: {
+        Row: {
+          class_id: string
+          created_at: string | null
+          created_by: string | null
+          duration_minutes: number | null
+          end_time: string | null
+          exam_date: string
+          exam_type_id: string
+          id: string
+          instructions: string | null
+          invigilator_id: string | null
+          max_marks: number | null
+          start_time: string | null
+          status: string | null
+          subject_id: string
+          tenant_id: string
+          term_id: string
+          updated_at: string | null
+          venue: string | null
+        }
+        Insert: {
+          class_id: string
+          created_at?: string | null
+          created_by?: string | null
+          duration_minutes?: number | null
+          end_time?: string | null
+          exam_date: string
+          exam_type_id: string
+          id?: string
+          instructions?: string | null
+          invigilator_id?: string | null
+          max_marks?: number | null
+          start_time?: string | null
+          status?: string | null
+          subject_id: string
+          tenant_id: string
+          term_id: string
+          updated_at?: string | null
+          venue?: string | null
+        }
+        Update: {
+          class_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          duration_minutes?: number | null
+          end_time?: string | null
+          exam_date?: string
+          exam_type_id?: string
+          id?: string
+          instructions?: string | null
+          invigilator_id?: string | null
+          max_marks?: number | null
+          start_time?: string | null
+          status?: string | null
+          subject_id?: string
+          tenant_id?: string
+          term_id?: string
+          updated_at?: string | null
+          venue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exams_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "school_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_exam_type_id_fkey"
+            columns: ["exam_type_id"]
+            isOneToOne: false
+            referencedRelation: "exam_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_invigilator_id_fkey"
+            columns: ["invigilator_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "academic_terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expenses: {
         Row: {
           amount: number
@@ -8054,6 +8274,78 @@ export type Database = {
           },
         ]
       }
+      term_calendar_events: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          end_time: string | null
+          event_type: string | null
+          id: string
+          is_all_day: boolean | null
+          is_published: boolean | null
+          start_date: string
+          start_time: string | null
+          tenant_id: string
+          term_id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          end_time?: string | null
+          event_type?: string | null
+          id?: string
+          is_all_day?: boolean | null
+          is_published?: boolean | null
+          start_date: string
+          start_time?: string | null
+          tenant_id: string
+          term_id: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          end_time?: string | null
+          event_type?: string | null
+          id?: string
+          is_all_day?: boolean | null
+          is_published?: boolean | null
+          start_date?: string
+          start_time?: string | null
+          tenant_id?: string
+          term_id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "term_calendar_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "term_calendar_events_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "academic_terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       term_requirements: {
         Row: {
           category: string
@@ -8175,6 +8467,144 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "testimonials_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      timetable_entries: {
+        Row: {
+          class_id: string
+          created_at: string | null
+          day_of_week: number
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          period_id: string
+          room: string | null
+          subject_id: string | null
+          teacher_id: string | null
+          tenant_id: string
+          term_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          class_id: string
+          created_at?: string | null
+          day_of_week: number
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          period_id: string
+          room?: string | null
+          subject_id?: string | null
+          teacher_id?: string | null
+          tenant_id: string
+          term_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          class_id?: string
+          created_at?: string | null
+          day_of_week?: number
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          period_id?: string
+          room?: string | null
+          subject_id?: string | null
+          teacher_id?: string | null
+          tenant_id?: string
+          term_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timetable_entries_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "school_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_entries_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "timetable_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_entries_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_entries_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_entries_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_entries_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "academic_terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      timetable_periods: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          end_time: string
+          id: string
+          is_active: boolean | null
+          name: string
+          period_type: string | null
+          start_time: string
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          end_time: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          period_type?: string | null
+          start_time: string
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          end_time?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          period_type?: string | null
+          start_time?: string
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timetable_periods_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -8372,6 +8802,7 @@ export type Database = {
         Args: { p_tenant_id: string }
         Returns: string
       }
+      get_user_tenant_id: { Args: never; Returns: string }
       get_user_tenant_info: {
         Args: { user_id: string }
         Returns: {

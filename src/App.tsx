@@ -88,6 +88,9 @@ import ECDPupilCards from "./pages/business/ECDPupilCards";
 import DisciplineCases from "./pages/business/DisciplineCases";
 import SendHome from "./pages/business/SendHome";
 import Requisitions from "./pages/business/Requisitions";
+import Timetable from "./pages/business/Timetable";
+import Exams from "./pages/business/Exams";
+import TermCalendar from "./pages/business/TermCalendar";
 import RentalDashboard from "./pages/business/rental/RentalDashboard";
 import RentalProperties from "./pages/business/rental/RentalProperties";
 import RentalUnits from "./pages/business/rental/RentalUnits";
@@ -215,6 +218,10 @@ const App = () => {
                 <Route path="discipline-cases" element={<DisciplineCases />} />
                 <Route path="send-home" element={<SendHome />} />
                 <Route path="requisitions" element={<Requisitions />} />
+                {/* Phase 2: Academics, Timetable & Exams */}
+                <Route path="timetable" element={<Timetable />} />
+                <Route path="exams" element={<Exams />} />
+                <Route path="term-calendar" element={<TermCalendar />} />
                 {/* Rental Management Routes */}
                 <Route path="rental-dashboard" element={<RentalDashboard />} />
                 <Route path="rental-tax-dashboard" element={<RentalTaxDashboard />} />
