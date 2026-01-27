@@ -6,13 +6,14 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Settings, Building, Users, Building2, Receipt, Mail, GraduationCap, Calendar, Clock, Home } from "lucide-react";
+import { Settings, Building, Users, Building2, Receipt, Mail, GraduationCap, Calendar, Clock, Home, Database } from "lucide-react";
 import { ModuleManagement } from "@/components/business/ModuleManagement";
 import { StaffManagement } from "@/components/business/StaffManagement";
 import { BranchManagement } from "@/components/business/BranchManagement";
 import { ReceiptSettings } from "@/components/business/ReceiptSettings";
 import { LetterSettings } from "@/components/business/LetterSettings";
 import { SchoolSettings } from "@/components/business/SchoolSettings";
+import { DataBackupExport } from "@/components/business/DataBackupExport";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTenant } from "@/hooks/use-tenant";
 
@@ -95,6 +96,10 @@ const BusinessSettings = () => {
               Letters
             </TabsTrigger>
           )}
+          <TabsTrigger value="backup" className="flex items-center gap-1">
+            <Database className="h-4 w-4" />
+            Backup
+          </TabsTrigger>
           <TabsTrigger value="subscription">Subscription</TabsTrigger>
         </TabsList>
 
@@ -200,6 +205,10 @@ const BusinessSettings = () => {
             <LetterSettings tenantId={tenant?.id || null} />
           </TabsContent>
         )}
+
+        <TabsContent value="backup">
+          <DataBackupExport tenantId={tenant?.id || null} businessType={tenant?.business_type || null} />
+        </TabsContent>
 
         <TabsContent value="subscription" className="space-y-6">
           <Card>
