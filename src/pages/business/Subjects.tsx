@@ -186,7 +186,7 @@ export default function Subjects() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
+    <div className="container mx-auto px-4 py-4 md:py-8 space-y-4 md:space-y-6 pb-24 md:pb-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

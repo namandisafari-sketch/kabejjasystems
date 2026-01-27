@@ -23,8 +23,10 @@ import {
   Check,
   X,
   Lock,
-  Sun
+  Sun,
+  Camera
 } from "lucide-react";
+import { BarcodeScanner } from "@/components/pos/BarcodeScanner";
 import {
   Select,
   SelectContent,
@@ -217,6 +219,7 @@ export default function GateCheckin() {
   const [lastScanned, setLastScanned] = useState<Student | null>(null);
   const [scanStatus, setScanStatus] = useState<"idle" | "success" | "error" | "late">("idle");
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   
   // Early departure dialog state
   const [showEarlyDepartureDialog, setShowEarlyDepartureDialog] = useState(false);
@@ -583,6 +586,13 @@ export default function GateCheckin() {
     checkinMutation.mutate(barcodeInput.trim());
   };
 
+  // Camera scan handler
+  const handleCameraScan = (scannedCode: string) => {
+    setBarcodeInput(scannedCode);
+    checkinMutation.mutate(scannedCode);
+    setIsScannerOpen(false);
+  };
+
   const handleSubmitEarlyDeparture = () => {
     if (!pendingStudent || !earlyDepartureReason.trim()) {
       toast.error("Please provide a reason for early departure");
@@ -602,7 +612,7 @@ export default function GateCheckin() {
   // ECD-themed render
   if (isECD) {
     return (
-      <div className="min-h-screen p-3 md:p-6 lg:p-8" style={{ background: 'linear-gradient(135deg, #FFE4EC 0%, #E0F7FA 100%)' }}>
+      <div className="min-h-screen p-3 md:p-6 lg:p-8 pb-24 md:pb-8" style={{ background: 'linear-gradient(135deg, #FFE4EC 0%, #E0F7FA 100%)' }}>
         <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
           {/* Playful Header - Responsive */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -715,20 +725,32 @@ export default function GateCheckin() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 md:space-y-6">
-              <form onSubmit={handleScan} className="flex flex-col sm:flex-row gap-2 md:gap-4">
-                <Input
-                  ref={inputRef}
-                  value={barcodeInput}
-                  onChange={(e) => setBarcodeInput(e.target.value)}
-                  placeholder="Scan card or type admission number..."
-                  className="text-lg md:text-2xl h-12 md:h-16 font-mono flex-1"
-                  style={{ borderRadius: '12px', border: '2px solid #FF6B9D' }}
-                  autoComplete="off"
-                />
+              <form onSubmit={handleScan} className="flex flex-col gap-2 md:gap-4">
+                <div className="flex flex-row gap-2 md:gap-4">
+                  <Input
+                    ref={inputRef}
+                    value={barcodeInput}
+                    onChange={(e) => setBarcodeInput(e.target.value)}
+                    placeholder="Scan card or type admission number..."
+                    className="text-lg md:text-2xl h-12 md:h-16 font-mono flex-1"
+                    style={{ borderRadius: '12px', border: '2px solid #FF6B9D' }}
+                    autoComplete="off"
+                  />
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    size="lg"
+                    className="h-12 md:h-16 px-3 md:px-4 shrink-0"
+                    style={{ borderRadius: '12px', border: '2px solid #4ECDC4' }}
+                    onClick={() => setIsScannerOpen(true)}
+                  >
+                    <Camera className="h-5 w-5 md:h-6 md:w-6" style={{ color: '#4ECDC4' }} />
+                  </Button>
+                </div>
                 <Button 
                   type="submit" 
                   size="lg" 
-                  className="h-12 md:h-16 px-6 md:px-8 text-white shadow-lg w-full sm:w-auto"
+                  className="h-12 md:h-16 px-6 md:px-8 text-white shadow-lg w-full"
                   style={{ background: checkType === "arrival" ? '#4ECDC4' : '#FF6B9D', borderRadius: '12px' }}
                   disabled={checkinMutation.isPending}
                 >
@@ -739,6 +761,13 @@ export default function GateCheckin() {
                   )}
                 </Button>
               </form>
+
+              {/* Camera Scanner Dialog */}
+              <BarcodeScanner 
+                isOpen={isScannerOpen}
+                onClose={() => setIsScannerOpen(false)}
+                onScan={handleCameraScan}
+              />
 
               {/* Scan Result Display - ECD themed */}
               {lastScanned && (
@@ -977,7 +1006,7 @@ export default function GateCheckin() {
 
   // Standard school render - Mobile-first responsive
   return (
-    <div className="min-h-screen bg-background p-3 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-background p-3 md:p-6 lg:p-8 pb-24 md:pb-8">
       <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
         {/* Header - Responsive */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1067,16 +1096,27 @@ export default function GateCheckin() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 md:space-y-6">
-            <form onSubmit={handleScan} className="flex flex-col sm:flex-row gap-2 md:gap-4">
-              <Input
-                ref={inputRef}
-                value={barcodeInput}
-                onChange={(e) => setBarcodeInput(e.target.value)}
-                placeholder="Scan barcode or enter admission number..."
-                className="text-base md:text-2xl h-12 md:h-16 font-mono flex-1"
-                autoComplete="off"
-              />
-              <Button type="submit" size="lg" className="h-12 md:h-16 px-6 md:px-8 w-full sm:w-auto" disabled={checkinMutation.isPending}>
+            <form onSubmit={handleScan} className="flex flex-col gap-2 md:gap-4">
+              <div className="flex flex-row gap-2 md:gap-4">
+                <Input
+                  ref={inputRef}
+                  value={barcodeInput}
+                  onChange={(e) => setBarcodeInput(e.target.value)}
+                  placeholder="Scan barcode or enter admission number..."
+                  className="text-base md:text-2xl h-12 md:h-16 font-mono flex-1"
+                  autoComplete="off"
+                />
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  size="lg"
+                  className="h-12 md:h-16 px-3 md:px-4 shrink-0"
+                  onClick={() => setIsScannerOpen(true)}
+                >
+                  <Camera className="h-5 w-5 md:h-6 md:w-6" />
+                </Button>
+              </div>
+              <Button type="submit" size="lg" className="h-12 md:h-16 px-6 md:px-8 w-full" disabled={checkinMutation.isPending}>
                 {checkinMutation.isPending ? (
                   <span className="animate-pulse">Scanning...</span>
                 ) : (
@@ -1087,6 +1127,13 @@ export default function GateCheckin() {
                 )}
               </Button>
             </form>
+
+            {/* Camera Scanner Dialog */}
+            <BarcodeScanner 
+              isOpen={isScannerOpen}
+              onClose={() => setIsScannerOpen(false)}
+              onScan={handleCameraScan}
+            />
 
             {/* Scan Result Display - Responsive */}
             {lastScanned && (

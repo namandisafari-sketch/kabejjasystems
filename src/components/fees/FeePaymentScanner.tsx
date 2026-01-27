@@ -10,9 +10,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Search, User, CreditCard, CheckCircle, Printer, Receipt, Users, SkipForward, Volume2, VolumeX } from "lucide-react";
+import { Search, User, CreditCard, CheckCircle, Printer, Receipt, Users, SkipForward, Volume2, VolumeX, Camera } from "lucide-react";
 import { FeeReceiptThermal } from "./FeeReceiptThermal";
 import { PaymentQueuePanel, QueuedStudent } from "./PaymentQueuePanel";
+import { BarcodeScanner } from "@/components/pos/BarcodeScanner";
 
 interface StudentInfo {
   id: string;
@@ -83,6 +84,7 @@ export function FeePaymentScanner({ tenantId }: FeePaymentScannerProps) {
   // Receipt state
   const [receiptData, setReceiptData] = useState<PaymentReceiptData | null>(null);
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   
   const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -573,6 +575,13 @@ export function FeePaymentScanner({ tenantId }: FeePaymentScannerProps) {
     }
   };
 
+  // Camera scan handler
+  const handleCameraScan = (scannedCode: string) => {
+    setManualCode(scannedCode);
+    handleStudentLookup(scannedCode);
+    setIsScannerOpen(false);
+  };
+
   const handleReceiptClose = () => {
     setIsReceiptDialogOpen(false);
     
@@ -639,8 +648,17 @@ export function FeePaymentScanner({ tenantId }: FeePaymentScannerProps) {
                   onChange={(e) => setManualCode(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleManualLookup()}
                   autoFocus
-                  className="text-lg font-mono"
+                  className="text-lg font-mono flex-1"
                 />
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                  onClick={() => setIsScannerOpen(true)}
+                >
+                  <Camera className="h-5 w-5" />
+                </Button>
                 <Button onClick={handleManualLookup} variant="secondary">
                   <Search className="h-4 w-4" />
                 </Button>
@@ -652,6 +670,13 @@ export function FeePaymentScanner({ tenantId }: FeePaymentScannerProps) {
                 }
               </p>
             </div>
+
+            {/* Camera Scanner Dialog */}
+            <BarcodeScanner 
+              isOpen={isScannerOpen}
+              onClose={() => setIsScannerOpen(false)}
+              onScan={handleCameraScan}
+            />
           </CardContent>
         </Card>
 
