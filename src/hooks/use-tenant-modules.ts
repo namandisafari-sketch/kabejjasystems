@@ -237,6 +237,10 @@ export const moduleRoutes: Record<string, { url: string; icon: string }> = {
   'send-home': { url: '/business/send-home', icon: 'Home' },
   // Requisitions module
   requisitions: { url: '/business/requisitions', icon: 'FileText' },
+  // Academics Phase 2
+  timetable: { url: '/business/timetable', icon: 'CalendarDays' },
+  exams: { url: '/business/exams', icon: 'ClipboardCheck' },
+  term_calendar: { url: '/business/term-calendar', icon: 'Calendar' },
   // Rental Management modules
   rental_dashboard: { url: '/business/rental-dashboard', icon: 'LayoutDashboard' },
   rental_properties: { url: '/business/rental-properties', icon: 'Building2' },
