@@ -87,6 +87,7 @@ import ECDMarksEntry from "./pages/business/ECDMarksEntry";
 import ECDPupilCards from "./pages/business/ECDPupilCards";
 import DisciplineCases from "./pages/business/DisciplineCases";
 import SendHome from "./pages/business/SendHome";
+import Requisitions from "./pages/business/Requisitions";
 import RentalDashboard from "./pages/business/rental/RentalDashboard";
 import RentalProperties from "./pages/business/rental/RentalProperties";
 import RentalUnits from "./pages/business/rental/RentalUnits";
@@ -213,6 +214,7 @@ const App = () => {
                 <Route path="ecd-pupil-cards" element={<ECDPupilCards />} />
                 <Route path="discipline-cases" element={<DisciplineCases />} />
                 <Route path="send-home" element={<SendHome />} />
+                <Route path="requisitions" element={<Requisitions />} />
                 {/* Rental Management Routes */}
                 <Route path="rental-dashboard" element={<RentalDashboard />} />
                 <Route path="rental-tax-dashboard" element={<RentalTaxDashboard />} />

@@ -5368,6 +5368,289 @@ export type Database = {
           },
         ]
       }
+      requisition_activity: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: string | null
+          id: string
+          metadata: Json | null
+          requisition_id: string
+          tenant_id: string
+          user_id: string | null
+          user_name: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: string | null
+          id?: string
+          metadata?: Json | null
+          requisition_id: string
+          tenant_id: string
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: string | null
+          id?: string
+          metadata?: Json | null
+          requisition_id?: string
+          tenant_id?: string
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requisition_activity_requisition_id_fkey"
+            columns: ["requisition_id"]
+            isOneToOne: false
+            referencedRelation: "requisitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requisition_activity_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requisition_approvals: {
+        Row: {
+          amount_approved: number | null
+          approval_level: number
+          approved_at: string | null
+          approver_id: string | null
+          approver_name: string | null
+          approver_role: Database["public"]["Enums"]["approver_role"]
+          comments: string | null
+          created_at: string | null
+          id: string
+          requisition_id: string
+          status: string
+          tenant_id: string
+        }
+        Insert: {
+          amount_approved?: number | null
+          approval_level: number
+          approved_at?: string | null
+          approver_id?: string | null
+          approver_name?: string | null
+          approver_role: Database["public"]["Enums"]["approver_role"]
+          comments?: string | null
+          created_at?: string | null
+          id?: string
+          requisition_id: string
+          status?: string
+          tenant_id: string
+        }
+        Update: {
+          amount_approved?: number | null
+          approval_level?: number
+          approved_at?: string | null
+          approver_id?: string | null
+          approver_name?: string | null
+          approver_role?: Database["public"]["Enums"]["approver_role"]
+          comments?: string | null
+          created_at?: string | null
+          id?: string
+          requisition_id?: string
+          status?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requisition_approvals_requisition_id_fkey"
+            columns: ["requisition_id"]
+            isOneToOne: false
+            referencedRelation: "requisitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requisition_approvals_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requisition_settings: {
+        Row: {
+          approval_levels: number | null
+          auto_approve_below: number | null
+          created_at: string | null
+          expense_categories: string[] | null
+          id: string
+          level1_label: string | null
+          level1_role: Database["public"]["Enums"]["approver_role"] | null
+          level2_label: string | null
+          level2_role: Database["public"]["Enums"]["approver_role"] | null
+          level3_label: string | null
+          level3_role: Database["public"]["Enums"]["approver_role"] | null
+          max_advance_amount: number | null
+          require_receipt_for_advance: boolean | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          approval_levels?: number | null
+          auto_approve_below?: number | null
+          created_at?: string | null
+          expense_categories?: string[] | null
+          id?: string
+          level1_label?: string | null
+          level1_role?: Database["public"]["Enums"]["approver_role"] | null
+          level2_label?: string | null
+          level2_role?: Database["public"]["Enums"]["approver_role"] | null
+          level3_label?: string | null
+          level3_role?: Database["public"]["Enums"]["approver_role"] | null
+          max_advance_amount?: number | null
+          require_receipt_for_advance?: boolean | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          approval_levels?: number | null
+          auto_approve_below?: number | null
+          created_at?: string | null
+          expense_categories?: string[] | null
+          id?: string
+          level1_label?: string | null
+          level1_role?: Database["public"]["Enums"]["approver_role"] | null
+          level2_label?: string | null
+          level2_role?: Database["public"]["Enums"]["approver_role"] | null
+          level3_label?: string | null
+          level3_role?: Database["public"]["Enums"]["approver_role"] | null
+          max_advance_amount?: number | null
+          require_receipt_for_advance?: boolean | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requisition_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requisitions: {
+        Row: {
+          actual_payment_date: string | null
+          amount_approved: number | null
+          amount_requested: number
+          bank_details: Json | null
+          budget_code: string | null
+          cancelled_reason: string | null
+          created_at: string | null
+          currency: string | null
+          current_approval_level: number | null
+          department: string | null
+          description: string | null
+          expected_date: string | null
+          expense_category: string | null
+          id: string
+          max_approval_levels: number | null
+          mobile_money_details: Json | null
+          notes: string | null
+          payment_method: string | null
+          purpose: string
+          receipt_submitted: boolean | null
+          receipt_urls: string[] | null
+          rejection_reason: string | null
+          requester_id: string | null
+          requester_name: string
+          requisition_number: string
+          requisition_type: Database["public"]["Enums"]["requisition_type"]
+          status: Database["public"]["Enums"]["requisition_status"]
+          supporting_documents: string[] | null
+          tenant_id: string
+          updated_at: string | null
+          urgency: string | null
+        }
+        Insert: {
+          actual_payment_date?: string | null
+          amount_approved?: number | null
+          amount_requested: number
+          bank_details?: Json | null
+          budget_code?: string | null
+          cancelled_reason?: string | null
+          created_at?: string | null
+          currency?: string | null
+          current_approval_level?: number | null
+          department?: string | null
+          description?: string | null
+          expected_date?: string | null
+          expense_category?: string | null
+          id?: string
+          max_approval_levels?: number | null
+          mobile_money_details?: Json | null
+          notes?: string | null
+          payment_method?: string | null
+          purpose: string
+          receipt_submitted?: boolean | null
+          receipt_urls?: string[] | null
+          rejection_reason?: string | null
+          requester_id?: string | null
+          requester_name: string
+          requisition_number: string
+          requisition_type?: Database["public"]["Enums"]["requisition_type"]
+          status?: Database["public"]["Enums"]["requisition_status"]
+          supporting_documents?: string[] | null
+          tenant_id: string
+          updated_at?: string | null
+          urgency?: string | null
+        }
+        Update: {
+          actual_payment_date?: string | null
+          amount_approved?: number | null
+          amount_requested?: number
+          bank_details?: Json | null
+          budget_code?: string | null
+          cancelled_reason?: string | null
+          created_at?: string | null
+          currency?: string | null
+          current_approval_level?: number | null
+          department?: string | null
+          description?: string | null
+          expected_date?: string | null
+          expense_category?: string | null
+          id?: string
+          max_approval_levels?: number | null
+          mobile_money_details?: Json | null
+          notes?: string | null
+          payment_method?: string | null
+          purpose?: string
+          receipt_submitted?: boolean | null
+          receipt_urls?: string[] | null
+          rejection_reason?: string | null
+          requester_id?: string | null
+          requester_name?: string
+          requisition_number?: string
+          requisition_type?: Database["public"]["Enums"]["requisition_type"]
+          status?: Database["public"]["Enums"]["requisition_status"]
+          supporting_documents?: string[] | null
+          tenant_id?: string
+          updated_at?: string | null
+          urgency?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requisitions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_tables: {
         Row: {
           capacity: number | null
@@ -8133,6 +8416,7 @@ export type Database = {
         | "accountant"
         | "marketer"
         | "customer"
+      approver_role: "hod" | "bursar" | "head_teacher" | "director" | "admin"
       asset_category:
         | "furniture"
         | "equipment"
@@ -8153,6 +8437,16 @@ export type Database = {
         | "damaged"
         | "disposed"
       payment_status: "pending" | "approved" | "rejected"
+      requisition_status:
+        | "draft"
+        | "pending_level1"
+        | "pending_level2"
+        | "pending_level3"
+        | "approved"
+        | "partially_approved"
+        | "rejected"
+        | "cancelled"
+      requisition_type: "cash_advance" | "reimbursement" | "purchase_request"
       tenant_status: "pending" | "active" | "suspended" | "rejected"
     }
     CompositeTypes: {
@@ -8291,6 +8585,7 @@ export const Constants = {
         "marketer",
         "customer",
       ],
+      approver_role: ["hod", "bursar", "head_teacher", "director", "admin"],
       asset_category: [
         "furniture",
         "equipment",
@@ -8313,6 +8608,17 @@ export const Constants = {
         "disposed",
       ],
       payment_status: ["pending", "approved", "rejected"],
+      requisition_status: [
+        "draft",
+        "pending_level1",
+        "pending_level2",
+        "pending_level3",
+        "approved",
+        "partially_approved",
+        "rejected",
+        "cancelled",
+      ],
+      requisition_type: ["cash_advance", "reimbursement", "purchase_request"],
       tenant_status: ["pending", "active", "suspended", "rejected"],
     },
   },
