@@ -8,6 +8,7 @@ interface Student {
   date_of_birth: string | null;
   gender: string | null;
   photo_url?: string | null;
+  student_index?: number; // Sequential index for formatting
 }
 
 interface StudentIDCardProps {
@@ -18,6 +19,8 @@ interface StudentIDCardProps {
   className: string;
   forPrint?: boolean;
   termYear?: string;
+  idPrefix?: string;
+  idDigits?: number;
 }
 
 // Standard CR80 ID card size: 85.6mm × 53.98mm (3.375" × 2.125")
@@ -32,10 +35,17 @@ export default function StudentIDCard({
   schoolPhone,
   className,
   forPrint = false,
-  termYear = "2024-2025"
+  termYear = "2024-2025",
+  idPrefix = "STU",
+  idDigits = 4
 }: StudentIDCardProps) {
   const cardId = student.admission_number || student.id.slice(0, 12).toUpperCase();
-  const barcodeValue = `STU-${student.id.replace(/-/g, '').slice(0, 16)}`;
+  
+  // Generate formatted student ID using prefix and digits from settings
+  const studentIndex = student.student_index || 1;
+  const formattedStudentId = `${idPrefix}-${String(studentIndex).padStart(idDigits, '0')}`;
+  const barcodeValue = formattedStudentId;
+  
   // QR code contains the admission number for easy gate scanning
   const qrValue = cardId;
 
