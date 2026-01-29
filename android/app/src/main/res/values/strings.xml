@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Kabejja Biz Track</string>
-    <string name="title_activity_main">Kabejja Biz Track</string>
+    <string name="app_name">TennaHub</string>
+    <string name="title_activity_main">TennaHub</string>
     <string name="package_name">com.kabejja.biztrack</string>
     <string name="custom_url_scheme">com.kabejja.biztrack</string>
 </resources>

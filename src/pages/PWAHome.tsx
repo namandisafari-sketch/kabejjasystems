@@ -179,12 +179,12 @@ export default function PWAHome() {
           <div className="flex items-center gap-3">
             <img 
               src={kabejjaLogo} 
-              alt="Kabejja" 
+              alt="TennaHub" 
               className="h-14 w-auto sm:h-16"
             />
             <div>
-              <h1 className="text-lg font-bold text-foreground">Kabejja</h1>
-              <p className="text-2xs text-muted-foreground">Biz Track</p>
+              <h1 className="text-lg font-bold text-foreground">TennaHub</h1>
+              <p className="text-2xs text-muted-foreground">Powered by Kabejja Systems</p>
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -335,7 +335,7 @@ export default function PWAHome() {
       <section className="px-4 pb-safe-bottom pb-8">
         <div className="max-w-2xl mx-auto text-center">
           <p className="text-xs text-muted-foreground mb-4">
-            Join 500+ Ugandan businesses already using Kabejja
+            Join 500+ Ugandan businesses already using TennaHub
           </p>
           <Button 
             size="lg"

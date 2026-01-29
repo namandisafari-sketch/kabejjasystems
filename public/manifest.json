@@ -1,7 +1,7 @@
 {
-  "name": "Kabejja Biz Track",
-  "short_name": "Kabejja",
-  "description": "Business management platform for Ugandan businesses. POS, inventory, staff management and more.",
+  "name": "TennaHub",
+  "short_name": "TennaHub",
+  "description": "TennaHub - Business management platform for Ugandan businesses. Powered by Kabejja Systems.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1e3a5f",
