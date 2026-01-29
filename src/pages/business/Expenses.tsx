@@ -38,7 +38,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 
-const EXPENSE_CATEGORIES = [
+// Generic expense categories
+const GENERIC_EXPENSE_CATEGORIES = [
   "Rent",
   "Utilities",
   "Salaries",
@@ -51,10 +52,37 @@ const EXPENSE_CATEGORIES = [
   "Other"
 ];
 
+// School-specific expense categories for bursar
+const SCHOOL_EXPENSE_CATEGORIES = [
+  "Staff Salaries",
+  "Teaching Materials",
+  "Stationery & Supplies",
+  "Electricity & Water",
+  "Transport (School Trips)",
+  "Transport (Fuel)",
+  "Maintenance & Repairs",
+  "Examination Expenses",
+  "Cleaning Supplies",
+  "Security Services",
+  "Medical Supplies",
+  "Sports Equipment",
+  "Library Books",
+  "Computer & IT",
+  "Food (Boarding)",
+  "Staff Welfare",
+  "Bank Charges",
+  "Printing & Photocopying",
+  "Telephone & Internet",
+  "Furniture & Fixtures",
+  "Miscellaneous",
+  "Other"
+];
+
 export default function Expenses() {
   const isMobile = useIsMobile();
   const tenantQuery = useTenant();
   const tenantId = tenantQuery.data?.tenantId;
+  const businessType = tenantQuery.data?.businessType;
   const { filterBranchId } = useBranchFilter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -67,6 +95,10 @@ export default function Expenses() {
     expense_date: format(new Date(), 'yyyy-MM-dd'),
     payment_method: "cash",
   });
+
+  // Determine which categories to use based on business type
+  const isSchoolBusiness = ['kindergarten', 'primary_school', 'secondary_school', 'school'].includes(businessType || '');
+  const EXPENSE_CATEGORIES = isSchoolBusiness ? SCHOOL_EXPENSE_CATEGORIES : GENERIC_EXPENSE_CATEGORIES;
 
   const { data: expenses, isLoading } = useQuery({
     queryKey: ['expenses', tenantId, filterBranchId],
