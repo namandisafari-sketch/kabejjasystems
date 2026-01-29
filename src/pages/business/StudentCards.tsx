@@ -23,6 +23,7 @@ interface Student {
   date_of_birth: string | null;
   gender: string | null;
   is_active: boolean;
+  student_index?: number;
 }
 
 interface SchoolClass {
@@ -508,16 +509,21 @@ export default function StudentCards() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {selectedStudentData.slice(0, 3).map(student => (
-                <StudentIDCard
-                  key={student.id}
-                  student={student}
-                  schoolName={tenant?.name || "School Name"}
-                  schoolLogo={tenant?.logo_url}
-                  schoolPhone={tenant?.phone}
-                  className={getClassName(student.class_id)}
-                />
-              ))}
+              {selectedStudentData.slice(0, 3).map((student, idx) => {
+                const globalIndex = students.findIndex(s => s.id === student.id);
+                return (
+                  <StudentIDCard
+                    key={student.id}
+                    student={{ ...student, student_index: globalIndex + 1 }}
+                    schoolName={tenant?.name || "School Name"}
+                    schoolLogo={tenant?.logo_url}
+                    schoolPhone={tenant?.phone}
+                    className={getClassName(student.class_id)}
+                    idPrefix={schoolSettings?.student_id_prefix || 'STU'}
+                    idDigits={schoolSettings?.student_id_digits || 4}
+                  />
+                );
+              })}
             </div>
             {selectedStudents.length > 3 && (
               <p className="text-center text-muted-foreground mt-4">
@@ -531,17 +537,22 @@ export default function StudentCards() {
       {/* Hidden Print Container */}
       <div className="hidden">
         <div ref={printRef}>
-          {selectedStudentData.map(student => (
-            <StudentIDCard
-              key={student.id}
-              student={student}
-              schoolName={tenant?.name || "School Name"}
-              schoolLogo={tenant?.logo_url}
-              schoolPhone={tenant?.phone}
-              className={getClassName(student.class_id)}
-              forPrint
-            />
-          ))}
+          {selectedStudentData.map((student) => {
+            const globalIndex = students.findIndex(s => s.id === student.id);
+            return (
+              <StudentIDCard
+                key={student.id}
+                student={{ ...student, student_index: globalIndex + 1 }}
+                schoolName={tenant?.name || "School Name"}
+                schoolLogo={tenant?.logo_url}
+                schoolPhone={tenant?.phone}
+                className={getClassName(student.class_id)}
+                idPrefix={schoolSettings?.student_id_prefix || 'STU'}
+                idDigits={schoolSettings?.student_id_digits || 4}
+                forPrint
+              />
+            );
+          })}
         </div>
       </div>
     </div>
