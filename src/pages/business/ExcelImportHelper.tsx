@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,8 +19,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle, X, Download } from "lucide-react";
+import { AlertCircle, CheckCircle, X, Download, Sparkles, Check } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import * as XLSX from "xlsx";
+import {
+  smartAutoDetectMapping,
+  formatFieldName,
+  getConfidenceLabel,
+} from "@/lib/smart-column-matcher";
 
 export interface ColumnMapping {
   [systemField: string]: number; // Maps system field name to Excel column index
@@ -112,54 +118,17 @@ export class ExcelImportHelper {
 
   /**
    * Auto-detect column mapping based on header names
-   * Uses fuzzy matching to find likely columns
+   * Uses smart fuzzy matching to find likely columns
    */
   static autoDetectMapping(
     excelHeaders: string[],
     systemFields: string[]
-  ): ColumnMapping {
-    const mapping: ColumnMapping = {};
-
-    const headerLower = excelHeaders.map((h) => h.toLowerCase());
-
-    for (const systemField of systemFields) {
-      const fieldLower = systemField.toLowerCase();
-
-      // Exact match
-      let matchIndex = headerLower.findIndex((h) => h === fieldLower);
-
-      // Partial match (contains)
-      if (matchIndex === -1) {
-        matchIndex = headerLower.findIndex((h) =>
-          h.includes(fieldLower) || fieldLower.includes(h)
-        );
-      }
-
-      // Abbreviation match
-      if (matchIndex === -1) {
-        const abbreviations: { [key: string]: string[] } = {
-          indexNumber: ["index", "idx", "no"],
-          studentName: ["name", "student", "student_name"],
-          englishLanguage: ["english", "eng"],
-          mathematics: ["math", "mathematics"],
-          physics: ["phy", "physics"],
-          chemistry: ["chem", "chemistry"],
-          biology: ["bio", "biology"],
-          aggregateGrade: ["grade", "aggregate", "agg"],
-        };
-
-        const abbrev = abbreviations[systemField] || [];
-        matchIndex = headerLower.findIndex((h) =>
-          abbrev.some((a) => h.includes(a))
-        );
-      }
-
-      if (matchIndex !== -1) {
-        mapping[systemField] = matchIndex;
-      }
-    }
-
-    return mapping;
+  ): { mapping: ColumnMapping; confidence: Record<string, number> } {
+    const result = smartAutoDetectMapping(excelHeaders, systemFields);
+    return {
+      mapping: result.mapping,
+      confidence: result.confidence,
+    };
   }
 
   /**
@@ -177,38 +146,13 @@ export class ExcelImportHelper {
     for (const field of requiredFields) {
       const colIndex = mapping[field];
       if (colIndex === undefined) {
-        errors.push(`Column mapping missing for ${field}`);
+        errors.push(`Column mapping missing for ${formatFieldName(field)}`);
         continue;
       }
 
       const value = row[colIndex]?.trim() || "";
       if (!value) {
-        errors.push(`${field} is required but empty`);
-      }
-    }
-
-    // Validate format
-    const indexColIndex = mapping.indexNumber;
-    if (indexColIndex !== undefined) {
-      const indexValue = row[indexColIndex]?.trim() || "";
-      if (indexValue && !/^[U]\d{4}\/\d{3}$/.test(indexValue)) {
-        errors.push(
-          `Invalid index number format: ${indexValue} (expected: U0000/001)`
-        );
-      }
-    }
-
-    // Validate grades
-    const gradeFields = ["englishLanguage", "mathematics", "physics", "chemistry", "biology"];
-    const validGrades = ["A", "B", "C", "D", "E", "O"];
-
-    for (const field of gradeFields) {
-      const colIndex = mapping[field];
-      if (colIndex !== undefined) {
-        const value = row[colIndex]?.trim() || "";
-        if (value && !validGrades.includes(value.toUpperCase())) {
-          errors.push(`${field}: "${value}" is not a valid grade (A-E or O)`);
-        }
+        errors.push(`${formatFieldName(field)} is required but empty`);
       }
     }
 
@@ -217,6 +161,7 @@ export class ExcelImportHelper {
       errors,
     };
   }
+
 
   /**
    * Parse rows based on column mapping
@@ -289,83 +234,148 @@ export class ExcelImportHelper {
 
 /**
  * Component: Column Mapping UI
- * Allows users to map their Excel columns to system fields
+ * Allows users to map their Excel columns to system fields with smart auto-detection
  */
 export const ColumnMappingUI = ({
   excelHeaders,
   systemFields,
+  requiredFields = [],
   onMappingChange,
   onAutoDetect,
 }: {
   excelHeaders: string[];
   systemFields: string[];
+  requiredFields?: string[];
   onMappingChange: (mapping: ColumnMapping) => void;
   onAutoDetect: () => void;
 }) => {
-  const [mapping, setMapping] = useState<ColumnMapping>(() => {
-    return ExcelImportHelper.autoDetectMapping(excelHeaders, systemFields);
-  });
+  const [mapping, setMapping] = useState<ColumnMapping>({});
+  const [confidence, setConfidence] = useState<Record<string, number>>({});
+  const [autoDetected, setAutoDetected] = useState(false);
+
+  // Auto-detect on mount
+  useEffect(() => {
+    const result = ExcelImportHelper.autoDetectMapping(excelHeaders, systemFields);
+    setMapping(result.mapping);
+    setConfidence(result.confidence);
+    onMappingChange(result.mapping);
+    setAutoDetected(true);
+  }, [excelHeaders, systemFields]);
 
   const handleMappingChange = (field: string, colIndex: string) => {
     const newMapping = { ...mapping };
+    const newConfidence = { ...confidence };
+    
     if (colIndex === "") {
       delete newMapping[field];
+      delete newConfidence[field];
     } else {
       newMapping[field] = parseInt(colIndex);
+      newConfidence[field] = 1; // Manual selection = 100% confidence
     }
+    
     setMapping(newMapping);
+    setConfidence(newConfidence);
     onMappingChange(newMapping);
   };
 
   const handleAutoDetect = () => {
-    const autoMapping = ExcelImportHelper.autoDetectMapping(
-      excelHeaders,
-      systemFields
-    );
-    setMapping(autoMapping);
-    onMappingChange(autoMapping);
+    const result = ExcelImportHelper.autoDetectMapping(excelHeaders, systemFields);
+    setMapping(result.mapping);
+    setConfidence(result.confidence);
+    onMappingChange(result.mapping);
     onAutoDetect();
   };
+
+  const mappedCount = Object.keys(mapping).length;
+  const requiredMapped = requiredFields.filter(f => f in mapping).length;
+  const allRequiredMapped = requiredMapped === requiredFields.length;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Map Your Columns</CardTitle>
-        <CardDescription>
-          Tell us which Excel columns contain which data. You can auto-detect
-          or manually select.
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Smart Column Mapping
+            </CardTitle>
+            <CardDescription>
+              Columns are auto-detected from your Excel headers. Review and adjust if needed.
+            </CardDescription>
+          </div>
+          <Badge variant={allRequiredMapped ? "default" : "destructive"}>
+            {mappedCount}/{systemFields.length} mapped
+          </Badge>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {autoDetected && (
+          <Alert className="border-primary/20 bg-primary/5">
+            <Check className="h-4 w-4 text-primary" />
+            <AlertDescription>
+              Auto-detected {mappedCount} column{mappedCount !== 1 ? 's' : ''} from your Excel file. 
+              {!allRequiredMapped && ` Please map the missing required fields.`}
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Button onClick={handleAutoDetect} variant="outline" className="w-full">
-          🔍 Auto-Detect Columns
+          <Sparkles className="mr-2 h-4 w-4" />
+          Re-Detect Columns
         </Button>
 
         <div className="grid gap-4 md:grid-cols-2">
-          {systemFields.map((field) => (
-            <div key={field} className="space-y-2">
-              <Label htmlFor={field}>{field}</Label>
-              <Select
-                value={
-                  mapping[field] !== undefined ? String(mapping[field]) : ""
-                }
-                onValueChange={(value) => handleMappingChange(field, value)}
-              >
-                <SelectTrigger id={field}>
-                  <SelectValue placeholder="Select column..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Not Provided</SelectItem>
-                  {excelHeaders.map((header, index) => (
-                    <SelectItem key={index} value={String(index)}>
-                      {header || `Column ${index + 1}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          ))}
+          {systemFields.map((field) => {
+            const isRequired = requiredFields.includes(field);
+            const isMapped = field in mapping;
+            const conf = confidence[field];
+            const confLabel = conf ? getConfidenceLabel(conf) : null;
+
+            return (
+              <div key={field} className="space-y-2">
+                <Label htmlFor={field} className="flex items-center gap-2">
+                  {formatFieldName(field)}
+                  {isRequired && <Badge variant="destructive" className="text-xs">Required</Badge>}
+                  {isMapped && confLabel && (
+                    <Badge variant="outline" className={`text-xs ${confLabel.color}`}>
+                      {confLabel.label}
+                    </Badge>
+                  )}
+                </Label>
+                <Select
+                  value={mapping[field] !== undefined ? String(mapping[field]) : ""}
+                  onValueChange={(value) => handleMappingChange(field, value)}
+                >
+                  <SelectTrigger 
+                    id={field}
+                    className={!isMapped && isRequired ? "border-destructive bg-destructive/5" : isMapped ? "border-primary/50 bg-primary/5" : ""}
+                  >
+                    <SelectValue placeholder="Select column..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Not Mapped</SelectItem>
+                    {excelHeaders.map((header, index) => (
+                      <SelectItem key={index} value={String(index)}>
+                        {header || `Column ${index + 1}`}
+                        {mapping[field] === index && " ✓"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            );
+          })}
         </div>
+
+        {!allRequiredMapped && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Missing required fields: {requiredFields.filter(f => !(f in mapping)).map(formatFieldName).join(", ")}
+            </AlertDescription>
+          </Alert>
+        )}
       </CardContent>
     </Card>
   );
@@ -396,17 +406,17 @@ export const ValidationResultsUI = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-lg bg-green-50 p-4">
-            <div className="text-2xl font-bold text-green-700">{validCount}</div>
-            <div className="text-sm text-green-600">Valid Rows</div>
+          <div className="rounded-lg bg-primary/10 p-4">
+            <div className="text-2xl font-bold text-primary">{validCount}</div>
+            <div className="text-sm text-muted-foreground">Valid Rows</div>
           </div>
-          <div className="rounded-lg bg-red-50 p-4">
-            <div className="text-2xl font-bold text-red-700">{errorCount}</div>
-            <div className="text-sm text-red-600">Errors Found</div>
+          <div className="rounded-lg bg-destructive/10 p-4">
+            <div className="text-2xl font-bold text-destructive">{errorCount}</div>
+            <div className="text-sm text-muted-foreground">Errors Found</div>
           </div>
-          <div className="rounded-lg bg-blue-50 p-4">
-            <div className="text-2xl font-bold text-blue-700">{successRate}%</div>
-            <div className="text-sm text-blue-600">Success Rate</div>
+          <div className="rounded-lg bg-secondary p-4">
+            <div className="text-2xl font-bold text-secondary-foreground">{successRate}%</div>
+            <div className="text-sm text-muted-foreground">Success Rate</div>
           </div>
         </div>
 
@@ -481,16 +491,16 @@ export const DataPreviewUI = ({
               {sampleRows.map((row, idx) => (
                 <TableRow
                   key={idx}
-                  className={row._isValid ? "bg-green-50" : "bg-red-50"}
+                  className={row._isValid ? "bg-primary/5" : "bg-destructive/5"}
                 >
                   {systemFields.map((field) => (
                     <TableCell key={field}>{row[field] || "-"}</TableCell>
                   ))}
                   <TableCell>
                     {row._isValid ? (
-                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <CheckCircle className="h-5 w-5 text-primary" />
                     ) : (
-                      <X className="h-5 w-5 text-red-600" />
+                      <X className="h-5 w-5 text-destructive" />
                     )}
                   </TableCell>
                 </TableRow>
@@ -499,7 +509,7 @@ export const DataPreviewUI = ({
           </Table>
         </div>
         {sampleRows.length < parsedRows.length && (
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-muted-foreground">
             Showing first {sampleRows.length} of {parsedRows.length} rows...
           </p>
         )}
