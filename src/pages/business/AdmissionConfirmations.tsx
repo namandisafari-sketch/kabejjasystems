@@ -66,24 +66,102 @@ export default function AdmissionConfirmations() {
     enabled: !!tenant?.tenantId,
   });
 
+  // Get school classes for assigning students
+  const { data: classes } = useQuery({
+    queryKey: ["school-classes", tenant?.tenantId],
+    queryFn: async () => {
+      if (!tenant?.tenantId) return [];
+      const { data, error } = await supabase
+        .from("school_classes")
+        .select("id, name")
+        .eq("tenant_id", tenant.tenantId)
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!tenant?.tenantId,
+  });
+
+  // Generate admission number
+  const generateAdmissionNumber = async () => {
+    const year = new Date().getFullYear();
+    const { count } = await supabase
+      .from("students")
+      .select("*", { count: "exact", head: true })
+      .eq("tenant_id", tenant?.tenantId);
+    
+    const nextNum = ((count || 0) + 1).toString().padStart(4, "0");
+    return `ADM/${year}/${nextNum}`;
+  };
+
   const verifyMutation = useMutation({
     mutationFn: async (id: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const { error } = await supabase
+      // Get the confirmation data
+      const confirmation = confirmations?.find((c) => c.id === id);
+      if (!confirmation) throw new Error("Confirmation not found");
+
+      const studentData = confirmation.student_data as StudentData;
+      
+      // Find the class by name
+      const matchingClass = classes?.find((c) => 
+        c.name.toLowerCase() === studentData.applying_for_class.toLowerCase()
+      );
+
+      // Generate admission number
+      const admissionNumber = await generateAdmissionNumber();
+
+      // Create the student record
+      const { data: newStudent, error: studentError } = await supabase
+        .from("students")
+        .insert({
+          tenant_id: tenant?.tenantId,
+          admission_number: admissionNumber,
+          full_name: studentData.full_name,
+          date_of_birth: studentData.date_of_birth || null,
+          gender: studentData.gender,
+          nationality: studentData.nationality || null,
+          religion: studentData.religion || null,
+          address: studentData.home_address || null,
+          previous_school_name: studentData.previous_school || null,
+          parent_name: studentData.parent_name,
+          parent_phone: studentData.parent_phone,
+          parent_email: studentData.parent_email || null,
+          medical_conditions: studentData.medical_conditions || null,
+          allergies: studentData.allergies || null,
+          class_id: matchingClass?.id || null,
+          admission_date: new Date().toISOString().split("T")[0],
+          is_active: true,
+          created_by: user.id,
+        })
+        .select()
+        .single();
+
+      if (studentError) throw studentError;
+
+      // Update the confirmation as verified and link to student
+      const { error: updateError } = await supabase
         .from("admission_confirmations")
         .update({
           verified_at: new Date().toISOString(),
           verified_by: user.id,
+          student_id: newStudent.id,
         })
         .eq("id", id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      return newStudent;
     },
-    onSuccess: () => {
+    onSuccess: (student) => {
       queryClient.invalidateQueries({ queryKey: ["admission-confirmations", tenant?.tenantId] });
-      toast({ title: "Verified", description: "Admission confirmation has been verified." });
+      toast({ 
+        title: "Student Created", 
+        description: `${student.full_name} has been added to the school records with admission number ${student.admission_number}`,
+      });
       setSelectedConfirmation(null);
     },
     onError: (error: Error) => {
@@ -320,8 +398,17 @@ export default function AdmissionConfirmations() {
                   >
                     {verifyMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     <CheckCircle className="mr-2 h-4 w-4" />
-                    Verify & Confirm
+                    Verify & Create Student Record
                   </Button>
+                </div>
+              )}
+
+              {selectedConfirmation.verified_at && (
+                <div className="rounded-lg border border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-800 p-4 text-center">
+                  <CheckCircle className="h-6 w-6 text-green-600 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-green-700 dark:text-green-400">
+                    Student record has been created
+                  </p>
                 </div>
               )}
             </div>
