@@ -255,6 +255,8 @@ export const moduleRoutes: Record<string, { url: string; icon: string }> = {
   // UNEB Exam modules
   uneb_exam_results: { url: '/business/exam-results-lookup', icon: 'ClipboardCheck' },
   exam_access: { url: '/business/blocked-exam-access', icon: 'ShieldAlert' },
+  // Additional school modules (marks_entry maps to exams page)
+  marks_entry: { url: '/business/exams', icon: 'Edit' },
   // Rental Management modules
   rental_dashboard: { url: '/business/rental-dashboard', icon: 'LayoutDashboard' },
   rental_properties: { url: '/business/rental-properties', icon: 'Building2' },
