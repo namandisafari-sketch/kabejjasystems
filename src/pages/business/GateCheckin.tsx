@@ -281,7 +281,7 @@ export default function GateCheckin() {
             id,
             full_name,
             admission_number,
-            school_classes (name)
+            school_classes!class_id (name)
           )
         `)
         .eq("tenant_id", tenantId)
@@ -309,7 +309,7 @@ export default function GateCheckin() {
           students (
             full_name,
             admission_number,
-            school_classes (name)
+            school_classes!class_id (name)
           )
         `)
         .eq("tenant_id", tenantId)
@@ -465,7 +465,7 @@ export default function GateCheckin() {
           full_name,
           admission_number,
           class_id,
-          school_classes (name)
+          school_classes!class_id (name)
         `)
         .eq("tenant_id", tenantId)
         .eq("admission_number", admissionNumber)

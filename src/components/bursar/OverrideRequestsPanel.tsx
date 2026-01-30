@@ -72,7 +72,7 @@ export function OverrideRequestsPanel({
           students (
             full_name,
             admission_number,
-            school_classes (name)
+            school_classes!class_id (name)
           )
         `)
         .eq("tenant_id", tenantId)
