@@ -21,7 +21,7 @@ interface ExamResult {
   subjects: Subject[];
   total_points: number;
   aggregate_grade: string;
-  status: string;
+  result_status: string;
   created_at: string;
 }
 
@@ -73,11 +73,17 @@ const ExamResults = () => {
           setBlockReason(
             blockData.reason || "Access to this result has been restricted"
           );
-          setResult(examResult);
+          setResult({
+            ...examResult,
+            subjects: (examResult.subjects || []) as unknown as Subject[],
+          });
           return;
         }
 
-        setResult(examResult);
+        setResult({
+          ...examResult,
+          subjects: (examResult.subjects || []) as unknown as Subject[],
+        });
       } catch (error) {
         console.error('Error fetching results:', error);
         toast({

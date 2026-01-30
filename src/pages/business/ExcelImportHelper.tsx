@@ -34,7 +34,7 @@ export interface ValidationError {
 }
 
 export interface ParsedRow {
-  [key: string]: string;
+  [key: string]: string | number | boolean | string[];
   _rowIndex: number;
   _isValid: boolean;
   _errors: string[];

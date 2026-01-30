@@ -1,5 +1,15 @@
 import { supabase } from "@/integrations/supabase/client";
-import { v4 as uuidv4 } from "uuid";
+
+/**
+ * Generate a unique ID for invitations
+ */
+const generateId = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
 
 /**
  * Generate a secure invitation token for admin signup
@@ -12,7 +22,7 @@ export const generateAdminInvitation = async (
   expiresInDays: number = 7
 ): Promise<{ token: string; inviteUrl: string } | null> => {
   try {
-    const token = uuidv4();
+    const token = generateId();
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + expiresInDays);
 
@@ -30,14 +40,14 @@ export const generateAdminInvitation = async (
       return null;
     }
 
-    const { error } = await supabase
-      .from('admin_invitations')
+    const { error } = await (supabase
+      .from('admin_invitations' as any)
       .insert({
         email,
         token,
         expires_at: expiresAt.toISOString(),
         created_by: session?.user.id,
-      });
+      }) as any);
 
     if (error) {
       console.error('Failed to create invitation:', error);
@@ -61,13 +71,13 @@ export const generateAdminInvitation = async (
  */
 export const validateAdminInvitation = async (token: string): Promise<boolean> => {
   try {
-    const { data, error } = await supabase
-      .from('admin_invitations')
+    const { data, error } = await (supabase
+      .from('admin_invitations' as any)
       .select('*')
       .eq('token', token)
       .eq('used', false)
       .gt('expires_at', new Date().toISOString())
-      .single();
+      .single() as any);
 
     return !error && !!data;
   } catch (error) {
@@ -94,14 +104,14 @@ export const getPendingInvitations = async () => {
       return [];
     }
 
-    const { data, error } = await supabase
-      .from('admin_invitations')
+    const { data, error } = await (supabase
+      .from('admin_invitations' as any)
       .select('*')
       .eq('used', false)
       .gt('expires_at', new Date().toISOString())
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }) as any);
 
-    return error ? [] : data;
+    return error ? [] : (data || []);
   } catch (error) {
     console.error('Error fetching invitations:', error);
     return [];
@@ -126,10 +136,10 @@ export const revokeAdminInvitation = async (invitationId: string): Promise<boole
       return false;
     }
 
-    const { error } = await supabase
-      .from('admin_invitations')
+    const { error } = await (supabase
+      .from('admin_invitations' as any)
       .delete()
-      .eq('id', invitationId);
+      .eq('id', invitationId) as any);
 
     return !error;
   } catch (error) {

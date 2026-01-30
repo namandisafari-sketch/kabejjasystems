@@ -136,7 +136,7 @@ export const ImportExamResultsExcel = () => {
 
         const hasAccess =
           profile.role === "tenant_owner" ||
-          profile.permissions?.exam_import_access;
+          (profile.permissions as any)?.exam_import_access;
 
         setIsTenant(hasAccess);
         if (!hasAccess) {
@@ -263,18 +263,18 @@ export const ImportExamResultsExcel = () => {
       // Transform parsed rows to exam results
       const examResults = validRows.map((row) => ({
         exam_session_id: selectedSession,
-        index_number: row.indexNumber,
-        student_name: row.studentName,
-        school_name: "", // Could be added to mapping
-        school_id: "", // Could be from tenant
+        index_number: String(row.indexNumber || ''),
+        student_name: String(row.studentName || ''),
+        school_name: "",
+        school_id: "",
         subjects: {
-          "English Language": row.englishLanguage,
-          Mathematics: row.mathematics,
-          Physics: row.physics,
-          Chemistry: row.chemistry,
-          Biology: row.biology,
+          "English Language": String(row.englishLanguage || ''),
+          Mathematics: String(row.mathematics || ''),
+          Physics: String(row.physics || ''),
+          Chemistry: String(row.chemistry || ''),
+          Biology: String(row.biology || ''),
         },
-        aggregate_grade: row.aggregateGrade,
+        aggregate_grade: String(row.aggregateGrade || ''),
         result_status: "published",
         created_at: new Date().toISOString(),
       }));
@@ -282,7 +282,7 @@ export const ImportExamResultsExcel = () => {
       // Batch insert
       const { error } = await supabase
         .from("exam_results")
-        .insert(examResults);
+        .insert(examResults as any);
 
       if (error) {
         throw error;
@@ -316,7 +316,7 @@ export const ImportExamResultsExcel = () => {
   const handleDownloadTemplate = () => {
     try {
       const template = ExcelImportHelper.generateTemplate(SYSTEM_FIELDS);
-      const blob = new Blob([template], {
+      const blob = new Blob([new Uint8Array(template).buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
       const url = URL.createObjectURL(blob);
@@ -528,7 +528,6 @@ export const ImportExamResultsExcel = () => {
                   onClick={handleImportExcel}
                   className="flex-1"
                   disabled={importing}
-                  loading={importing}
                 >
                   {importing ? "Importing..." : "Import Valid Rows"}
                 </Button>

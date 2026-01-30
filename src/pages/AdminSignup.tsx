@@ -44,13 +44,13 @@ const AdminSignup = () => {
         
         if (token) {
           // Validate token with backend
-          const { data, error } = await supabase
-            .from('admin_invitations')
+          const { data, error } = await (supabase
+            .from('admin_invitations' as any)
             .select('*')
             .eq('token', token)
             .eq('used', false)
             .gt('expires_at', new Date().toISOString())
-            .single();
+            .single() as any);
           
           if (error || !data) {
             setError("Invalid, expired, or already-used invitation token.");
@@ -60,7 +60,7 @@ const AdminSignup = () => {
           
           setFormData(prev => ({
             ...prev,
-            email: data.email || "",
+            email: (data as any).email || "",
           }));
           setIsAuthorized(true);
         } else if (signupEnabled) {
@@ -160,10 +160,10 @@ const AdminSignup = () => {
       
       // Mark invitation as used if token exists
       if (token) {
-        await supabase
-          .from('admin_invitations')
+        await (supabase
+          .from('admin_invitations' as any)
           .update({ used: true, used_by: authData.user.id, used_at: new Date().toISOString() })
-          .eq('token', token);
+          .eq('token', token) as any);
       }
       
       toast({
