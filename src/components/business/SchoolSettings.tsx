@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, X, Save, Loader2, GraduationCap, Copy, Users, CreditCard, Hash } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { UNEBSettings } from "./UNEBSettings";
+import { useTenant } from "@/hooks/use-tenant";
 
 interface SchoolSettingsProps {
   tenantId: string | null;
@@ -18,6 +20,9 @@ interface SchoolSettingsProps {
 export function SchoolSettings({ tenantId }: SchoolSettingsProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { data: tenantData } = useTenant();
+  const isSecondarySchool = tenantData?.businessType === 'secondary_school';
+  
   const [streams, setStreams] = useState<string[]>([]);
   const [newStream, setNewStream] = useState("");
   const [studentIdPrefix, setStudentIdPrefix] = useState("STU");
@@ -342,6 +347,14 @@ export function SchoolSettings({ tenantId }: SchoolSettingsProps) {
         </Card>
 
         <Separator />
+
+        {/* UNEB Settings for Secondary Schools */}
+        {isSecondarySchool && (
+          <>
+            <UNEBSettings tenantId={tenantId} />
+            <Separator />
+          </>
+        )}
 
         {/* Class Streams */}
         <div className="space-y-4">
