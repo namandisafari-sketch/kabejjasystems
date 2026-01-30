@@ -314,11 +314,12 @@ export const GeneralImportPage = ({
               <ColumnMappingUI
                 excelHeaders={excelHeaders}
                 systemFields={config.systemFields}
+                requiredFields={config.requiredFields}
                 onMappingChange={setColumnMapping}
                 onAutoDetect={() =>
                   toast({
-                    title: "Auto-Detected",
-                    description: "Columns detected automatically",
+                    title: "Smart Detection Complete",
+                    description: "Columns auto-detected from your Excel headers",
                   })
                 }
               />
