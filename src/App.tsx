@@ -110,6 +110,9 @@ import UNEBCandidates from "./pages/business/UNEBCandidates";
 import Grades from "./pages/business/Grades";
 import AdmissionLinks from "./pages/business/AdmissionLinks";
 import AdmissionConfirmations from "./pages/business/AdmissionConfirmations";
+import StudentLifecycle from "./pages/business/StudentLifecycle";
+import PromotionRules from "./pages/business/PromotionRules";
+import SchoolHolidays from "./pages/business/SchoolHolidays";
 import RentalDashboard from "./pages/business/rental/RentalDashboard";
 import RentalProperties from "./pages/business/rental/RentalProperties";
 import RentalUnits from "./pages/business/rental/RentalUnits";
@@ -266,6 +269,10 @@ const App = () => {
                 {/* Admission Management */}
                 <Route path="admission-links" element={<AdmissionLinks />} />
                 <Route path="admission-confirmations" element={<AdmissionConfirmations />} />
+                {/* Student Lifecycle Management */}
+                <Route path="student-lifecycle" element={<StudentLifecycle />} />
+                <Route path="promotion-rules" element={<PromotionRules />} />
+                <Route path="school-holidays" element={<SchoolHolidays />} />
                 {/* Rental Management Routes */}
                 <Route path="rental-dashboard" element={<RentalDashboard />} />
                 <Route path="rental-tax-dashboard" element={<RentalTaxDashboard />} />
