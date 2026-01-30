@@ -33,6 +33,7 @@ import AdminCreateBusiness from "./pages/admin/AdminCreateBusiness";
 import AdminSystemHealth from "./pages/admin/AdminSystemHealth";
 import AdminFeatureFlags from "./pages/admin/AdminFeatureFlags";
 import AdminStorage from "./pages/admin/AdminStorage";
+import AdminBackups from "./pages/admin/AdminBackups";
 import SubmitTestimonial from "./pages/SubmitTestimonial";
 import { BusinessLayout } from "./components/BusinessLayout";
 import BusinessDashboard from "./pages/business/BusinessDashboard";
@@ -180,6 +181,7 @@ const App = () => {
                 <Route path="system-health" element={<AdminSystemHealth />} />
                 <Route path="feature-flags" element={<AdminFeatureFlags />} />
                 <Route path="storage" element={<AdminStorage />} />
+                <Route path="backups" element={<AdminBackups />} />
                 <Route path="audit-logs" element={<AdminAuditLogs />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>

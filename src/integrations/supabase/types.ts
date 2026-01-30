@@ -9112,6 +9112,42 @@ export type Database = {
           },
         ]
       }
+      system_backups: {
+        Row: {
+          backup_type: string
+          categories: string[] | null
+          created_at: string | null
+          created_by: string | null
+          file_name: string | null
+          format: string | null
+          id: string
+          row_counts: Json | null
+          tables_included: string[] | null
+        }
+        Insert: {
+          backup_type?: string
+          categories?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          file_name?: string | null
+          format?: string | null
+          id?: string
+          row_counts?: Json | null
+          tables_included?: string[] | null
+        }
+        Update: {
+          backup_type?: string
+          categories?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          file_name?: string | null
+          format?: string | null
+          id?: string
+          row_counts?: Json | null
+          tables_included?: string[] | null
+        }
+        Relationships: []
+      }
       tax_tracking: {
         Row: {
           created_at: string | null
