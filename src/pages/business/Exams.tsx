@@ -255,7 +255,7 @@ export default function Exams() {
     mutationFn: async (results: { student_id: string; marks: number; is_absent: boolean }[]) => {
       for (const result of results) {
         const { error } = await supabase
-          .from("exam_results")
+          .from("student_exam_scores")
           .upsert({
             exam_id: selectedExam.id,
             student_id: result.student_id,
