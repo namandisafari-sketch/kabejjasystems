@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { 
   GraduationCap, ShoppingCart, UtensilsCrossed, Bed, 
-  Scissors, Pill, Wrench, Building2, LogIn, UserPlus,
+  Scissors, Pill, Wrench, Building2, LogIn,
   Sparkles, Users, BookOpen, Briefcase, RefreshCw, Download,
   Award, FileSearch
 } from "lucide-react";
@@ -402,20 +402,12 @@ export default function PWAHome() {
         </div>
       </section>
 
-      {/* Bottom CTA */}
+      {/* Bottom Info */}
       <section className="px-4 pb-safe-bottom pb-8">
         <div className="max-w-2xl mx-auto text-center">
-          <p className="text-xs text-muted-foreground mb-4">
-            Join 500+ Ugandan businesses already using TennaHub
+          <p className="text-xs text-muted-foreground">
+            Trusted by 500+ Ugandan businesses
           </p>
-          <Button 
-            size="lg"
-            onClick={() => navigate("/signup")}
-            className="w-full sm:w-auto gap-2 btn-press"
-          >
-            <UserPlus className="w-5 h-5" />
-            Create Free Account
-          </Button>
         </div>
       </section>
     </div>
