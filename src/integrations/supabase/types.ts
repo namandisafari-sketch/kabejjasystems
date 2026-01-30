@@ -3990,6 +3990,8 @@ export type Database = {
           package_id: string | null
           payment_method: string | null
           payment_status: string | null
+          pesapal_merchant_reference: string | null
+          pesapal_tracking_id: string | null
           tenant_id: string | null
           updated_at: string | null
         }
@@ -4004,6 +4006,8 @@ export type Database = {
           package_id?: string | null
           payment_method?: string | null
           payment_status?: string | null
+          pesapal_merchant_reference?: string | null
+          pesapal_tracking_id?: string | null
           tenant_id?: string | null
           updated_at?: string | null
         }
@@ -4018,6 +4022,8 @@ export type Database = {
           package_id?: string | null
           payment_method?: string | null
           payment_status?: string | null
+          pesapal_merchant_reference?: string | null
+          pesapal_tracking_id?: string | null
           tenant_id?: string | null
           updated_at?: string | null
         }
