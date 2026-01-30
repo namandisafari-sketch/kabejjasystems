@@ -95,7 +95,7 @@ const ECDRoles = () => {
     queryFn: async () => {
       let query = supabase
         .from('students')
-        .select('*, school_classes(name, section)')
+        .select('*, school_classes!class_id(name, section)')
         .eq('tenant_id', tenantId)
         .eq('is_active', true);
       
@@ -119,7 +119,7 @@ const ECDRoles = () => {
         .from('ecd_student_roles')
         .select(`
           *,
-          students(full_name, admission_number, class_id, school_classes(name, section)),
+          students(full_name, admission_number, class_id, school_classes!class_id(name, section)),
           ecd_class_roles(name, badge_icon)
         `)
         .eq('tenant_id', tenantId)

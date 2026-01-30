@@ -113,7 +113,7 @@ export default function Fees() {
         .from('fee_payments')
         .select(`
           *,
-          student:students(id, full_name, admission_number, class:school_classes(name)),
+          student:students(id, full_name, admission_number, class:school_classes!class_id(name)),
           student_fee:student_fees(term:academic_terms(name, year))
         `)
         .eq('tenant_id', tenantData.tenantId)

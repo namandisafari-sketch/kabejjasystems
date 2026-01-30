@@ -43,7 +43,7 @@ export default function ECDPupils() {
     queryFn: async () => {
       let query = supabase
         .from('students')
-        .select('*, school_classes(name, section, level)')
+        .select('*, school_classes!class_id(name, section, level)')
         .eq('tenant_id', tenantId)
         .order('created_at', { ascending: false });
       
