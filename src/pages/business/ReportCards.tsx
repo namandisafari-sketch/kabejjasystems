@@ -87,7 +87,7 @@ export default function ReportCards() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('students')
-        .select('*, school_classes(id, name)')
+        .select('*, school_classes!class_id(id, name)')
         .eq('tenant_id', tenantData!.tenantId)
         .eq('is_active', true)
         .order('full_name');
@@ -105,7 +105,7 @@ export default function ReportCards() {
         .from('student_report_cards')
         .select(`
           *,
-          students(id, full_name, admission_number, school_classes(id, name)),
+          students(id, full_name, admission_number, school_classes!class_id(id, name)),
           academic_terms(id, name, term_number, year)
         `)
         .eq('tenant_id', tenantData!.tenantId)

@@ -44,7 +44,7 @@ export default function Students() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('students')
-        .select('*, school_classes(name, level, grade)')
+        .select('*, school_classes!class_id(name, level, grade)')
         .eq('tenant_id', tenantData!.tenantId)
         .order('full_name');
       if (error) throw error;
@@ -236,7 +236,7 @@ export default function Students() {
   const handleView = async (student: Student) => {
     const { data } = await supabase
       .from('students')
-      .select('*, school_classes(name, level, grade)')
+      .select('*, school_classes!class_id(name, level, grade)')
       .eq('id', student.id)
       .single();
     

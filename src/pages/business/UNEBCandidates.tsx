@@ -98,7 +98,7 @@ export default function UNEBCandidates() {
             full_name,
             admission_number,
             gender,
-            class:school_classes(name)
+            class:school_classes!class_id(name)
           )
         `)
         .eq('tenant_id', tenantId!)

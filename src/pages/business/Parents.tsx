@@ -70,7 +70,7 @@ export default function Parents() {
               id,
               full_name,
               admission_number,
-              class:school_classes(name)
+              class:school_classes!class_id(name)
             )
           )
         `)
@@ -94,7 +94,7 @@ export default function Parents() {
           id,
           full_name,
           admission_number,
-          class:school_classes(name)
+          class:school_classes!class_id(name)
         `)
         .eq("tenant_id", tenantId)
         .eq("is_active", true)

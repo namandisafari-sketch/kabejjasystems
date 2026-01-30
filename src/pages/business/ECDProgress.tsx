@@ -77,7 +77,7 @@ const ECDProgress = () => {
     queryFn: async () => {
       let query = supabase
         .from('students')
-        .select('*, school_classes(name, section)')
+        .select('*, school_classes!class_id(name, section)')
         .eq('tenant_id', tenantId)
         .eq('is_active', true);
       
@@ -102,7 +102,7 @@ const ECDProgress = () => {
         .select(`
           *,
           students(full_name, admission_number, photo_url),
-          school_classes(name, section),
+          school_classes!class_id(name, section),
           academic_terms(name, year, term_number)
         `)
         .eq('tenant_id', tenantId)

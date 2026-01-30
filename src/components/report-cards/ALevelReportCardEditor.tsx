@@ -77,7 +77,7 @@ export function ALevelReportCardEditor({ reportCard, onClose }: ALevelReportCard
     queryFn: async () => {
       const { data, error } = await supabase
         .from('students')
-        .select('*, school_classes(id, name, level)')
+        .select('*, school_classes!class_id(id, name, level)')
         .eq('id', reportCard.student_id)
         .single();
       if (error) throw error;

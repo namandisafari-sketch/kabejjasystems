@@ -51,7 +51,7 @@ export function ReportCardPreview({ reportCardId, onClose }: ReportCardPreviewPr
         .from('student_report_cards')
         .select(`
           *,
-          students(id, full_name, admission_number, date_of_birth, gender, guardian_name, guardian_phone, school_classes(id, name, level)),
+          students(id, full_name, admission_number, date_of_birth, gender, guardian_name, guardian_phone, school_classes!class_id(id, name, level)),
           academic_terms(id, name, term_number, year)
         `)
         .eq('id', reportCardId)
