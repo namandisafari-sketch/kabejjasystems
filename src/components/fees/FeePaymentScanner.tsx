@@ -201,36 +201,42 @@ export function FeePaymentScanner({ tenantId }: FeePaymentScannerProps) {
   const lookupStudentData = async (code: string): Promise<{ student: StudentInfo; fee: StudentFeeInfo | null } | null> => {
     let studentData: StudentInfo | null = null;
 
-    // Extract student ID from barcode format: STU-{id16chars}
-    if (code.startsWith("STU-")) {
-      const idPart = code.replace("STU-", "");
-      const { data: students, error } = await supabase
-        .from("students")
-        .select("id, full_name, admission_number, boarding_status, school_classes(name, level)")
-        .eq("tenant_id", tenantId)
-        .eq("is_active", true);
-      
-      if (error) throw error;
+    // Fetch all active students for this tenant (needed for index-based lookup)
+    const { data: allStudents, error: fetchError } = await supabase
+      .from("students")
+      .select("id, full_name, admission_number, boarding_status, school_classes(name, level)")
+      .eq("tenant_id", tenantId)
+      .eq("is_active", true)
+      .order("created_at", { ascending: true });
+    
+    if (fetchError) throw fetchError;
 
-      studentData = students?.find(s => 
-        s.id.replace(/-/g, '').slice(0, 16) === idPart ||
-        s.admission_number === code
+    // Handle barcode format: STU-XXXX or custom prefix like ADM-XXXX
+    const barcodeMatch = code.match(/^([A-Z]+)-(\d+)$/);
+    if (barcodeMatch) {
+      const indexNum = parseInt(barcodeMatch[2], 10);
+      
+      // Student index is 1-based, array is 0-based
+      if (indexNum > 0 && indexNum <= (allStudents?.length || 0)) {
+        studentData = allStudents?.[indexNum - 1] || null;
+      }
+      
+      // Also try matching by admission_number directly
+      if (!studentData) {
+        studentData = allStudents?.find(s => s.admission_number === code) || null;
+      }
+    }
+
+    // Try lookup by exact admission number or UUID
+    if (!studentData) {
+      studentData = allStudents?.find(s => 
+        s.admission_number === code || 
+        s.id === code ||
+        s.id.replace(/-/g, '').slice(0, 16) === code.replace("STU-", "")
       ) || null;
     }
 
-    if (!studentData) {
-      // Try lookup by admission number
-      const { data, error } = await supabase
-        .from("students")
-        .select("id, full_name, admission_number, boarding_status, school_classes(name, level)")
-        .eq("tenant_id", tenantId)
-        .eq("is_active", true)
-        .or(`admission_number.eq.${code},id.eq.${code}`)
-        .maybeSingle();
-
-      if (error || !data) return null;
-      studentData = data;
-    }
+    if (!studentData) return null;
 
     // Fetch fee data
     const { data: feeData } = await supabase
