@@ -77,7 +77,7 @@ export async function handleTeacherScan(
         full_name,
         admission_number,
         photo_url,
-        school_classes (name)
+        school_classes!class_id (name)
       `)
       .eq("tenant_id", tenantId);
 
@@ -191,7 +191,7 @@ export async function handleGateScan(
         guardian_name,
         guardian_phone,
         authorized_pickups,
-        school_classes (name)
+        school_classes!class_id (name)
       `)
       .eq("tenant_id", tenantId);
 

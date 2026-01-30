@@ -248,6 +248,11 @@ export const moduleRoutes: Record<string, { url: string; icon: string }> = {
   // Self-Admission modules
   admission_links: { url: '/business/admission-links', icon: 'Link' },
   admission_confirmations: { url: '/business/admission-confirmations', icon: 'UserPlus' },
+  // Student Lifecycle Management modules
+  student_lifecycle: { url: '/business/student-lifecycle', icon: 'Users' },
+  promotion_rules: { url: '/business/promotion-rules', icon: 'TrendingUp' },
+  school_holidays: { url: '/business/school-holidays', icon: 'Calendar' },
+  exam_access: { url: '/business/blocked-exam-access', icon: 'ShieldAlert' },
   // Rental Management modules
   rental_dashboard: { url: '/business/rental-dashboard', icon: 'LayoutDashboard' },
   rental_properties: { url: '/business/rental-properties', icon: 'Building2' },

@@ -76,7 +76,7 @@ export function BursarRulesManager() {
         .from("bursar_rules")
         .select(`
           *,
-          school_classes (name),
+          school_classes!class_id (name),
           term_requirements (name)
         `)
         .eq("tenant_id", tenantId)
