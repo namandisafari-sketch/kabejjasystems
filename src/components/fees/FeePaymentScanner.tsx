@@ -201,22 +201,23 @@ export function FeePaymentScanner({ tenantId }: FeePaymentScannerProps) {
   const lookupStudentData = async (code: string): Promise<{ student: StudentInfo; fee: StudentFeeInfo | null } | null> => {
     let studentData: StudentInfo | null = null;
 
-    // Fetch all active students for this tenant (needed for index-based lookup)
+    // Fetch all active students for this tenant - sorted by full_name to match ID card generation order
     const { data: allStudents, error: fetchError } = await supabase
       .from("students")
       .select("id, full_name, admission_number, boarding_status, school_classes(name, level)")
       .eq("tenant_id", tenantId)
       .eq("is_active", true)
-      .order("created_at", { ascending: true });
+      .order("full_name", { ascending: true });
     
     if (fetchError) throw fetchError;
 
-    // Handle barcode format: STU-XXXX or custom prefix like ADM-XXXX
+    // Handle barcode format: STU-XXXX or custom prefix like PREFIX-XXXX
     const barcodeMatch = code.match(/^([A-Z]+)-(\d+)$/);
     if (barcodeMatch) {
       const indexNum = parseInt(barcodeMatch[2], 10);
       
       // Student index is 1-based, array is 0-based
+      // This matches how StudentCards.tsx generates IDs (sorted alphabetically by full_name)
       if (indexNum > 0 && indexNum <= (allStudents?.length || 0)) {
         studentData = allStudents?.[indexNum - 1] || null;
       }
@@ -231,8 +232,7 @@ export function FeePaymentScanner({ tenantId }: FeePaymentScannerProps) {
     if (!studentData) {
       studentData = allStudents?.find(s => 
         s.admission_number === code || 
-        s.id === code ||
-        s.id.replace(/-/g, '').slice(0, 16) === code.replace("STU-", "")
+        s.id === code
       ) || null;
     }
 
