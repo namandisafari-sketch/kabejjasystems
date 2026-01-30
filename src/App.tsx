@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { useWelcomeNotifications } from "@/hooks/use-welcome-notifications";
+import { ProtectedAdminRoute } from "@/components/ProtectedAdminRoute";
 import PWAHome from "./pages/PWAHome";
 import Signup from "./pages/Signup";
 import AdminSignup from "./pages/AdminSignup";
@@ -15,6 +16,8 @@ import PaymentUpload from "./pages/PaymentUpload";
 import PendingApproval from "./pages/PendingApproval";
 import Dashboard from "./pages/Dashboard";
 import AcceptInvitation from "./pages/AcceptInvitation";
+import ExamResultsLookup from "./pages/public/ExamResultsLookup";
+import ExamResults from "./pages/public/ExamResults";
 import { AdminLayout } from "./components/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminTenants from "./pages/admin/AdminTenants";
@@ -67,11 +70,24 @@ import Prescriptions from "./pages/business/Prescriptions";
 import Students from "./pages/business/Students";
 import Classes from "./pages/business/Classes";
 import Fees from "./pages/business/Fees";
+import BlockedExamAccess from "./pages/business/BlockedExamAccess";
+import ImportExamResults from "./pages/business/ImportExamResults";
+import ImportExamResultsExcel from "./pages/business/ImportExamResultsExcel";
+import ExamImportPermissions from "./pages/business/ExamImportPermissions";
+import ExamSessions from "./pages/business/ExamSessions";
 import AcademicTerms from "./pages/business/AcademicTerms";
 import Attendance from "./pages/business/Attendance";
 import Subjects from "./pages/business/Subjects";
 import Inventory from "./pages/business/Inventory";
 import Letters from "./pages/business/Letters";
+import StudentsImport from "./pages/business/StudentsImport";
+import StaffImport from "./pages/business/StaffImport";
+import FeesImport from "./pages/business/FeesImport";
+import AttendanceImport from "./pages/business/AttendanceImport";
+import InventoryImport from "./pages/business/InventoryImport";
+import ParentsImport from "./pages/business/ParentsImport";
+import ClassesImport from "./pages/business/ClassesImport";
+import SubjectsImport from "./pages/business/SubjectsImport";
 import StudentCards from "./pages/business/StudentCards";
 import TermRequirements from "./pages/business/TermRequirements";
 import ReportCards from "./pages/business/ReportCards";
@@ -140,6 +156,10 @@ const App = () => {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/accept-invitation" element={<AcceptInvitation />} />
               <Route path="/submit-testimonial" element={<SubmitTestimonial />} />
+              
+              {/* UNEB Exam Results - Public Access */}
+              <Route path="/exam-results" element={<ExamResultsLookup />} />
+              <Route path="/exam-results/:resultId" element={<ExamResults />} />
 
               {/* Admin Routes with Sidebar Layout */}
               <Route path="/admin" element={<AdminLayout />}>
@@ -190,18 +210,31 @@ const App = () => {
                 <Route path="patients" element={<Patients />} />
                 <Route path="prescriptions" element={<Prescriptions />} />
                 <Route path="students" element={<Students />} />
+                <Route path="students-import" element={<StudentsImport />} />
                 <Route path="classes" element={<Classes />} />
+                <Route path="classes-import" element={<ClassesImport />} />
                 <Route path="attendance" element={<Attendance />} />
+                <Route path="attendance-import" element={<AttendanceImport />} />
                 <Route path="fees" element={<Fees />} />
+                <Route path="fees-import" element={<FeesImport />} />
+                <Route path="exam-access" element={<BlockedExamAccess />} />
+                <Route path="exam-sessions" element={<ExamSessions />} />
+                <Route path="exam-results-import" element={<ImportExamResults />} />
+                <Route path="exam-results-import-excel" element={<ImportExamResultsExcel />} />
+                <Route path="exam-import-permissions" element={<ExamImportPermissions />} />
                 <Route path="academic-terms" element={<AcademicTerms />} />
                 <Route path="subjects" element={<Subjects />} />
+                <Route path="subjects-import" element={<SubjectsImport />} />
                 <Route path="inventory" element={<Inventory />} />
+                <Route path="inventory-import" element={<InventoryImport />} />
                 <Route path="letters" element={<Letters />} />
                 <Route path="student-cards" element={<StudentCards />} />
                 <Route path="term-requirements" element={<TermRequirements />} />
                 <Route path="report-cards" element={<ReportCards />} />
                 <Route path="staff" element={<Staff />} />
-                <Route path="staff" element={<Staff />} />
+                <Route path="staff-import" element={<StaffImport />} />
+                <Route path="parents" element={<Parents />} />
+                <Route path="parents-import" element={<ParentsImport />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="branches" element={<Branches />} />
                 <Route path="settings" element={<BusinessSettings />} />

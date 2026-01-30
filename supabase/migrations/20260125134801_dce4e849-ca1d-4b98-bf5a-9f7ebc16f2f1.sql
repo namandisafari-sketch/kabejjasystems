@@ -13,13 +13,11 @@ CREATE TABLE IF NOT EXISTS public.subscription_packages (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- Create payments table for Pesapal
+-- Create payments table
 CREATE TABLE IF NOT EXISTS public.payments (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   tenant_id UUID REFERENCES public.tenants(id) ON DELETE CASCADE,
   package_id UUID REFERENCES public.subscription_packages(id),
-  pesapal_tracking_id TEXT,
-  pesapal_merchant_reference TEXT,
   amount NUMERIC NOT NULL,
   currency TEXT DEFAULT 'UGX',
   payment_status TEXT DEFAULT 'pending',

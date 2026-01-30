@@ -17,8 +17,6 @@ CREATE TABLE IF NOT EXISTS payments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
   package_id UUID REFERENCES subscription_packages(id),
-  pesapal_tracking_id TEXT UNIQUE,
-  pesapal_merchant_reference TEXT UNIQUE NOT NULL,
   amount DECIMAL(10,2) NOT NULL,
   currency TEXT NOT NULL DEFAULT 'UGX',
   payment_status TEXT NOT NULL DEFAULT 'pending' CHECK (payment_status IN ('pending', 'completed', 'failed', 'cancelled', 'reversed')),
@@ -33,8 +31,6 @@ CREATE TABLE IF NOT EXISTS payments (
 -- Create indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_payments_tenant_id ON payments(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(payment_status);
-CREATE INDEX IF NOT EXISTS idx_payments_tracking_id ON payments(pesapal_tracking_id);
-CREATE INDEX IF NOT EXISTS idx_payments_merchant_ref ON payments(pesapal_merchant_reference);
 
 -- Insert sample subscription packages
 INSERT INTO subscription_packages (name, description, price_monthly, price_yearly, billing_cycle_months, features) VALUES

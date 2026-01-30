@@ -1,0 +1,147 @@
+[
+  {
+    "indexNumber": "U0000/001",
+    "studentName": "John Mukasa",
+    "schoolName": "Kabejja High School",
+    "subjects": [
+      {
+        "name": "English Language",
+        "grade": "A"
+      },
+      {
+        "name": "Mathematics",
+        "grade": "A"
+      },
+      {
+        "name": "Physics",
+        "grade": "B"
+      },
+      {
+        "name": "Chemistry",
+        "grade": "B"
+      },
+      {
+        "name": "Biology",
+        "grade": "A"
+      }
+    ],
+    "division": 1,
+    "aggregateGrade": "A"
+  },
+  {
+    "indexNumber": "U0000/002",
+    "studentName": "Sarah Nakimuli",
+    "schoolName": "Kabejja High School",
+    "subjects": [
+      {
+        "name": "English Language",
+        "grade": "A"
+      },
+      {
+        "name": "Mathematics",
+        "grade": "B"
+      },
+      {
+        "name": "History",
+        "grade": "A"
+      },
+      {
+        "name": "Geography",
+        "grade": "B"
+      },
+      {
+        "name": "Christian Religious Education",
+        "grade": "A"
+      }
+    ],
+    "division": 2,
+    "aggregateGrade": "A"
+  },
+  {
+    "indexNumber": "U0000/003",
+    "studentName": "David Mubiru",
+    "schoolName": "Kabejja High School",
+    "subjects": [
+      {
+        "name": "English Language",
+        "grade": "B"
+      },
+      {
+        "name": "Mathematics",
+        "grade": "C"
+      },
+      {
+        "name": "Physics",
+        "grade": "C"
+      },
+      {
+        "name": "Chemistry",
+        "grade": "D"
+      },
+      {
+        "name": "Geography",
+        "grade": "B"
+      }
+    ],
+    "division": 3,
+    "aggregateGrade": "B"
+  },
+  {
+    "indexNumber": "U0000/004",
+    "studentName": "Grace Namaganda",
+    "schoolName": "Kabejja High School",
+    "subjects": [
+      {
+        "name": "English Language",
+        "grade": "A"
+      },
+      {
+        "name": "Mathematics",
+        "grade": "A"
+      },
+      {
+        "name": "Physics",
+        "grade": "A"
+      },
+      {
+        "name": "Chemistry",
+        "grade": "A"
+      },
+      {
+        "name": "Biology",
+        "grade": "A"
+      }
+    ],
+    "division": 1,
+    "aggregateGrade": "A"
+  },
+  {
+    "indexNumber": "U0000/005",
+    "studentName": "Robert Katamba",
+    "schoolName": "Kabejja High School",
+    "subjects": [
+      {
+        "name": "English Language",
+        "grade": "C"
+      },
+      {
+        "name": "Mathematics",
+        "grade": "C"
+      },
+      {
+        "name": "Physics",
+        "grade": "D"
+      },
+      {
+        "name": "Chemistry",
+        "grade": "D"
+      },
+      {
+        "name": "Luganda",
+        "grade": "B"
+      }
+    ],
+    "division": 4,
+    "aggregateGrade": "C"
+  }
+]

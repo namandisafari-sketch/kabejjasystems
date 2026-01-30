@@ -239,6 +239,9 @@ export const moduleRoutes: Record<string, { url: string; icon: string }> = {
   timetable: { url: '/business/timetable', icon: 'CalendarDays' },
   exams: { url: '/business/exams', icon: 'ClipboardCheck' },
   term_calendar: { url: '/business/term-calendar', icon: 'Calendar' },
+  exam_sessions: { url: '/business/exam-sessions', icon: 'Calendar' },
+  exam_results_import: { url: '/business/exam-results-import', icon: 'Upload' },
+  exam_import_permissions: { url: '/business/exam-import-permissions', icon: 'Shield' },
   // Rental Management modules
   rental_dashboard: { url: '/business/rental-dashboard', icon: 'LayoutDashboard' },
   rental_properties: { url: '/business/rental-properties', icon: 'Building2' },
