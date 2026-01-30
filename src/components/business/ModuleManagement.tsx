@@ -11,6 +11,12 @@ interface ModuleManagementProps {
 
 const categoryLabels: Record<string, string> = {
   core: 'Core Features',
+  academic: 'Academic',
+  academics: 'Academic',
+  admission: 'Admissions',
+  communication: 'Communication',
+  education: 'Education',
+  finance: 'Finance',
   restaurant: 'Restaurant & Bar',
   hotel: 'Hotel & Lodge',
   salon: 'Salon & Spa',
