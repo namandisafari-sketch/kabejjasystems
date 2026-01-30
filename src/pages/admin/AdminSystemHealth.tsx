@@ -271,7 +271,7 @@ export default function AdminSystemHealth() {
             <Button 
               variant="outline" 
               className="h-auto py-4 flex-col gap-2"
-              onClick={() => navigate("/admin/settings")}
+              onClick={() => navigate("/admin/storage")}
             >
               <HardDrive className="h-5 w-5" />
               <span>Storage Usage</span>
