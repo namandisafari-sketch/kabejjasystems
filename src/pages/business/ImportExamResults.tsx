@@ -119,13 +119,13 @@ const ImportExamResults = () => {
           return;
         }
 
-        console.log('User profile loaded:', { role: profile.role, hasPermission: profile.permissions?.exam_import_access });
+        console.log('User profile loaded:', { role: profile.role, hasPermission: (profile.permissions as any)?.exam_import_access });
 
         // Allow if: tenant_owner, superadmin, or granted exam_import permission
         const canImport = 
           profile.role === 'tenant_owner' || 
           profile.role === 'superadmin' ||
-          (profile.permissions && profile.permissions.exam_import_access === true);
+          (profile.permissions && (profile.permissions as any).exam_import_access === true);
 
         if (!canImport) {
           toast({

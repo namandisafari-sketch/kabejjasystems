@@ -87,7 +87,7 @@ const ExamImportPermissions = () => {
         id: person.id,
         full_name: person.full_name || 'Unknown',
         role: person.role,
-        has_exam_import_access: person.permissions?.exam_import_access === true,
+        has_exam_import_access: (person.permissions as any)?.exam_import_access === true,
       }));
 
       setStaff(staffWithPermissions);
@@ -116,7 +116,9 @@ const ExamImportPermissions = () => {
 
       if (fetchError) throw fetchError;
 
-      const currentPermissions = profile?.permissions || {};
+      const currentPermissions = (profile?.permissions && typeof profile.permissions === 'object' && !Array.isArray(profile.permissions)) 
+        ? profile.permissions as Record<string, unknown>
+        : {};
       const updatedPermissions = {
         ...currentPermissions,
         exam_import_access: !currentAccess,
