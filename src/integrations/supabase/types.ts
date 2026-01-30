@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      absence_alerts: {
+        Row: {
+          acknowledged: boolean | null
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          action_taken: string | null
+          alert_message: string | null
+          alert_type: string
+          consecutive_days: number
+          created_at: string | null
+          id: string
+          last_present_date: string | null
+          student_id: string
+          tenant_id: string
+          threshold_days: number
+        }
+        Insert: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          action_taken?: string | null
+          alert_message?: string | null
+          alert_type: string
+          consecutive_days: number
+          created_at?: string | null
+          id?: string
+          last_present_date?: string | null
+          student_id: string
+          tenant_id: string
+          threshold_days: number
+        }
+        Update: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          action_taken?: string | null
+          alert_message?: string | null
+          alert_type?: string
+          consecutive_days?: number
+          created_at?: string | null
+          id?: string
+          last_present_date?: string | null
+          student_id?: string
+          tenant_id?: string
+          threshold_days?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "absence_alerts_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "absence_alerts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       academic_terms: {
         Row: {
           created_at: string
@@ -4674,6 +4737,211 @@ export type Database = {
           },
         ]
       }
+      promotion_decisions: {
+        Row: {
+          aggregate_score_at_decision: number | null
+          conditions: string | null
+          conditions_met: boolean | null
+          conditions_met_date: string | null
+          created_at: string | null
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          decision_type: string
+          failed_subjects: Json | null
+          from_class_id: string | null
+          gpa_at_decision: number | null
+          id: string
+          override_applied: boolean | null
+          override_reason: string | null
+          parent_acknowledged: boolean | null
+          parent_acknowledged_at: string | null
+          parent_notified: boolean | null
+          parent_notified_at: string | null
+          qualifying_criteria_met: boolean | null
+          student_id: string
+          tenant_id: string
+          term_id: string
+          to_class_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          aggregate_score_at_decision?: number | null
+          conditions?: string | null
+          conditions_met?: boolean | null
+          conditions_met_date?: string | null
+          created_at?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          decision_type: string
+          failed_subjects?: Json | null
+          from_class_id?: string | null
+          gpa_at_decision?: number | null
+          id?: string
+          override_applied?: boolean | null
+          override_reason?: string | null
+          parent_acknowledged?: boolean | null
+          parent_acknowledged_at?: string | null
+          parent_notified?: boolean | null
+          parent_notified_at?: string | null
+          qualifying_criteria_met?: boolean | null
+          student_id: string
+          tenant_id: string
+          term_id: string
+          to_class_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          aggregate_score_at_decision?: number | null
+          conditions?: string | null
+          conditions_met?: boolean | null
+          conditions_met_date?: string | null
+          created_at?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          decision_type?: string
+          failed_subjects?: Json | null
+          from_class_id?: string | null
+          gpa_at_decision?: number | null
+          id?: string
+          override_applied?: boolean | null
+          override_reason?: string | null
+          parent_acknowledged?: boolean | null
+          parent_acknowledged_at?: string | null
+          parent_notified?: boolean | null
+          parent_notified_at?: string | null
+          qualifying_criteria_met?: boolean | null
+          student_id?: string
+          tenant_id?: string
+          term_id?: string
+          to_class_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotion_decisions_from_class_id_fkey"
+            columns: ["from_class_id"]
+            isOneToOne: false
+            referencedRelation: "school_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_decisions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_decisions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_decisions_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "academic_terms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_decisions_to_class_id_fkey"
+            columns: ["to_class_id"]
+            isOneToOne: false
+            referencedRelation: "school_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promotion_rules: {
+        Row: {
+          apply_to_all_classes: boolean | null
+          class_id: string | null
+          created_at: string | null
+          created_by: string | null
+          gpa_scale: number | null
+          id: string
+          is_active: boolean | null
+          mandatory_pass_subjects: Json | null
+          max_failed_subjects: number | null
+          minimum_aggregate_percentage: number | null
+          minimum_gpa: number | null
+          non_qualifying_action: string | null
+          rule_name: string
+          rule_type: string
+          subject_requirements: Json | null
+          tenant_id: string
+          term_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          apply_to_all_classes?: boolean | null
+          class_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          gpa_scale?: number | null
+          id?: string
+          is_active?: boolean | null
+          mandatory_pass_subjects?: Json | null
+          max_failed_subjects?: number | null
+          minimum_aggregate_percentage?: number | null
+          minimum_gpa?: number | null
+          non_qualifying_action?: string | null
+          rule_name: string
+          rule_type: string
+          subject_requirements?: Json | null
+          tenant_id: string
+          term_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          apply_to_all_classes?: boolean | null
+          class_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          gpa_scale?: number | null
+          id?: string
+          is_active?: boolean | null
+          mandatory_pass_subjects?: Json | null
+          max_failed_subjects?: number | null
+          minimum_aggregate_percentage?: number | null
+          minimum_gpa?: number | null
+          non_qualifying_action?: string | null
+          rule_name?: string
+          rule_type?: string
+          subject_requirements?: Json | null
+          tenant_id?: string
+          term_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotion_rules_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "school_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_rules_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_rules_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "academic_terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       property_inspections: {
         Row: {
           created_at: string
@@ -7031,6 +7299,44 @@ export type Database = {
           },
         ]
       }
+      school_holidays: {
+        Row: {
+          created_at: string | null
+          end_date: string
+          holiday_type: string | null
+          id: string
+          name: string
+          start_date: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          end_date: string
+          holiday_type?: string | null
+          id?: string
+          name: string
+          start_date: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string
+          holiday_type?: string | null
+          id?: string
+          name?: string
+          start_date?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_holidays_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       school_packages: {
         Row: {
           created_at: string
@@ -7649,6 +7955,76 @@ export type Database = {
           },
         ]
       }
+      student_fee_voids: {
+        Row: {
+          created_at: string | null
+          id: string
+          notes: string | null
+          original_amount: number
+          related_withdrawal_date: string | null
+          student_fee_id: string | null
+          student_id: string
+          tenant_id: string
+          void_reason: string
+          void_type: string
+          voided_amount: number
+          voided_at: string | null
+          voided_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          original_amount: number
+          related_withdrawal_date?: string | null
+          student_fee_id?: string | null
+          student_id: string
+          tenant_id: string
+          void_reason: string
+          void_type: string
+          voided_amount: number
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          original_amount?: number
+          related_withdrawal_date?: string | null
+          student_fee_id?: string | null
+          student_id?: string
+          tenant_id?: string
+          void_reason?: string
+          void_type?: string
+          voided_amount?: number
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_fee_voids_student_fee_id_fkey"
+            columns: ["student_fee_id"]
+            isOneToOne: false
+            referencedRelation: "student_fees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_fee_voids_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_fee_voids_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_fees: {
         Row: {
           amount_paid: number
@@ -7786,6 +8162,63 @@ export type Database = {
             columns: ["term_id"]
             isOneToOne: false
             referencedRelation: "academic_terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_lifecycle_logs: {
+        Row: {
+          action_type: string
+          details: Json | null
+          id: string
+          ip_address: string | null
+          new_status: string | null
+          performed_at: string | null
+          performed_by: string | null
+          previous_status: string | null
+          student_id: string
+          tenant_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          action_type: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          new_status?: string | null
+          performed_at?: string | null
+          performed_by?: string | null
+          previous_status?: string | null
+          student_id: string
+          tenant_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          action_type?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          new_status?: string | null
+          performed_at?: string | null
+          performed_by?: string | null
+          previous_status?: string | null
+          student_id?: string
+          tenant_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_lifecycle_logs_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_lifecycle_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -8147,6 +8580,7 @@ export type Database = {
           blood_group: string | null
           boarding_status: string
           class_id: string | null
+          consecutive_absence_days: number | null
           created_at: string
           created_by: string | null
           date_of_birth: string | null
@@ -8156,6 +8590,7 @@ export type Database = {
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
           emergency_contact_relationship: string | null
+          enrollment_type: string | null
           father_name: string | null
           father_national_id: string | null
           father_occupation: string | null
@@ -8174,6 +8609,7 @@ export type Database = {
           immunization_status: string | null
           is_active: boolean | null
           is_uneb_candidate: boolean | null
+          last_attendance_date: string | null
           medical_conditions: string | null
           mother_name: string | null
           mother_national_id: string | null
@@ -8193,13 +8629,20 @@ export type Database = {
           previous_school_address: string | null
           previous_school_leaving_reason: string | null
           previous_school_name: string | null
+          promoted_from_class_id: string | null
+          promotion_conditions: string | null
+          promotion_status: string | null
           religion: string | null
+          status: string | null
           student_national_id: string | null
           suggested_class_level: string | null
           talent: string | null
           tenant_id: string
           uneb_candidate_type: string | null
           updated_at: string
+          withdrawal_date: string | null
+          withdrawal_reason: string | null
+          withdrawal_type: string | null
         }
         Insert: {
           academic_report_notes?: string | null
@@ -8215,6 +8658,7 @@ export type Database = {
           blood_group?: string | null
           boarding_status?: string
           class_id?: string | null
+          consecutive_absence_days?: number | null
           created_at?: string
           created_by?: string | null
           date_of_birth?: string | null
@@ -8224,6 +8668,7 @@ export type Database = {
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           emergency_contact_relationship?: string | null
+          enrollment_type?: string | null
           father_name?: string | null
           father_national_id?: string | null
           father_occupation?: string | null
@@ -8242,6 +8687,7 @@ export type Database = {
           immunization_status?: string | null
           is_active?: boolean | null
           is_uneb_candidate?: boolean | null
+          last_attendance_date?: string | null
           medical_conditions?: string | null
           mother_name?: string | null
           mother_national_id?: string | null
@@ -8261,13 +8707,20 @@ export type Database = {
           previous_school_address?: string | null
           previous_school_leaving_reason?: string | null
           previous_school_name?: string | null
+          promoted_from_class_id?: string | null
+          promotion_conditions?: string | null
+          promotion_status?: string | null
           religion?: string | null
+          status?: string | null
           student_national_id?: string | null
           suggested_class_level?: string | null
           talent?: string | null
           tenant_id: string
           uneb_candidate_type?: string | null
           updated_at?: string
+          withdrawal_date?: string | null
+          withdrawal_reason?: string | null
+          withdrawal_type?: string | null
         }
         Update: {
           academic_report_notes?: string | null
@@ -8283,6 +8736,7 @@ export type Database = {
           blood_group?: string | null
           boarding_status?: string
           class_id?: string | null
+          consecutive_absence_days?: number | null
           created_at?: string
           created_by?: string | null
           date_of_birth?: string | null
@@ -8292,6 +8746,7 @@ export type Database = {
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           emergency_contact_relationship?: string | null
+          enrollment_type?: string | null
           father_name?: string | null
           father_national_id?: string | null
           father_occupation?: string | null
@@ -8310,6 +8765,7 @@ export type Database = {
           immunization_status?: string | null
           is_active?: boolean | null
           is_uneb_candidate?: boolean | null
+          last_attendance_date?: string | null
           medical_conditions?: string | null
           mother_name?: string | null
           mother_national_id?: string | null
@@ -8329,18 +8785,32 @@ export type Database = {
           previous_school_address?: string | null
           previous_school_leaving_reason?: string | null
           previous_school_name?: string | null
+          promoted_from_class_id?: string | null
+          promotion_conditions?: string | null
+          promotion_status?: string | null
           religion?: string | null
+          status?: string | null
           student_national_id?: string | null
           suggested_class_level?: string | null
           talent?: string | null
           tenant_id?: string
           uneb_candidate_type?: string | null
           updated_at?: string
+          withdrawal_date?: string | null
+          withdrawal_reason?: string | null
+          withdrawal_type?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "students_class_id_fkey"
             columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "school_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_promoted_from_class_id_fkey"
+            columns: ["promoted_from_class_id"]
             isOneToOne: false
             referencedRelation: "school_classes"
             referencedColumns: ["id"]
@@ -9556,11 +10026,62 @@ export type Database = {
           },
         ]
       }
+      withdrawal_settings: {
+        Row: {
+          absence_threshold_days: number
+          auto_void_fees: boolean | null
+          created_at: string | null
+          exclude_holidays: boolean | null
+          id: string
+          minimum_attendance_window_days: number | null
+          notification_enabled: boolean | null
+          require_dos_approval: boolean | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          absence_threshold_days?: number
+          auto_void_fees?: boolean | null
+          created_at?: string | null
+          exclude_holidays?: boolean | null
+          id?: string
+          minimum_attendance_window_days?: number | null
+          notification_enabled?: boolean | null
+          require_dos_approval?: boolean | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          absence_threshold_days?: number
+          auto_void_fees?: boolean | null
+          created_at?: string | null
+          exclude_holidays?: boolean | null
+          id?: string
+          minimum_attendance_window_days?: number | null
+          notification_enabled?: boolean | null
+          require_dos_approval?: boolean | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      check_absence_withdrawals: {
+        Args: { p_tenant_id: string }
+        Returns: Json
+      }
       check_device_trial_status: {
         Args: { p_device_id: string }
         Returns: Json
@@ -9640,6 +10161,26 @@ export type Database = {
         }
         Returns: string
       }
+      process_student_promotions: {
+        Args: {
+          p_class_id: string
+          p_performed_by: string
+          p_tenant_id: string
+          p_term_id: string
+        }
+        Returns: Json
+      }
+      process_student_withdrawal: {
+        Args: {
+          p_auto_void_fees?: boolean
+          p_performed_by: string
+          p_student_id: string
+          p_tenant_id: string
+          p_withdrawal_reason: string
+          p_withdrawal_type: string
+        }
+        Returns: Json
+      }
       register_platform_admin: {
         Args: {
           admin_email: string
@@ -9653,6 +10194,16 @@ export type Database = {
           p_link_code: string
           p_payment_code: string
           p_tenant_id: string
+        }
+        Returns: Json
+      }
+      void_student_fees_on_withdrawal: {
+        Args: {
+          p_student_id: string
+          p_tenant_id: string
+          p_void_reason: string
+          p_void_type: string
+          p_voided_by: string
         }
         Returns: Json
       }
