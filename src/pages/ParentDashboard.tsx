@@ -47,6 +47,7 @@ import { DisciplineCasesView } from "@/components/parent/DisciplineCasesView";
 import { ECDParentView } from "@/components/parent/ECDParentView";
 import { NotificationCenter } from "@/components/parent/NotificationCenter";
 import { RedListBanner } from "@/components/parent/RedListBanner";
+import { ExamResultsCard } from "@/components/parent/ExamResultsCard";
 import { useParentNotifications } from "@/hooks/use-parent-notifications";
 
 interface Student {
@@ -556,6 +557,13 @@ export default function ParentDashboard() {
                     <span className="hidden sm:inline">{isSecondary ? 'Grades' : 'Performance'}</span>
                   </TabsTrigger>
                 )}
+
+                {!isECD && (
+                  <TabsTrigger value="exams" className="flex gap-2">
+                    <GraduationCap className="h-4 w-4" />
+                    <span className="hidden sm:inline">Exams</span>
+                  </TabsTrigger>
+                )}
                 
                 <TabsTrigger value="discipline" className="flex gap-2">
                   <ShieldAlert className="h-4 w-4" />
@@ -1030,6 +1038,18 @@ export default function ParentDashboard() {
                       studentId={selectedStudentData.id} 
                       tenantId={parentData.tenant_id}
                       studentName={selectedStudentData.full_name}
+                    />
+                  )}
+                </TabsContent>
+              )}
+
+              {/* Exam Results Tab */}
+              {!isECD && (
+                <TabsContent value="exams" className="space-y-4">
+                  {selectedStudentData && (
+                    <ExamResultsCard 
+                      studentName={selectedStudentData.full_name}
+                      studentAdmissionNumber={selectedStudentData.admission_number}
                     />
                   )}
                 </TabsContent>
