@@ -27,15 +27,11 @@ import AdminPackages from "./pages/admin/AdminPackages";
 import AdminSchoolPackages from "./pages/admin/AdminSchoolPackages";
 import AdminRentalPackages from "./pages/admin/AdminRentalPackages";
 import AdminSettings from "./pages/admin/AdminSettings";
-import AdminTestimonials from "./pages/admin/AdminTestimonials";
-import AdminInstallations from "./pages/admin/AdminInstallations";
-import AdminMarketers from "./pages/admin/AdminMarketers";
 import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
-import AdminSubscriptionRequests from "./pages/admin/AdminSubscriptionRequests";
 import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
-import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
-import AdminSupportTickets from "./pages/admin/AdminSupportTickets";
-import AdminBulkActions from "./pages/admin/AdminBulkActions";
+import AdminCreateBusiness from "./pages/admin/AdminCreateBusiness";
+import AdminSystemHealth from "./pages/admin/AdminSystemHealth";
+import AdminFeatureFlags from "./pages/admin/AdminFeatureFlags";
 import SubmitTestimonial from "./pages/SubmitTestimonial";
 import { BusinessLayout } from "./components/BusinessLayout";
 import BusinessDashboard from "./pages/business/BusinessDashboard";
@@ -172,21 +168,17 @@ const App = () => {
               {/* Admin Routes with Sidebar Layout */}
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
+                <Route path="create-business" element={<AdminCreateBusiness />} />
                 <Route path="tenants" element={<AdminTenants />} />
                 <Route path="tenants/:id" element={<AdminTenantDetails />} />
-                <Route path="installations" element={<AdminInstallations />} />
-                <Route path="subscription-requests" element={<AdminSubscriptionRequests />} />
                 <Route path="subscriptions" element={<AdminSubscriptions />} />
-                <Route path="marketers" element={<AdminMarketers />} />
                 <Route path="payments" element={<AdminPayments />} />
                 <Route path="packages" element={<AdminPackages />} />
                 <Route path="school-packages" element={<AdminSchoolPackages />} />
                 <Route path="rental-packages" element={<AdminRentalPackages />} />
+                <Route path="system-health" element={<AdminSystemHealth />} />
+                <Route path="feature-flags" element={<AdminFeatureFlags />} />
                 <Route path="audit-logs" element={<AdminAuditLogs />} />
-                <Route path="announcements" element={<AdminAnnouncements />} />
-                <Route path="support-tickets" element={<AdminSupportTickets />} />
-                <Route path="bulk-actions" element={<AdminBulkActions />} />
-                <Route path="testimonials" element={<AdminTestimonials />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
 
