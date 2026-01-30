@@ -7994,6 +7994,7 @@ export type Database = {
           id: string
           immunization_status: string | null
           is_active: boolean | null
+          is_uneb_candidate: boolean | null
           medical_conditions: string | null
           mother_name: string | null
           mother_national_id: string | null
@@ -8018,6 +8019,7 @@ export type Database = {
           suggested_class_level: string | null
           talent: string | null
           tenant_id: string
+          uneb_candidate_type: string | null
           updated_at: string
         }
         Insert: {
@@ -8060,6 +8062,7 @@ export type Database = {
           id?: string
           immunization_status?: string | null
           is_active?: boolean | null
+          is_uneb_candidate?: boolean | null
           medical_conditions?: string | null
           mother_name?: string | null
           mother_national_id?: string | null
@@ -8084,6 +8087,7 @@ export type Database = {
           suggested_class_level?: string | null
           talent?: string | null
           tenant_id: string
+          uneb_candidate_type?: string | null
           updated_at?: string
         }
         Update: {
@@ -8126,6 +8130,7 @@ export type Database = {
           id?: string
           immunization_status?: string | null
           is_active?: boolean | null
+          is_uneb_candidate?: boolean | null
           medical_conditions?: string | null
           mother_name?: string | null
           mother_national_id?: string | null
@@ -8150,6 +8155,7 @@ export type Database = {
           suggested_class_level?: string | null
           talent?: string | null
           tenant_id?: string
+          uneb_candidate_type?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -9086,6 +9092,200 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      uneb_candidate_registrations: {
+        Row: {
+          academic_year: number
+          center_number: string | null
+          created_at: string | null
+          exam_type: string
+          fee_paid: boolean | null
+          fee_paid_date: string | null
+          fee_receipt_number: string | null
+          id: string
+          index_number: string | null
+          passport_photo_submitted: boolean | null
+          previous_index_number: string | null
+          previous_sitting: boolean | null
+          registered_at: string | null
+          registration_deadline: string | null
+          registration_fee: number
+          registration_status: string
+          special_needs_accommodation: string | null
+          student_id: string
+          subject_combination: string | null
+          subjects: Json | null
+          submitted_by: string | null
+          submitted_to_uneb_at: string | null
+          tenant_id: string
+          uneb_photo_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          academic_year: number
+          center_number?: string | null
+          created_at?: string | null
+          exam_type: string
+          fee_paid?: boolean | null
+          fee_paid_date?: string | null
+          fee_receipt_number?: string | null
+          id?: string
+          index_number?: string | null
+          passport_photo_submitted?: boolean | null
+          previous_index_number?: string | null
+          previous_sitting?: boolean | null
+          registered_at?: string | null
+          registration_deadline?: string | null
+          registration_fee?: number
+          registration_status?: string
+          special_needs_accommodation?: string | null
+          student_id: string
+          subject_combination?: string | null
+          subjects?: Json | null
+          submitted_by?: string | null
+          submitted_to_uneb_at?: string | null
+          tenant_id: string
+          uneb_photo_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          academic_year?: number
+          center_number?: string | null
+          created_at?: string | null
+          exam_type?: string
+          fee_paid?: boolean | null
+          fee_paid_date?: string | null
+          fee_receipt_number?: string | null
+          id?: string
+          index_number?: string | null
+          passport_photo_submitted?: boolean | null
+          previous_index_number?: string | null
+          previous_sitting?: boolean | null
+          registered_at?: string | null
+          registration_deadline?: string | null
+          registration_fee?: number
+          registration_status?: string
+          special_needs_accommodation?: string | null
+          student_id?: string
+          subject_combination?: string | null
+          subjects?: Json | null
+          submitted_by?: string | null
+          submitted_to_uneb_at?: string | null
+          tenant_id?: string
+          uneb_photo_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "uneb_candidate_registrations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "uneb_candidate_registrations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      uneb_school_settings: {
+        Row: {
+          center_name: string | null
+          center_number: string | null
+          created_at: string | null
+          current_academic_year: number | null
+          id: string
+          photo_specifications: string | null
+          registration_deadline_uace: string | null
+          registration_deadline_uce: string | null
+          registration_open: boolean | null
+          tenant_id: string
+          uace_registration_fee: number | null
+          uce_registration_fee: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          center_name?: string | null
+          center_number?: string | null
+          created_at?: string | null
+          current_academic_year?: number | null
+          id?: string
+          photo_specifications?: string | null
+          registration_deadline_uace?: string | null
+          registration_deadline_uce?: string | null
+          registration_open?: boolean | null
+          tenant_id: string
+          uace_registration_fee?: number | null
+          uce_registration_fee?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          center_name?: string | null
+          center_number?: string | null
+          created_at?: string | null
+          current_academic_year?: number | null
+          id?: string
+          photo_specifications?: string | null
+          registration_deadline_uace?: string | null
+          registration_deadline_uce?: string | null
+          registration_open?: boolean | null
+          tenant_id?: string
+          uace_registration_fee?: number | null
+          uce_registration_fee?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "uneb_school_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      uneb_subjects: {
+        Row: {
+          code: string
+          created_at: string | null
+          display_order: number | null
+          exam_type: string
+          id: string
+          is_active: boolean | null
+          is_compulsory: boolean | null
+          name: string
+          paper_number: number | null
+          subject_category: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          display_order?: number | null
+          exam_type: string
+          id?: string
+          is_active?: boolean | null
+          is_compulsory?: boolean | null
+          name: string
+          paper_number?: number | null
+          subject_category?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          display_order?: number | null
+          exam_type?: string
+          id?: string
+          is_active?: boolean | null
+          is_compulsory?: boolean | null
+          name?: string
+          paper_number?: number | null
+          subject_category?: string | null
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

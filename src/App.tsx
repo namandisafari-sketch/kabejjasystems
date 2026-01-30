@@ -106,6 +106,7 @@ import Requisitions from "./pages/business/Requisitions";
 import Timetable from "./pages/business/Timetable";
 import Exams from "./pages/business/Exams";
 import TermCalendar from "./pages/business/TermCalendar";
+import UNEBCandidates from "./pages/business/UNEBCandidates";
 import RentalDashboard from "./pages/business/rental/RentalDashboard";
 import RentalProperties from "./pages/business/rental/RentalProperties";
 import RentalUnits from "./pages/business/rental/RentalUnits";
@@ -254,6 +255,8 @@ const App = () => {
                 <Route path="timetable" element={<Timetable />} />
                 <Route path="exams" element={<Exams />} />
                 <Route path="term-calendar" element={<TermCalendar />} />
+                {/* UNEB Candidate Management */}
+                <Route path="uneb-candidates" element={<UNEBCandidates />} />
                 {/* Rental Management Routes */}
                 <Route path="rental-dashboard" element={<RentalDashboard />} />
                 <Route path="rental-tax-dashboard" element={<RentalTaxDashboard />} />

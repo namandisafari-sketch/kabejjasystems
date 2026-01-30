@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { User, Users, GraduationCap, Heart, FileText, CheckSquare, AlertCircle, CreditCard } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { User, Users, GraduationCap, Heart, FileText, CheckSquare, AlertCircle, CreditCard, BookOpen } from "lucide-react";
+import { UNEBCandidateSection, UNEBFormData } from "./UNEBCandidateSection";
 
 interface StudentFormData {
   // Basic Info
@@ -173,6 +175,19 @@ export function StudentEnrollmentForm({
 
   const [selectedRequirements, setSelectedRequirements] = useState<Record<string, boolean>>({});
   const [selectedFees, setSelectedFees] = useState<Record<string, boolean>>({});
+  
+  // UNEB Candidate state
+  const [unebFormData, setUnebFormData] = useState<UNEBFormData>({
+    is_uneb_candidate: false,
+    uneb_candidate_type: null,
+    registration_fee: 0,
+    subjects: [],
+    subject_combination: '',
+    previous_sitting: false,
+    previous_index_number: '',
+    special_needs_accommodation: '',
+    passport_photo_submitted: false,
+  });
 
   // Fetch school classes
   const { data: classes = [] } = useQuery({
@@ -189,6 +204,48 @@ export function StudentEnrollmentForm({
       return data;
     },
   });
+
+  // Detect if selected class is S4 (UCE) or S6 (UACE)
+  const selectedClass = useMemo(() => {
+    return classes.find((cls: any) => cls.id === formData.class_id);
+  }, [classes, formData.class_id]);
+
+  const unebCandidateType = useMemo((): 'UCE' | 'UACE' | null => {
+    if (!selectedClass) return null;
+    const grade = selectedClass.grade?.toUpperCase() || '';
+    const name = selectedClass.name?.toUpperCase() || '';
+    
+    // Check for S4/Senior 4 -> UCE
+    if (grade === 'S4' || grade === 'S.4' || name.includes('SENIOR 4') || name.includes('S4')) {
+      return 'UCE';
+    }
+    // Check for S6/Senior 6 -> UACE
+    if (grade === 'S6' || grade === 'S.6' || name.includes('SENIOR 6') || name.includes('S6')) {
+      return 'UACE';
+    }
+    return null;
+  }, [selectedClass]);
+
+  // Update UNEB candidate type when class changes
+  useEffect(() => {
+    if (unebCandidateType) {
+      setUnebFormData(prev => ({
+        ...prev,
+        is_uneb_candidate: true,
+        uneb_candidate_type: unebCandidateType,
+      }));
+    } else {
+      setUnebFormData(prev => ({
+        ...prev,
+        is_uneb_candidate: false,
+        uneb_candidate_type: null,
+      }));
+    }
+  }, [unebCandidateType]);
+
+  const updateUnebField = (updates: Partial<UNEBFormData>) => {
+    setUnebFormData(prev => ({ ...prev, ...updates }));
+  };
 
   // Fetch term requirements
   const { data: requirements = [] } = useQuery({
@@ -263,7 +320,8 @@ export function StudentEnrollmentForm({
     return new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX', minimumFractionDigits: 0 }).format(amount);
   };
 
-  const tabs = [
+  // Dynamic tabs based on whether student is UNEB candidate
+  const baseTabs = [
     { id: "basic", label: "Basic Info", icon: User },
     { id: "guardian", label: "Guardian/Parents", icon: Users },
     { id: "academic", label: "Academic Records", icon: GraduationCap },
@@ -273,10 +331,26 @@ export function StudentEnrollmentForm({
     { id: "requirements", label: "Requirements", icon: CheckSquare },
   ];
 
+  const tabs = unebCandidateType 
+    ? [...baseTabs.slice(0, 5), { id: "uneb", label: unebCandidateType === 'UCE' ? "UCE Registration" : "UACE Registration", icon: BookOpen }, ...baseTabs.slice(5)]
+    : baseTabs;
+
+  const gridCols = tabs.length === 8 ? "grid-cols-8" : "grid-cols-7";
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* UNEB Candidate Alert */}
+      {unebCandidateType && (
+        <Alert className="border-primary bg-primary/5">
+          <BookOpen className="h-4 w-4" />
+          <AlertDescription>
+            <strong>{unebCandidateType === 'UCE' ? 'UCE (O-Level)' : 'UACE (A-Level)'} Candidate:</strong> This student will sit for national examinations and requires UNEB registration.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-7 w-full">
+        <TabsList className={`grid ${gridCols} w-full`}>
           {tabs.map(tab => (
             <TabsTrigger key={tab.id} value={tab.id} className="flex items-center gap-1 text-xs">
               <tab.icon className="h-3 w-3" />
@@ -941,6 +1015,19 @@ export function StudentEnrollmentForm({
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* UNEB Registration Tab - Only shown for S4/S6 candidates */}
+          {unebCandidateType && (
+            <TabsContent value="uneb" className="p-1">
+              <UNEBCandidateSection
+                tenantId={tenantId}
+                examType={unebCandidateType}
+                formData={unebFormData}
+                onChange={updateUnebField}
+                selectedClassName={selectedClass?.name}
+              />
+            </TabsContent>
+          )}
         </ScrollArea>
       </Tabs>
 
