@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Building2, AlertCircle } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import kabejjaLogo from "@/assets/kabejja-logo.png";
 
 const Login = () => {
@@ -17,10 +18,14 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [businessCode, setBusinessCode] = useState("");
+  const [showBusinessCode, setShowBusinessCode] = useState(false);
+  const [businessCodeError, setBusinessCodeError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setBusinessCodeError("");
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -30,9 +35,10 @@ const Login = () => {
 
       if (error) throw error;
 
+      // Fetch user profile with tenant information
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, tenant_id')
         .eq('id', data.user.id)
         .maybeSingle();
 
@@ -40,16 +46,73 @@ const Login = () => {
         console.error('Profile fetch error:', profileError);
       }
 
+      // Check if user is admin/superadmin - they don't need business code
+      if (profile?.role === 'superadmin' || profile?.role === 'admin') {
+        toast({
+          title: "Welcome back!",
+          description: "You've successfully logged in as admin",
+        });
+        navigate('/admin');
+        return;
+      }
+
+      // Check if user is tenant owner - they don't need business code
+      if (profile?.role === 'tenant_owner') {
+        toast({
+          title: "Welcome back!",
+          description: "You've successfully logged in",
+        });
+        navigate('/dashboard');
+        return;
+      }
+
+      // For staff members, verify business code
+      if (profile?.tenant_id) {
+        // Staff must provide business code
+        if (!businessCode.trim()) {
+          // Show business code field
+          setShowBusinessCode(true);
+          setBusinessCodeError("Staff members must enter their school/business code to login");
+          await supabase.auth.signOut();
+          setLoading(false);
+          return;
+        }
+
+        // Verify business code matches the tenant
+        const { data: tenant, error: tenantError } = await supabase
+          .from('tenants')
+          .select('id, business_code, name')
+          .eq('id', profile.tenant_id)
+          .single();
+
+        if (tenantError || !tenant) {
+          throw new Error("Could not verify your organization");
+        }
+
+        // Check if business code matches
+        if (tenant.business_code?.toLowerCase() !== businessCode.trim().toLowerCase()) {
+          setBusinessCodeError(`Invalid school code. Please check with your administrator.`);
+          await supabase.auth.signOut();
+          setLoading(false);
+          return;
+        }
+
+        // Success - staff logged in with correct business code
+        toast({
+          title: "Welcome back!",
+          description: `Logged in to ${tenant.name}`,
+        });
+        navigate('/dashboard');
+        return;
+      }
+
+      // Fallback for users without tenant - redirect to dashboard
       toast({
         title: "Welcome back!",
         description: "You've successfully logged in",
       });
+      navigate('/dashboard');
 
-      if (profile?.role === 'superadmin' || profile?.role === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate('/dashboard');
-      }
     } catch (error: any) {
       console.error('Login error:', error);
       toast({
@@ -126,6 +189,39 @@ const Login = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* Business/School Code Field - Always visible for staff */}
+                <div className="space-y-2">
+                  <Label htmlFor="businessCode" className="text-sm font-medium flex items-center gap-2">
+                    <Building2 className="h-4 w-4" />
+                    School/Business Code
+                    <span className="text-xs text-muted-foreground">(Staff only)</span>
+                  </Label>
+                  <Input
+                    id="businessCode"
+                    type="text"
+                    value={businessCode}
+                    onChange={(e) => {
+                      setBusinessCode(e.target.value.toUpperCase());
+                      setBusinessCodeError("");
+                    }}
+                    placeholder="e.g. STMARYS or ABC123"
+                    autoComplete="organization"
+                    className={`h-12 touch-target uppercase ${businessCodeError ? 'border-destructive' : ''}`}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Staff members must enter their school/business code. Owners can leave this empty.
+                  </p>
+                </div>
+
+                {businessCodeError && (
+                  <Alert variant="destructive" className="py-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-sm">
+                      {businessCodeError}
+                    </AlertDescription>
+                  </Alert>
+                )}
                 
                 <Button 
                   type="submit" 
