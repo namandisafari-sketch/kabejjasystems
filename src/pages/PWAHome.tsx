@@ -2,13 +2,42 @@ import { useNavigate } from "react-router-dom";
 import { 
   GraduationCap, ShoppingCart, UtensilsCrossed, Bed, 
   Scissors, Pill, Wrench, Building2, LogIn, UserPlus,
-  Sparkles, Users, BookOpen, Briefcase, RefreshCw, Download
+  Sparkles, Users, BookOpen, Briefcase, RefreshCw, Download,
+  Award, FileSearch
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { usePWAUpdate } from "@/hooks/use-pwa-update";
 import { toast } from "@/hooks/use-toast";
 import kabejjaLogo from "@/assets/kabejja-logo.png";
+
+interface PublicServiceCard {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  gradient: string;
+  route: string;
+}
+
+const publicServices: PublicServiceCard[] = [
+  {
+    id: "exam-results",
+    title: "Check Exam Results",
+    description: "Look up UNEB national examination results by index number",
+    icon: <Award className="w-6 h-6" />,
+    gradient: "from-indigo-600 to-blue-700",
+    route: "/exam-results"
+  },
+  {
+    id: "job-status",
+    title: "Job Status",
+    description: "Track your repair job or service request",
+    icon: <FileSearch className="w-6 h-6" />,
+    gradient: "from-slate-600 to-gray-700",
+    route: "/job-status"
+  }
+];
 
 interface SecondaryUserCard {
   id: string;
@@ -266,6 +295,48 @@ export default function PWAHome() {
         </div>
       </section>
 
+      {/* Public Services Section - No Login Required */}
+      <section className="px-4 pb-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-4">
+            <h3 className="text-lg font-semibold text-foreground mb-1">
+              🔓 Public Services
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Access these services without logging in
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {publicServices.map((service, index) => (
+              <Card
+                key={service.id}
+                className="group cursor-pointer overflow-hidden border-2 border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300 active:scale-[0.98] animate-fade-up"
+                style={{ animationDelay: `${(index + 8) * 50}ms` }}
+                onClick={() => navigate(service.route)}
+              >
+                <CardContent className="p-0">
+                  <div className={`bg-gradient-to-br ${service.gradient} p-4 text-white`}>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm group-hover:scale-110 transition-transform">
+                        {service.icon}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-base leading-tight mb-1">
+                          {service.title}
+                        </h4>
+                        <p className="text-xs text-white/80 line-clamp-2">
+                          {service.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Secondary Users Section */}
       <section className="px-4 pb-8">
         <div className="max-w-2xl mx-auto">
@@ -282,7 +353,7 @@ export default function PWAHome() {
               <Card
                 key={user.id}
                 className="group cursor-pointer overflow-hidden border-0 shadow-sm hover:shadow-lg transition-all duration-300 active:scale-[0.98] animate-fade-up"
-                style={{ animationDelay: `${(index + 8) * 50}ms` }}
+                style={{ animationDelay: `${(index + 10) * 50}ms` }}
                 onClick={() => navigate(user.route)}
               >
                 <CardContent className="p-0">
