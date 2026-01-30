@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, UserCircle, Edit, Trash2, Shield, Key, MessageCircle, RefreshCw, GraduationCap } from "lucide-react";
+import { Plus, UserCircle, Edit, Trash2, Shield, Key, MessageCircle, RefreshCw, GraduationCap, Eye, EyeOff } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -100,6 +100,7 @@ export function StaffManagement({ tenantId, userLimit, businessName, businessCod
   const [selectedSubjects, setSelectedSubjects] = useState<{ subjectId: string; classId?: string }[]>([]);
   const [isClassTeacher, setIsClassTeacher] = useState(false);
   const [classTeacherId, setClassTeacherId] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   
   const [formData, setFormData] = useState({
     username: "",
@@ -769,11 +770,23 @@ Please login with your email, password, and school code.`
                           <Label>Generated Password</Label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Input
-                            value={generatedPassword}
-                            readOnly
-                            className="font-mono bg-background"
-                          />
+                          <div className="relative flex-1">
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              value={generatedPassword}
+                              readOnly
+                              className="font-mono bg-background pr-10"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                          </div>
                           <Button
                             type="button"
                             variant="outline"
