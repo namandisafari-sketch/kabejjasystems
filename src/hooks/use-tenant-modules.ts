@@ -252,6 +252,8 @@ export const moduleRoutes: Record<string, { url: string; icon: string }> = {
   student_lifecycle: { url: '/business/student-lifecycle', icon: 'Users' },
   promotion_rules: { url: '/business/promotion-rules', icon: 'TrendingUp' },
   school_holidays: { url: '/business/school-holidays', icon: 'Calendar' },
+  // UNEB Exam modules
+  uneb_exam_results: { url: '/business/exam-results-lookup', icon: 'ClipboardCheck' },
   exam_access: { url: '/business/blocked-exam-access', icon: 'ShieldAlert' },
   // Rental Management modules
   rental_dashboard: { url: '/business/rental-dashboard', icon: 'LayoutDashboard' },
