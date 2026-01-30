@@ -26,13 +26,14 @@ export default function AdminStorage() {
   const fetchStorageInfo = async () => {
     setLoading(true);
     try {
-      // Storage buckets are managed by Lovable Cloud
-      // Show commonly used buckets based on tenant uploads
+      // Storage buckets for self-hosted Supabase
+      // These represent the configured buckets on your self-hosted instance
       const defaultBuckets: BucketInfo[] = [
         { id: "avatars", name: "avatars", public: true, created_at: new Date().toISOString() },
         { id: "documents", name: "documents", public: false, created_at: new Date().toISOString() },
         { id: "receipts", name: "receipts", public: false, created_at: new Date().toISOString() },
         { id: "student-photos", name: "student-photos", public: false, created_at: new Date().toISOString() },
+        { id: "payment-proofs", name: "payment-proofs", public: false, created_at: new Date().toISOString() },
       ];
       setBuckets(defaultBuckets);
     } catch (error) {
@@ -94,15 +95,26 @@ export default function AdminStorage() {
             Storage Overview
           </CardTitle>
           <CardDescription>
-            Platform file storage is managed through Lovable Cloud
+            File storage for your self-hosted Supabase instance
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="p-4 rounded-lg bg-muted/50 border">
+            <p className="text-sm font-medium mb-2">Self-Hosted Configuration</p>
             <p className="text-sm text-muted-foreground">
-              Storage is automatically managed by Lovable Cloud. Files uploaded through the app 
-              are stored securely and can be accessed based on bucket permissions.
+              Storage is managed on your self-hosted Supabase server at <code className="text-xs bg-muted px-1 py-0.5 rounded">172.233.185.42:8000</code>. 
+              Files are stored securely and accessed based on bucket RLS policies.
             </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="p-3 rounded-lg border bg-card">
+              <p className="text-xs text-muted-foreground">Storage Location</p>
+              <p className="font-medium text-sm">Self-Hosted Server</p>
+            </div>
+            <div className="p-3 rounded-lg border bg-card">
+              <p className="text-xs text-muted-foreground">Access Control</p>
+              <p className="font-medium text-sm">RLS Policies</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -155,28 +167,37 @@ export default function AdminStorage() {
         </CardContent>
       </Card>
 
-      {/* Usage Tips */}
+      {/* Self-Hosted Info */}
       <Card>
         <CardHeader>
-          <CardTitle>Storage Best Practices</CardTitle>
+          <CardTitle>Self-Hosted Storage Management</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <div className="p-4 rounded-lg border bg-muted/30">
+            <p className="text-sm font-medium mb-2">Managing Storage on Self-Hosted Instance</p>
+            <p className="text-sm text-muted-foreground mb-3">
+              To manage storage buckets directly, access your Supabase dashboard:
+            </p>
+            <code className="block text-xs bg-muted p-2 rounded">
+              http://172.233.185.42:8000 → Storage
+            </code>
+          </div>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-primary" />
-              Use public buckets only for assets that need to be publicly accessible
+              Create buckets via SQL migrations for version control
             </li>
             <li className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-primary" />
-              Private buckets are ideal for user documents and sensitive files
+              Set up RLS policies to control tenant-specific file access
             </li>
             <li className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-primary" />
-              Set up proper RLS policies to control file access per tenant
+              Use private buckets for sensitive documents (receipts, ID cards)
             </li>
             <li className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-primary" />
-              Compress images before upload to optimize storage usage
+              Monitor disk usage on your Linode server periodically
             </li>
           </ul>
         </CardContent>
