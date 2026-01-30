@@ -7406,6 +7406,70 @@ export type Database = {
           },
         ]
       }
+      student_exam_scores: {
+        Row: {
+          created_at: string
+          exam_id: string
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          is_absent: boolean | null
+          marks_obtained: number | null
+          remarks: string | null
+          student_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          exam_id: string
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          is_absent?: boolean | null
+          marks_obtained?: number | null
+          remarks?: string | null
+          student_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          exam_id?: string
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          is_absent?: boolean | null
+          marks_obtained?: number | null
+          remarks?: string | null
+          student_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_exam_scores_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_exam_scores_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_exam_scores_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_fees: {
         Row: {
           amount_paid: number
