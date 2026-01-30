@@ -30,7 +30,6 @@ export default function AdmissionLinks() {
   const { data: tenant, isLoading: tenantLoading } = useTenant();
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [paymentCode, setPaymentCode] = useState("");
   const [notes, setNotes] = useState("");
   const [validityHours, setValidityHours] = useState(24);
   const [createdLink, setCreatedLink] = useState<{ url: string; code: string } | null>(null);
@@ -65,17 +64,28 @@ export default function AdmissionLinks() {
     enabled: !!tenant?.tenantId,
   });
 
+  // Generate a random payment code
+  const generatePaymentCode = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = 'PAY-';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  };
+
   const createMutation = useMutation({
     mutationFn: async () => {
       if (!tenant?.tenantId) throw new Error("No tenant");
       
       const expiresAt = addHours(new Date(), validityHours);
+      const autoPaymentCode = generatePaymentCode();
       
       const { data, error } = await supabase
         .from("admission_links")
         .insert({
           tenant_id: tenant.tenantId,
-          payment_code: paymentCode.toUpperCase(),
+          payment_code: autoPaymentCode,
           expires_at: expiresAt.toISOString(),
           notes,
         })
@@ -89,7 +99,6 @@ export default function AdmissionLinks() {
       queryClient.invalidateQueries({ queryKey: ["admission-links", tenant?.tenantId] });
       const url = `${window.location.origin}/public/admission/${data.link_code}`;
       setCreatedLink({ url, code: data.payment_code });
-      setPaymentCode("");
       setNotes("");
       toast({ title: "Admission link created", description: "Share this link with the parent along with the payment code." });
     },
@@ -193,20 +202,6 @@ export default function AdmissionLinks() {
             ) : (
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="payment_code">Payment Code *</Label>
-                  <Input
-                    id="payment_code"
-                    value={paymentCode}
-                    onChange={(e) => setPaymentCode(e.target.value.toUpperCase())}
-                    placeholder="e.g., PAY-2025-0001"
-                    className="font-mono"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Enter a unique code to verify the parent has paid admission fees
-                  </p>
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="validity">Link Validity (hours)</Label>
                   <Input
                     id="validity"
@@ -216,6 +211,9 @@ export default function AdmissionLinks() {
                     value={validityHours}
                     onChange={(e) => setValidityHours(Number(e.target.value))}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    A unique payment code will be auto-generated when you create the link
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -238,10 +236,10 @@ export default function AdmissionLinks() {
               ) : (
                 <Button
                   onClick={() => createMutation.mutate()}
-                  disabled={!paymentCode || createMutation.isPending}
+                  disabled={createMutation.isPending}
                 >
                   {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Generate Link
+                  Generate Link & Code
                 </Button>
               )}
             </DialogFooter>
