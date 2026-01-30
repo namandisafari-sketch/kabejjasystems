@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ interface HealthMetric {
 }
 
 export default function AdminSystemHealth() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [lastCheck, setLastCheck] = useState<Date | null>(null);
   const [metrics, setMetrics] = useState({
@@ -242,19 +244,35 @@ export default function AdminSystemHealth() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
+            <Button 
+              variant="outline" 
+              className="h-auto py-4 flex-col gap-2"
+              onClick={() => navigate("/admin/tenants")}
+            >
               <Users className="h-5 w-5" />
               <span>View All Users</span>
             </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
+            <Button 
+              variant="outline" 
+              className="h-auto py-4 flex-col gap-2"
+              onClick={() => navigate("/admin/tenants")}
+            >
               <Building2 className="h-5 w-5" />
               <span>View All Tenants</span>
             </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
+            <Button 
+              variant="outline" 
+              className="h-auto py-4 flex-col gap-2"
+              onClick={() => navigate("/admin/subscriptions")}
+            >
               <AlertCircle className="h-5 w-5" />
               <span>Expiring Subscriptions</span>
             </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
+            <Button 
+              variant="outline" 
+              className="h-auto py-4 flex-col gap-2"
+              onClick={() => navigate("/admin/settings")}
+            >
               <HardDrive className="h-5 w-5" />
               <span>Storage Usage</span>
             </Button>
