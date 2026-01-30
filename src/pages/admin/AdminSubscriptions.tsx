@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +20,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -28,14 +29,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Clock, AlertTriangle, CheckCircle, XCircle, RefreshCw } from "lucide-react";
-import { format, differenceInDays, addMonths, addDays } from "date-fns";
+import { Calendar, Clock, AlertTriangle, CheckCircle, XCircle, RefreshCw, CalendarDays, Edit } from "lucide-react";
+import { format, differenceInDays, addDays } from "date-fns";
 
 export default function AdminSubscriptions() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedTenant, setSelectedTenant] = useState<any>(null);
   const [extensionDays, setExtensionDays] = useState(30);
+  const [manualDateTenant, setManualDateTenant] = useState<any>(null);
+  const [manualExpiryDate, setManualExpiryDate] = useState("");
 
   // Fetch tenants with subscription info
   const { data: tenants, isLoading } = useQuery({
@@ -78,6 +81,31 @@ export default function AdminSubscriptions() {
       queryClient.invalidateQueries({ queryKey: ["admin-subscriptions"] });
       toast({ title: "Subscription extended successfully" });
       setSelectedTenant(null);
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Set manual expiry date mutation
+  const setExpiryDateMutation = useMutation({
+    mutationFn: async ({ tenantId, expiryDate }: { tenantId: string; expiryDate: string }) => {
+      const { error } = await supabase
+        .from("tenants")
+        .update({
+          subscription_end_date: new Date(expiryDate).toISOString(),
+          status: "active",
+          subscription_status: "active",
+        })
+        .eq("id", tenantId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-subscriptions"] });
+      toast({ title: "Expiry date set successfully" });
+      setManualDateTenant(null);
+      setManualExpiryDate("");
     },
     onError: (error: Error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -239,6 +267,21 @@ export default function AdminSubscriptions() {
                           <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => {
+                              setManualDateTenant(tenant);
+                              setManualExpiryDate(
+                                tenant.subscription_end_date
+                                  ? format(new Date(tenant.subscription_end_date), "yyyy-MM-dd")
+                                  : format(new Date(), "yyyy-MM-dd")
+                              );
+                            }}
+                          >
+                            <CalendarDays className="h-4 w-4 mr-1" />
+                            Set Date
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => setSelectedTenant(tenant)}
                           >
                             <RefreshCw className="h-4 w-4 mr-1" />
@@ -348,6 +391,66 @@ export default function AdminSubscriptions() {
                 className="w-full"
               >
                 {extendSubscriptionMutation.isPending ? "Extending..." : "Extend Subscription"}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Manual Date Setting Dialog */}
+      <Dialog open={!!manualDateTenant} onOpenChange={() => setManualDateTenant(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set Subscription Expiry Date</DialogTitle>
+            <DialogDescription>
+              Manually set the expiry date for this tenant's subscription
+            </DialogDescription>
+          </DialogHeader>
+          {manualDateTenant && (
+            <div className="space-y-4 pt-4">
+              <div className="p-4 bg-muted rounded-lg">
+                <div className="font-medium">{manualDateTenant.name}</div>
+                <div className="text-sm text-muted-foreground">
+                  Current expiry:{" "}
+                  {manualDateTenant.subscription_end_date
+                    ? format(new Date(manualDateTenant.subscription_end_date), "MMM d, yyyy")
+                    : "Not set"}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="expiry-date">New Expiry Date</Label>
+                <Input
+                  id="expiry-date"
+                  type="date"
+                  value={manualExpiryDate}
+                  onChange={(e) => setManualExpiryDate(e.target.value)}
+                  min={format(new Date(), "yyyy-MM-dd")}
+                />
+              </div>
+
+              {manualExpiryDate && (
+                <div className="p-4 bg-primary/10 rounded-lg">
+                  <div className="text-sm">
+                    Subscription will expire on:{" "}
+                    <strong>
+                      {format(new Date(manualExpiryDate), "MMMM d, yyyy")}
+                    </strong>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                onClick={() =>
+                  setExpiryDateMutation.mutate({
+                    tenantId: manualDateTenant.id,
+                    expiryDate: manualExpiryDate,
+                  })
+                }
+                disabled={!manualExpiryDate || setExpiryDateMutation.isPending}
+                className="w-full"
+              >
+                {setExpiryDateMutation.isPending ? "Setting..." : "Set Expiry Date"}
               </Button>
             </div>
           )}
