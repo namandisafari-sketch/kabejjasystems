@@ -1810,72 +1810,191 @@ export type Database = {
           },
         ]
       }
-      exam_results: {
+      exam_access_logs: {
         Row: {
-          created_at: string | null
-          exam_id: string
-          grade: string | null
-          graded_at: string | null
-          graded_by: string | null
+          access_status: string | null
+          accessed_at: string | null
+          exam_session_id: string
           id: string
-          is_absent: boolean | null
-          marks_obtained: number | null
-          remarks: string | null
-          student_id: string
-          tenant_id: string
-          updated_at: string | null
+          index_number: string
+          ip_address: string | null
+          user_agent: string | null
         }
         Insert: {
-          created_at?: string | null
-          exam_id: string
-          grade?: string | null
-          graded_at?: string | null
-          graded_by?: string | null
+          access_status?: string | null
+          accessed_at?: string | null
+          exam_session_id: string
           id?: string
-          is_absent?: boolean | null
-          marks_obtained?: number | null
-          remarks?: string | null
-          student_id: string
-          tenant_id: string
-          updated_at?: string | null
+          index_number: string
+          ip_address?: string | null
+          user_agent?: string | null
         }
         Update: {
-          created_at?: string | null
-          exam_id?: string
-          grade?: string | null
-          graded_at?: string | null
-          graded_by?: string | null
+          access_status?: string | null
+          accessed_at?: string | null
+          exam_session_id?: string
           id?: string
-          is_absent?: boolean | null
-          marks_obtained?: number | null
-          remarks?: string | null
-          student_id?: string
-          tenant_id?: string
-          updated_at?: string | null
+          index_number?: string
+          ip_address?: string | null
+          user_agent?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "exam_results_exam_id_fkey"
-            columns: ["exam_id"]
+            foreignKeyName: "exam_access_logs_exam_session_id_fkey"
+            columns: ["exam_session_id"]
             isOneToOne: false
-            referencedRelation: "exams"
+            referencedRelation: "exam_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_result_blocks: {
+        Row: {
+          blocked_at: string | null
+          blocked_by: string | null
+          exam_result_id: string
+          expires_at: string | null
+          id: string
+          index_number: string
+          notes: string | null
+          reason: string | null
+          school_id: string
+        }
+        Insert: {
+          blocked_at?: string | null
+          blocked_by?: string | null
+          exam_result_id: string
+          expires_at?: string | null
+          id?: string
+          index_number: string
+          notes?: string | null
+          reason?: string | null
+          school_id: string
+        }
+        Update: {
+          blocked_at?: string | null
+          blocked_by?: string | null
+          exam_result_id?: string
+          expires_at?: string | null
+          id?: string
+          index_number?: string
+          notes?: string | null
+          reason?: string | null
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_result_blocks_blocked_by_fkey"
+            columns: ["blocked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "exam_results_student_id_fkey"
-            columns: ["student_id"]
+            foreignKeyName: "exam_result_blocks_exam_result_id_fkey"
+            columns: ["exam_result_id"]
             isOneToOne: false
-            referencedRelation: "students"
+            referencedRelation: "exam_results"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "exam_results_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: "exam_result_blocks_school_id_fkey"
+            columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
+      }
+      exam_results: {
+        Row: {
+          aggregate_grade: string | null
+          created_at: string | null
+          exam_session_id: string
+          id: string
+          index_number: string
+          result_status: string | null
+          school_id: string | null
+          school_name: string | null
+          student_name: string
+          subjects: Json
+          total_points: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          aggregate_grade?: string | null
+          created_at?: string | null
+          exam_session_id: string
+          id?: string
+          index_number: string
+          result_status?: string | null
+          school_id?: string | null
+          school_name?: string | null
+          student_name: string
+          subjects?: Json
+          total_points?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          aggregate_grade?: string | null
+          created_at?: string | null
+          exam_session_id?: string
+          id?: string
+          index_number?: string
+          result_status?: string | null
+          school_id?: string | null
+          school_name?: string | null
+          student_name?: string
+          subjects?: Json
+          total_points?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_results_exam_session_id_fkey"
+            columns: ["exam_session_id"]
+            isOneToOne: false
+            referencedRelation: "exam_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_results_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_sessions: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          level: string
+          results_released_date: string | null
+          session_name: string
+          year: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          level: string
+          results_released_date?: string | null
+          session_name: string
+          year: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          level?: string
+          results_released_date?: string | null
+          session_name?: string
+          year?: number
+        }
+        Relationships: []
       }
       exam_types: {
         Row: {
@@ -4336,6 +4455,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          permissions: Json | null
           phone: string | null
           role: Database["public"]["Enums"]["app_role"] | null
           tenant_id: string | null
@@ -4347,6 +4467,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          permissions?: Json | null
           phone?: string | null
           role?: Database["public"]["Enums"]["app_role"] | null
           tenant_id?: string | null
@@ -4358,6 +4479,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          permissions?: Json | null
           phone?: string | null
           role?: Database["public"]["Enums"]["app_role"] | null
           tenant_id?: string | null
