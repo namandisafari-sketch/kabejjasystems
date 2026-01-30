@@ -11,6 +11,7 @@ import { Plus, X, Save, Loader2, GraduationCap, Copy, Users, CreditCard, Hash } 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { UNEBSettings } from "./UNEBSettings";
+import { AdmissionSettings } from "./AdmissionSettings";
 import { useTenant } from "@/hooks/use-tenant";
 
 interface SchoolSettingsProps {
@@ -22,6 +23,7 @@ export function SchoolSettings({ tenantId }: SchoolSettingsProps) {
   const queryClient = useQueryClient();
   const { data: tenantData } = useTenant();
   const isSecondarySchool = tenantData?.businessType === 'secondary_school';
+  const isSchool = ['kindergarten', 'primary_school', 'secondary_school'].includes(tenantData?.businessType || '');
   
   const [streams, setStreams] = useState<string[]>([]);
   const [newStream, setNewStream] = useState("");
@@ -352,6 +354,14 @@ export function SchoolSettings({ tenantId }: SchoolSettingsProps) {
         {isSecondarySchool && (
           <>
             <UNEBSettings tenantId={tenantId} />
+            <Separator />
+          </>
+        )}
+
+        {/* Self-Admission Portal Settings */}
+        {isSchool && tenantId && (
+          <>
+            <AdmissionSettings tenantId={tenantId} />
             <Separator />
           </>
         )}

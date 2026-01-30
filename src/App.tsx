@@ -107,6 +107,8 @@ import Timetable from "./pages/business/Timetable";
 import Exams from "./pages/business/Exams";
 import TermCalendar from "./pages/business/TermCalendar";
 import UNEBCandidates from "./pages/business/UNEBCandidates";
+import AdmissionLinks from "./pages/business/AdmissionLinks";
+import AdmissionConfirmations from "./pages/business/AdmissionConfirmations";
 import RentalDashboard from "./pages/business/rental/RentalDashboard";
 import RentalProperties from "./pages/business/rental/RentalProperties";
 import RentalUnits from "./pages/business/rental/RentalUnits";
@@ -120,6 +122,7 @@ import RentalTaxDashboard from "./pages/business/rental/RentalTaxDashboard";
 import PublicMenu from "./pages/public/PublicMenu";
 import SubmitPaymentProof from "./pages/public/SubmitPaymentProof";
 import JobStatus from "./pages/public/JobStatus";
+import SelfAdmission from "./pages/public/SelfAdmission";
 import ParentPortal from "./pages/ParentPortal";
 import ParentDashboard from "./pages/ParentDashboard";
 import ECDParentPortal from "./pages/ECDParentPortal";
@@ -257,6 +260,9 @@ const App = () => {
                 <Route path="term-calendar" element={<TermCalendar />} />
                 {/* UNEB Candidate Management */}
                 <Route path="uneb-candidates" element={<UNEBCandidates />} />
+                {/* Admission Management */}
+                <Route path="admission-links" element={<AdmissionLinks />} />
+                <Route path="admission-confirmations" element={<AdmissionConfirmations />} />
                 {/* Rental Management Routes */}
                 <Route path="rental-dashboard" element={<RentalDashboard />} />
                 <Route path="rental-tax-dashboard" element={<RentalTaxDashboard />} />
@@ -293,6 +299,7 @@ const App = () => {
               <Route path="/menu/:tenantId/:tableId" element={<PublicMenu />} />
               <Route path="/job-status" element={<JobStatus />} />
               <Route path="/submit-payment" element={<SubmitPaymentProof />} />
+              <Route path="/public/admission/:linkCode" element={<SelfAdmission />} />
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

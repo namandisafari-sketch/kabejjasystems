@@ -242,6 +242,12 @@ export const moduleRoutes: Record<string, { url: string; icon: string }> = {
   exam_sessions: { url: '/business/exam-sessions', icon: 'Calendar' },
   exam_results_import: { url: '/business/exam-results-import', icon: 'Upload' },
   exam_import_permissions: { url: '/business/exam-import-permissions', icon: 'Shield' },
+  // UNEB Candidates
+  uneb_registration: { url: '/business/uneb-candidates', icon: 'GraduationCap' },
+  uneb_candidates: { url: '/business/uneb-candidates', icon: 'GraduationCap' },
+  // Self-Admission modules
+  admission_links: { url: '/business/admission-links', icon: 'Link' },
+  admission_confirmations: { url: '/business/admission-confirmations', icon: 'UserPlus' },
   // Rental Management modules
   rental_dashboard: { url: '/business/rental-dashboard', icon: 'LayoutDashboard' },
   rental_properties: { url: '/business/rental-properties', icon: 'Building2' },

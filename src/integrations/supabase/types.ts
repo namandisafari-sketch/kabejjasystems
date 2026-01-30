@@ -61,6 +61,185 @@ export type Database = {
           },
         ]
       }
+      admission_confirmations: {
+        Row: {
+          admission_link_id: string
+          agreed_to_terms: boolean
+          confirmation_code: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          student_data: Json
+          student_id: string | null
+          tenant_id: string
+          terms_agreed_at: string
+          user_agent: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          admission_link_id: string
+          agreed_to_terms?: boolean
+          confirmation_code: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          student_data: Json
+          student_id?: string | null
+          tenant_id: string
+          terms_agreed_at?: string
+          user_agent?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          admission_link_id?: string
+          agreed_to_terms?: boolean
+          confirmation_code?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          student_data?: Json
+          student_id?: string | null
+          tenant_id?: string
+          terms_agreed_at?: string
+          user_agent?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admission_confirmations_admission_link_id_fkey"
+            columns: ["admission_link_id"]
+            isOneToOne: false
+            referencedRelation: "admission_links"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admission_confirmations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admission_confirmations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admission_links: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          is_active: boolean
+          link_code: string
+          max_registrations: number
+          notes: string | null
+          payment_code: string
+          registrations_used: number
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at: string
+          id?: string
+          is_active?: boolean
+          link_code?: string
+          max_registrations?: number
+          notes?: string | null
+          payment_code: string
+          registrations_used?: number
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          is_active?: boolean
+          link_code?: string
+          max_registrations?: number
+          notes?: string | null
+          payment_code?: string
+          registrations_used?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admission_links_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admission_settings: {
+        Row: {
+          academic_year: string | null
+          admission_fee_amount: number | null
+          created_at: string
+          custom_fields: Json | null
+          disclaimer_text: string | null
+          id: string
+          is_open: boolean
+          link_validity_hours: number | null
+          require_birth_certificate: boolean | null
+          require_photo: boolean | null
+          require_previous_school_records: boolean | null
+          rules_and_regulations: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year?: string | null
+          admission_fee_amount?: number | null
+          created_at?: string
+          custom_fields?: Json | null
+          disclaimer_text?: string | null
+          id?: string
+          is_open?: boolean
+          link_validity_hours?: number | null
+          require_birth_certificate?: boolean | null
+          require_photo?: boolean | null
+          require_previous_school_records?: boolean | null
+          rules_and_regulations?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string | null
+          admission_fee_amount?: number | null
+          created_at?: string
+          custom_fields?: Json | null
+          disclaimer_text?: string | null
+          id?: string
+          is_open?: boolean
+          link_validity_hours?: number | null
+          require_birth_certificate?: boolean | null
+          require_photo?: boolean | null
+          require_previous_school_records?: boolean | null
+          rules_and_regulations?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admission_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       announcements: {
         Row: {
           content: string
@@ -9424,6 +9603,7 @@ export type Database = {
         Returns: string
       }
       generate_business_code: { Args: never; Returns: string }
+      generate_confirmation_code: { Args: never; Returns: string }
       generate_parent_login_code: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
       generate_rental_card_number: {
@@ -9465,6 +9645,14 @@ export type Database = {
           admin_email: string
           admin_name: string
           admin_password: string
+        }
+        Returns: Json
+      }
+      use_admission_link: {
+        Args: {
+          p_link_code: string
+          p_payment_code: string
+          p_tenant_id: string
         }
         Returns: Json
       }
