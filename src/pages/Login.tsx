@@ -190,29 +190,30 @@ const Login = () => {
                   </div>
                 </div>
 
-                {/* Business/School Code Field - Always visible for staff */}
-                <div className="space-y-2">
-                  <Label htmlFor="businessCode" className="text-sm font-medium flex items-center gap-2">
-                    <Building2 className="h-4 w-4" />
-                    School/Business Code
-                    <span className="text-xs text-muted-foreground">(Staff only)</span>
-                  </Label>
-                  <Input
-                    id="businessCode"
-                    type="text"
-                    value={businessCode}
-                    onChange={(e) => {
-                      setBusinessCode(e.target.value.toUpperCase());
-                      setBusinessCodeError("");
-                    }}
-                    placeholder="e.g. STMARYS or ABC123"
-                    autoComplete="organization"
-                    className={`h-12 touch-target uppercase ${businessCodeError ? 'border-destructive' : ''}`}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Staff members must enter their school/business code. Owners can leave this empty.
-                  </p>
-                </div>
+                {/* Business/School Code Field - Only visible when staff mode enabled */}
+                {showBusinessCode && (
+                  <div className="space-y-2">
+                    <Label htmlFor="businessCode" className="text-sm font-medium flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      School/Business Code
+                    </Label>
+                    <Input
+                      id="businessCode"
+                      type="text"
+                      value={businessCode}
+                      onChange={(e) => {
+                        setBusinessCode(e.target.value.toUpperCase());
+                        setBusinessCodeError("");
+                      }}
+                      placeholder="e.g. STMARYS or ABC123"
+                      autoComplete="organization"
+                      className={`h-12 touch-target uppercase ${businessCodeError ? 'border-destructive' : ''}`}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Enter your school/business code to continue.
+                    </p>
+                  </div>
+                )}
 
                 {businessCodeError && (
                   <Alert variant="destructive" className="py-2">
@@ -222,7 +223,19 @@ const Login = () => {
                     </AlertDescription>
                   </Alert>
                 )}
-                
+
+                {/* Staff login toggle - only show when not already in staff mode */}
+                {!showBusinessCode && (
+                  <button
+                    type="button"
+                    onClick={() => setShowBusinessCode(true)}
+                    className="w-full text-sm text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Building2 className="h-4 w-4" />
+                    Staff Portal Login
+                  </button>
+                )}
+
                 <Button 
                   type="submit" 
                   disabled={loading} 
