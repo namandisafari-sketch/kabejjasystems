@@ -123,74 +123,34 @@ export default function AdminCreateBusiness() {
     }
 
     setLoading(true);
-    const tempPassword = generatePassword();
 
     try {
-      // 1. Create user account
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.ownerEmail,
-        password: tempPassword,
-        options: {
-          data: {
-            full_name: formData.ownerName,
-          },
+      // IMPORTANT: Don't use supabase.auth.signUp here because it switches the current session
+      // to the newly created user, which then fails admin-only inserts (RLS). Do everything
+      // server-side in a backend function.
+      const { data, error } = await supabase.functions.invoke("admin-create-business", {
+        body: {
+          businessName: formData.businessName,
+          businessType: formData.businessType,
+          ownerName: formData.ownerName,
+          ownerEmail: formData.ownerEmail,
+          ownerPhone: formData.ownerPhone,
+          location: formData.location,
+          packageId: formData.packageId,
+          trialDays: formData.trialDays,
+          notes: formData.notes,
         },
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Failed to create user");
-
-      // 2. Create tenant
-      const trialEndDate = new Date();
-      trialEndDate.setDate(trialEndDate.getDate() + parseInt(formData.trialDays));
-
-      const { data: tenant, error: tenantError } = await supabase
-        .from("tenants")
-        .insert({
-          name: formData.businessName,
-          business_type: formData.businessType,
-          status: "active",
-          subscription_status: "trialing",
-          trial_end_date: trialEndDate.toISOString(),
-          phone: formData.ownerPhone,
-          address: formData.location,
-          business_code: formData.businessName.toLowerCase().replace(/\s+/g, '-').substring(0, 20) + '-' + Date.now().toString(36),
-          owner_email: formData.ownerEmail,
-          owner_password: tempPassword,
-        })
-        .select()
-        .single();
-
-      if (tenantError) throw tenantError;
-
-      // 3. Update profile with tenant_id
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({
-          tenant_id: tenant.id,
-          full_name: formData.ownerName,
-          role: "tenant_owner" as const,
-        })
-        .eq("id", authData.user.id);
-
-      if (profileError) throw profileError;
-
-      // 4. Add owner role
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert({
-          user_id: authData.user.id,
-          role: "tenant_owner" as const,
-        });
-
-      if (roleError) throw roleError;
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Failed to create business account");
 
       toast({
         title: "Business Created!",
         description: (
           <div className="space-y-2">
             <p><strong>Email:</strong> {formData.ownerEmail}</p>
-            <p><strong>Temporary Password:</strong> {tempPassword}</p>
+            <p><strong>Temporary Password:</strong> {data.tempPassword}</p>
             <p className="text-xs text-muted-foreground">Share these credentials with the business owner</p>
           </div>
         ),
