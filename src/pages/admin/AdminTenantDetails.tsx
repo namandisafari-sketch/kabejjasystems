@@ -11,7 +11,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { 
   ArrowLeft, Mail, Phone, MapPin, Calendar, CreditCard, Package, Check, X, 
-  Users, Building2, ShoppingBag, Receipt, Banknote, GraduationCap, UserCheck, Clock, Trash2, AlertTriangle
+  Users, Building2, ShoppingBag, Receipt, Banknote, GraduationCap, UserCheck, Clock, Trash2, AlertTriangle, Key, Eye, EyeOff, Copy
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -199,6 +199,9 @@ const AdminTenantDetails = () => {
   // Delete tenant state
   const [deleteReason, setDeleteReason] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  
+  // Password visibility state
+  const [showPassword, setShowPassword] = useState(false);
 
   const deleteTenantMutation = useMutation({
     mutationFn: async () => {
@@ -407,6 +410,71 @@ const AdminTenantDetails = () => {
                 </div>
               )}
             </div>
+
+            {/* Owner Credentials Section */}
+            {(tenant.owner_email || tenant.owner_password) && (
+              <div className="mt-6 p-4 rounded-lg bg-muted/50 border">
+                <div className="flex items-center gap-2 mb-3">
+                  <Key className="h-4 w-4 text-primary" />
+                  <span className="font-medium text-sm">Owner Login Credentials</span>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Owner Email</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-mono text-sm">{tenant.owner_email || 'N/A'}</p>
+                      {tenant.owner_email && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6"
+                          onClick={() => {
+                            navigator.clipboard.writeText(tenant.owner_email || '');
+                            toast({ title: "Copied!", description: "Email copied to clipboard" });
+                          }}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Initial Password</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-mono text-sm">
+                        {showPassword ? (tenant.owner_password || 'N/A') : '••••••••'}
+                      </p>
+                      {tenant.owner_password && (
+                        <>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6"
+                            onClick={() => {
+                              navigator.clipboard.writeText(tenant.owner_password || '');
+                              toast({ title: "Copied!", description: "Password copied to clipboard" });
+                            }}
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Note: User may have changed this password
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

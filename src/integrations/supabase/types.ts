@@ -9457,6 +9457,8 @@ export type Database = {
           late_arrival_minutes: number | null
           logo_url: string | null
           name: string
+          owner_email: string | null
+          owner_password: string | null
           package_id: string | null
           parent_login_code: string | null
           phone: string | null
@@ -9487,6 +9489,8 @@ export type Database = {
           late_arrival_minutes?: number | null
           logo_url?: string | null
           name: string
+          owner_email?: string | null
+          owner_password?: string | null
           package_id?: string | null
           parent_login_code?: string | null
           phone?: string | null
@@ -9517,6 +9521,8 @@ export type Database = {
           late_arrival_minutes?: number | null
           logo_url?: string | null
           name?: string
+          owner_email?: string | null
+          owner_password?: string | null
           package_id?: string | null
           parent_login_code?: string | null
           phone?: string | null

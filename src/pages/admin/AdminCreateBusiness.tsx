@@ -155,6 +155,8 @@ export default function AdminCreateBusiness() {
           phone: formData.ownerPhone,
           address: formData.location,
           business_code: formData.businessName.toLowerCase().replace(/\s+/g, '-').substring(0, 20) + '-' + Date.now().toString(36),
+          owner_email: formData.ownerEmail,
+          owner_password: tempPassword,
         })
         .select()
         .single();
