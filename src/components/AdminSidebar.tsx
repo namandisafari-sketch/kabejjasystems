@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CreditCard, Package, Settings, LogOut, GraduationCap, Building2, Shield, Activity, Flag, PlusCircle, HardDrive } from "lucide-react";
+import { LayoutDashboard, Users, CreditCard, Package, Settings, LogOut, GraduationCap, Building2, Shield, Activity, Flag, PlusCircle, HardDrive, Sparkles } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +28,7 @@ const menuItems = [
   { title: "Packages", url: "/admin/packages", icon: Package },
   { title: "School Packages", url: "/admin/school-packages", icon: GraduationCap },
   { title: "Rental Packages", url: "/admin/rental-packages", icon: Building2 },
+  { title: "Sponsors", url: "/admin/sponsors", icon: Sparkles },
   { title: "System Health", url: "/admin/system-health", icon: Activity },
   { title: "Backups", url: "/admin/backups", icon: HardDrive },
   { title: "Feature Flags", url: "/admin/feature-flags", icon: Flag },

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { usePWAUpdate } from "@/hooks/use-pwa-update";
 import { toast } from "@/hooks/use-toast";
 import kabejjaLogo from "@/assets/kabejja-logo.png";
+import { SponsorMarquee } from "@/components/SponsorMarquee";
 
 interface PublicServiceCard {
   id: string;
@@ -402,8 +403,11 @@ export default function PWAHome() {
         </div>
       </section>
 
+      {/* Sponsors Marquee */}
+      <SponsorMarquee />
+
       {/* Bottom Info */}
-      <section className="px-4 pb-safe-bottom pb-8">
+      <section className="px-4 pb-safe-bottom pb-8 pt-6">
         <div className="max-w-2xl mx-auto text-center">
           <p className="text-xs text-muted-foreground">
             Trusted by 500+ Ugandan businesses
