@@ -7,8 +7,20 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Building2, Search, Eye, Check, X } from "lucide-react";
+import { Building2, Search, Eye, Check, X, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -24,6 +36,9 @@ const AdminTenants = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTenants, setSelectedTenants] = useState<string[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [tenantToDelete, setTenantToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
 
   const { data: tenants, isLoading } = useQuery({
     queryKey: ['all-tenants'],
@@ -106,6 +121,49 @@ const AdminTenants = () => {
       });
     },
   });
+
+  const deleteTenantMutation = useMutation({
+    mutationFn: async ({ tenantId, reason }: { tenantId: string; reason: string }) => {
+      const { data, error } = await supabase.functions.invoke('delete-tenant', {
+        body: { tenantId, reason },
+      });
+      
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Tenant Deleted",
+        description: data.message || "Tenant has been permanently deleted. A backup was created.",
+      });
+      setDeleteDialogOpen(false);
+      setTenantToDelete(null);
+      setDeleteReason("");
+      queryClient.invalidateQueries({ queryKey: ['all-tenants'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteClick = (tenant: { id: string; name: string }) => {
+    setTenantToDelete(tenant);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (tenantToDelete) {
+      deleteTenantMutation.mutate({ 
+        tenantId: tenantToDelete.id, 
+        reason: deleteReason || "Deleted by admin" 
+      });
+    }
+  };
 
   const toggleTenantSelection = (tenantId: string) => {
     setSelectedTenants(prev =>
@@ -250,14 +308,24 @@ const AdminTenants = () => {
                         {new Date(tenant.created_at || '').toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => navigate(`/admin/tenants/${tenant.id}`)}
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => navigate(`/admin/tenants/${tenant.id}`)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDeleteClick({ id: tenant.id, name: tenant.name })}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -267,6 +335,67 @@ const AdminTenants = () => {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">Delete Tenant Permanently</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                You are about to permanently delete <strong>{tenantToDelete?.name}</strong> and all associated data including:
+              </p>
+              <ul className="list-disc list-inside text-sm space-y-1 mt-2">
+                <li>All user accounts linked to this tenant</li>
+                <li>All business data (products, sales, customers, etc.)</li>
+                <li>All school data (students, fees, report cards, etc.)</li>
+                <li>All rental data (properties, tenants, payments, etc.)</li>
+              </ul>
+              <p className="font-medium text-foreground mt-3">
+                A backup will be created before deletion. This action cannot be undone.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <div className="space-y-2 py-2">
+            <Label htmlFor="delete-reason">Reason for deletion (optional)</Label>
+            <Textarea
+              id="delete-reason"
+              placeholder="Enter reason for deleting this tenant..."
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              className="min-h-[80px]"
+            />
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => {
+                setTenantToDelete(null);
+                setDeleteReason("");
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteTenantMutation.isPending}
+            >
+              {deleteTenantMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Permanently
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
