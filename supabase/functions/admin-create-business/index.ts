@@ -112,7 +112,18 @@ serve(async (req) => {
     });
 
     if (createUserError || !createdUser?.user) {
-      return new Response(JSON.stringify({ error: createUserError?.message || "Failed to create user" }), {
+      // Check if user already exists
+      const errorMessage = createUserError?.message || "Failed to create user";
+      const isEmailExists = errorMessage.toLowerCase().includes("already") || 
+                            errorMessage.toLowerCase().includes("registered") ||
+                            errorMessage.toLowerCase().includes("exists");
+      
+      return new Response(JSON.stringify({ 
+        error: isEmailExists 
+          ? "A user with this email already exists. Please use a different email address or delete the existing account first."
+          : errorMessage,
+        code: isEmailExists ? "EMAIL_EXISTS" : "CREATE_USER_ERROR"
+      }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
