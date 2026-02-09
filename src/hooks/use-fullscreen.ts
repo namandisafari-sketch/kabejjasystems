@@ -8,10 +8,25 @@ export function useFullscreen() {
       if (document.fullscreenElement) {
         await document.exitFullscreen();
       } else {
-        await document.documentElement.requestFullscreen();
+        // Try fullscreen on document element first
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+          await elem.requestFullscreen();
+        } else if ((elem as any).webkitRequestFullscreen) {
+          // Safari support
+          await (elem as any).webkitRequestFullscreen();
+        } else if ((elem as any).msRequestFullscreen) {
+          // IE/Edge support
+          await (elem as any).msRequestFullscreen();
+        }
       }
     } catch (err) {
-      console.warn("Fullscreen not supported:", err);
+      // Fullscreen may fail in iframes - try opening in new tab
+      console.warn("Fullscreen not available (may be in iframe):", err);
+      // If in iframe, open the app in a new window for fullscreen
+      if (window.self !== window.top) {
+        window.open(window.location.href, '_blank');
+      }
     }
   }, []);
 
@@ -21,7 +36,11 @@ export function useFullscreen() {
     };
 
     document.addEventListener("fullscreenchange", handleChange);
-    return () => document.removeEventListener("fullscreenchange", handleChange);
+    document.addEventListener("webkitfullscreenchange", handleChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleChange);
+      document.removeEventListener("webkitfullscreenchange", handleChange);
+    };
   }, []);
 
   return { isFullscreen, toggleFullscreen };

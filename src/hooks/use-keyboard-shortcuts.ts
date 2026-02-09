@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 export interface Shortcut {
@@ -18,7 +18,7 @@ export function useKeyboardShortcuts(businessType?: string) {
   const isSchool = businessType === 'school' || businessType === 'secondary_school' || 
                    businessType === 'primary_school' || businessType === 'kindergarten';
 
-  const shortcuts: Shortcut[] = [
+  const shortcuts: Shortcut[] = useMemo(() => [
     // Navigation shortcuts (Alt + key to avoid browser conflicts)
     { key: "d", altKey: true, label: "Alt+D", description: "Go to Dashboard", action: () => navigate("/business"), category: "Navigation" },
     { key: "s", altKey: true, label: "Alt+S", description: "Go to Settings", action: () => navigate("/business/settings"), category: "Navigation" },
@@ -40,10 +40,22 @@ export function useKeyboardShortcuts(businessType?: string) {
       if (document.fullscreenElement) {
         document.exitFullscreen();
       } else {
-        document.documentElement.requestFullscreen();
+        document.documentElement.requestFullscreen?.().catch(() => {
+          // Fallback: open in new tab if in iframe
+          if (window.self !== window.top) {
+            window.open(window.location.href, '_blank');
+          }
+        });
       }
     }, category: "Global" },
-  ];
+
+    // Help shortcut
+    { key: "?", shiftKey: true, label: "Shift+?", description: "Show Keyboard Shortcuts", action: () => {
+      // Trigger click on keyboard shortcuts button
+      const btn = document.querySelector('[data-shortcuts-trigger]') as HTMLButtonElement;
+      btn?.click();
+    }, category: "Global" },
+  ], [isSchool, navigate]);
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     // Don't trigger shortcuts when typing in inputs
@@ -53,12 +65,13 @@ export function useKeyboardShortcuts(businessType?: string) {
     }
 
     for (const shortcut of shortcuts) {
-      const ctrlMatch = shortcut.ctrlKey ? (event.ctrlKey || event.metaKey) : true;
+      const ctrlMatch = shortcut.ctrlKey ? (event.ctrlKey || event.metaKey) : !(event.ctrlKey || event.metaKey);
       const altMatch = shortcut.altKey ? event.altKey : !event.altKey;
-      const shiftMatch = shortcut.shiftKey ? event.shiftKey : !event.shiftKey;
+      const shiftMatch = shortcut.shiftKey ? event.shiftKey : true; // Don't require shift to be absent
 
       if (event.key.toLowerCase() === shortcut.key.toLowerCase() && ctrlMatch && altMatch && shiftMatch) {
         event.preventDefault();
+        event.stopPropagation();
         shortcut.action();
         return;
       }
@@ -66,8 +79,8 @@ export function useKeyboardShortcuts(businessType?: string) {
   }, [shortcuts]);
 
   useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown, true); // Use capture phase
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [handleKeyDown]);
 
   return { shortcuts };
