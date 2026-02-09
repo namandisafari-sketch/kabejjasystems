@@ -3,7 +3,7 @@ import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { BusinessSidebar } from "@/components/BusinessSidebar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
-import { AnnouncementBanner } from "@/components/AnnouncementBanner";
+
 import { TermsFooterLink } from "@/components/TermsFooterLink";
 import { NetworkStatusIndicator } from "@/components/NetworkStatusIndicator";
 import { FullscreenToggle } from "@/components/FullscreenToggle";
@@ -123,8 +123,6 @@ export function BusinessLayout() {
         </div>
         
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Announcement Banner - Always visible at top */}
-          <AnnouncementBanner />
           
           {/* Desktop header with sidebar trigger - hidden on mobile */}
           <header className="hidden md:flex h-14 border-b border-border items-center px-4 bg-card/95 backdrop-blur-sm sticky top-0 z-40">
