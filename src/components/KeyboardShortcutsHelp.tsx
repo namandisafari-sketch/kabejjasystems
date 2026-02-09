@@ -18,13 +18,13 @@ export function KeyboardShortcutsHelp({ shortcuts }: KeyboardShortcutsHelpProps)
         <Tooltip>
           <TooltipTrigger asChild>
             <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-8 w-8" data-shortcuts-trigger>
                 <Keyboard className="h-4 w-4" />
               </Button>
             </DialogTrigger>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Keyboard Shortcuts</p>
+            <p>Keyboard Shortcuts (Shift+?)</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
