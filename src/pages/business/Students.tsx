@@ -5,7 +5,6 @@ import { useTenant } from "@/hooks/use-tenant";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Pencil, Trash2, Users, Eye, UserPlus, RotateCcw } from "lucide-react";
@@ -504,45 +503,36 @@ export default function Students() {
               </Button>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Admission No.</TableHead>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Guardian</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredStudents.map(student => (
-                  <TableRow key={student.id}>
-                    <TableCell className="font-medium">{student.full_name}</TableCell>
-                    <TableCell>{student.admission_number || "-"}</TableCell>
-                    <TableCell>
-                      {student.school_classes 
-                        ? `${student.school_classes.name}`
-                        : "-"
-                      }
-                    </TableCell>
-                    <TableCell>{student.guardian_name || student.parent_name || "-"}</TableCell>
-                    <TableCell>{student.guardian_phone || student.parent_phone || "-"}</TableCell>
-                    <TableCell className="text-right">
-                      <Button size="sm" variant="ghost" onClick={() => handleView(student)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => handleEdit(student)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(student.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredStudents.map(student => (
+                <Card key={student.id} className="p-4 hover:border-primary/50 transition-colors">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">{student.full_name}</p>
+                      <p className="text-sm text-muted-foreground">{student.admission_number || "No Adm. No."}</p>
+                    </div>
+                    {student.school_classes && (
+                      <Badge variant="secondary" className="ml-2 shrink-0">{student.school_classes.name}</Badge>
+                    )}
+                  </div>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p>Guardian: {student.guardian_name || student.parent_name || "-"}</p>
+                    <p>Phone: {student.guardian_phone || student.parent_phone || "-"}</p>
+                  </div>
+                  <div className="flex justify-end gap-1 mt-3">
+                    <Button size="sm" variant="ghost" onClick={() => handleView(student)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleEdit(student)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(student.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>

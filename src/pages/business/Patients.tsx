@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, HeartPulse, Search, Edit, Trash2, User, Phone, Calendar } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
@@ -298,53 +298,31 @@ const Patients = () => {
               <p className="text-muted-foreground">No patients found</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Patient</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Age/Gender</TableHead>
-                  <TableHead>Allergies</TableHead>
-                  <TableHead>Insurance</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPatients.map((patient: any) => (
-                  <TableRow key={patient.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{patient.full_name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {patient.phone && <div className="flex items-center gap-1 text-sm"><Phone className="h-3 w-3" />{patient.phone}</div>}
-                    </TableCell>
-                    <TableCell>
-                      {patient.date_of_birth && <span>{calculateAge(patient.date_of_birth)} yrs</span>}
-                      {patient.gender && <Badge variant="outline" className="ml-2">{patient.gender}</Badge>}
-                    </TableCell>
-                    <TableCell>
-                      {patient.allergies ? (
-                        <Badge variant="destructive" className="text-xs">{patient.allergies.substring(0, 20)}...</Badge>
-                      ) : <span className="text-muted-foreground">None</span>}
-                    </TableCell>
-                    <TableCell>
-                      {patient.insurance_provider ? (
-                        <Badge variant="secondary">{patient.insurance_provider}</Badge>
-                      ) : <span className="text-muted-foreground">-</span>}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button size="icon" variant="ghost" onClick={() => handleEdit(patient)}><Edit className="h-4 w-4" /></Button>
-                        <Button size="icon" variant="ghost" className="text-destructive" onClick={() => deletePatientMutation.mutate(patient.id)}><Trash2 className="h-4 w-4" /></Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredPatients.map((patient: any) => (
+                <Card key={patient.id} className="p-4 hover:border-primary/50 transition-colors">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <p className="font-medium">{patient.full_name}</p>
+                    </div>
+                    {patient.gender && <Badge variant="outline">{patient.gender}</Badge>}
+                  </div>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    {patient.phone && <div className="flex items-center gap-1"><Phone className="h-3 w-3" />{patient.phone}</div>}
+                    {patient.date_of_birth && <p>Age: {calculateAge(patient.date_of_birth)} yrs</p>}
+                    {patient.allergies ? (
+                      <Badge variant="destructive" className="text-xs">{patient.allergies.substring(0, 30)}...</Badge>
+                    ) : <p>Allergies: None</p>}
+                    {patient.insurance_provider && <Badge variant="secondary">{patient.insurance_provider}</Badge>}
+                  </div>
+                  <div className="flex justify-end gap-1 mt-3">
+                    <Button size="icon" variant="ghost" onClick={() => handleEdit(patient)}><Edit className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" className="text-destructive" onClick={() => deletePatientMutation.mutate(patient.id)}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -204,142 +204,130 @@ export default function Parents() {
               {searchTerm ? "No parents match your search" : "No parents registered yet"}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Parent Name</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Linked Students</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredParents.map((parent) => (
-                  <TableRow key={parent.id}>
-                    <TableCell className="font-medium">{parent.full_name}</TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        {parent.email && (
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Mail className="h-3 w-3" />
-                            {parent.email}
-                          </div>
-                        )}
-                        {parent.phone && (
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Phone className="h-3 w-3" />
-                            {parent.phone}
-                          </div>
-                        )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredParents.map((parent) => (
+                <Card key={parent.id} className="p-4 hover:border-primary/50 transition-colors">
+                  <div className="flex items-start justify-between mb-2">
+                    <p className="font-medium">{parent.full_name}</p>
+                  </div>
+                  <div className="space-y-1 text-sm text-muted-foreground mb-3">
+                    {parent.email && (
+                      <div className="flex items-center gap-1">
+                        <Mail className="h-3 w-3" />
+                        {parent.email}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      {parent.students.length === 0 ? (
-                        <span className="text-muted-foreground text-sm">No students linked</span>
-                      ) : (
-                        <div className="flex flex-wrap gap-1">
-                          {parent.students.map((link) => (
-                            <Badge key={link.id} variant="outline" className="gap-1">
-                              {link.student.full_name}
-                              {link.student.class && (
-                                <span className="text-xs text-muted-foreground">
-                                  ({link.student.class.name})
-                                </span>
-                              )}
-                              <button
-                                onClick={() => unlinkStudentMutation.mutate(link.id)}
-                                className="ml-1 hover:text-destructive"
-                                title="Unlink student"
-                              >
-                                <Unlink className="h-3 w-3" />
-                              </button>
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Dialog open={linkDialogOpen && selectedParent?.id === parent.id} onOpenChange={(open) => {
-                        setLinkDialogOpen(open);
-                        if (open) setSelectedParent(parent);
-                      }}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" className="gap-1">
-                            <Link2 className="h-4 w-4" />
-                            Link Student
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Link Student to {parent.full_name}</DialogTitle>
-                            <DialogDescription>
-                              Select a student to link to this parent's account.
-                            </DialogDescription>
-                          </DialogHeader>
-                          
-                          <div className="space-y-4 py-4">
-                            <div className="space-y-2">
-                              <Label>Student</Label>
-                              <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select a student" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {getAvailableStudents(parent).map((student) => (
-                                    <SelectItem key={student.id} value={student.id}>
-                                      {student.full_name}
-                                      {student.admission_number && ` (${student.admission_number})`}
-                                      {student.class && ` - ${student.class.name}`}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              {getAvailableStudents(parent).length === 0 && (
-                                <p className="text-sm text-muted-foreground">
-                                  All students are already linked to this parent.
-                                </p>
-                              )}
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label>Relationship</Label>
-                              <Select value={relationship} onValueChange={setRelationship}>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="parent">Parent</SelectItem>
-                                  <SelectItem value="guardian">Guardian</SelectItem>
-                                  <SelectItem value="mother">Mother</SelectItem>
-                                  <SelectItem value="father">Father</SelectItem>
-                                  <SelectItem value="other">Other</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                          
-                          <DialogFooter>
-                            <Button variant="outline" onClick={() => setLinkDialogOpen(false)}>
-                              Cancel
-                            </Button>
-                            <Button
-                              onClick={() => linkStudentMutation.mutate({
-                                parentId: parent.id,
-                                studentId: selectedStudent,
-                                relationship,
-                              })}
-                              disabled={!selectedStudent || linkStudentMutation.isPending}
+                    )}
+                    {parent.phone && (
+                      <div className="flex items-center gap-1">
+                        <Phone className="h-3 w-3" />
+                        {parent.phone}
+                      </div>
+                    )}
+                  </div>
+                  <div className="mb-3">
+                    {parent.students.length === 0 ? (
+                      <span className="text-muted-foreground text-sm">No students linked</span>
+                    ) : (
+                      <div className="flex flex-wrap gap-1">
+                        {parent.students.map((link) => (
+                          <Badge key={link.id} variant="outline" className="gap-1">
+                            {link.student.full_name}
+                            {link.student.class && (
+                              <span className="text-xs text-muted-foreground">
+                                ({link.student.class.name})
+                              </span>
+                            )}
+                            <button
+                              onClick={() => unlinkStudentMutation.mutate(link.id)}
+                              className="ml-1 hover:text-destructive"
+                              title="Unlink student"
                             >
-                              {linkStudentMutation.isPending ? "Linking..." : "Link Student"}
-                            </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                              <Unlink className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <Dialog open={linkDialogOpen && selectedParent?.id === parent.id} onOpenChange={(open) => {
+                    setLinkDialogOpen(open);
+                    if (open) setSelectedParent(parent);
+                  }}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full gap-1">
+                        <Link2 className="h-4 w-4" />
+                        Link Student
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Link Student to {parent.full_name}</DialogTitle>
+                        <DialogDescription>
+                          Select a student to link to this parent's account.
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label>Student</Label>
+                          <Select value={selectedStudent} onValueChange={setSelectedStudent}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a student" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {getAvailableStudents(parent).map((student) => (
+                                <SelectItem key={student.id} value={student.id}>
+                                  {student.full_name}
+                                  {student.admission_number && ` (${student.admission_number})`}
+                                  {student.class && ` - ${student.class.name}`}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {getAvailableStudents(parent).length === 0 && (
+                            <p className="text-sm text-muted-foreground">
+                              All students are already linked to this parent.
+                            </p>
+                          )}
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label>Relationship</Label>
+                          <Select value={relationship} onValueChange={setRelationship}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="parent">Parent</SelectItem>
+                              <SelectItem value="guardian">Guardian</SelectItem>
+                              <SelectItem value="mother">Mother</SelectItem>
+                              <SelectItem value="father">Father</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setLinkDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={() => linkStudentMutation.mutate({
+                            parentId: parent.id,
+                            studentId: selectedStudent,
+                            relationship,
+                          })}
+                          disabled={!selectedStudent || linkStudentMutation.isPending}
+                        >
+                          {linkStudentMutation.isPending ? "Linking..." : "Link Student"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </Card>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
