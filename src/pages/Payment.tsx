@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PaymentPackageSelector } from '@/components/payment/PaymentPackageSelector';
+import { PaymentPackageSelector, type NormalizedPackage } from '@/components/payment/PaymentPackageSelector';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Loader2, CheckCircle, Send } from 'lucide-react';
-import type { SubscriptionPackage } from '@/types/payment-types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -18,8 +17,7 @@ export default function PaymentPage() {
     const queryClient = useQueryClient();
 
     const [step, setStep] = useState<PaymentStep>('select-package');
-    const [selectedPackage, setSelectedPackage] = useState<SubscriptionPackage | null>(null);
-    const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+    const [selectedPackage, setSelectedPackage] = useState<NormalizedPackage | null>(null);
 
     const [billingInfo, setBillingInfo] = useState({
         firstName: '',
@@ -60,7 +58,6 @@ export default function PaymentPage() {
         mutationFn: async (data: {
             packageId: string;
             amount: number;
-            billingCycle: 'monthly' | 'yearly';
             billingEmail: string;
             billingPhone: string;
             firstName: string;
@@ -82,7 +79,7 @@ export default function PaymentPage() {
                 .insert({
                     tenant_id: profile.tenant_id,
                     package_id: data.packageId,
-                    billing_cycle: data.billingCycle,
+                    billing_cycle: 'monthly',
                     amount: data.amount,
                     billing_email: data.billingEmail,
                     billing_phone: data.billingPhone,
@@ -104,23 +101,18 @@ export default function PaymentPage() {
         },
     });
 
-    const handleSelectPackage = (pkg: SubscriptionPackage, cycle: 'monthly' | 'yearly') => {
+    const handleSelectPackage = (pkg: NormalizedPackage) => {
         setSelectedPackage(pkg);
-        setBillingCycle(cycle);
         setStep('billing-info');
     };
 
     const handleSubmitBilling = async (e: React.FormEvent) => {
         e.preventDefault();
-
         if (!selectedPackage) return;
-
-        const amount = billingCycle === 'monthly' ? selectedPackage.price_monthly : selectedPackage.price_yearly;
 
         submitRequest.mutate({
             packageId: selectedPackage.id,
-            amount,
-            billingCycle,
+            amount: selectedPackage.price,
             billingEmail: billingInfo.email,
             billingPhone: billingInfo.phone,
             firstName: billingInfo.firstName,
@@ -158,8 +150,7 @@ export default function PaymentPage() {
                         {['select-package', 'billing-info'].map((s, idx) => (
                             <div key={s} className="flex items-center flex-1">
                                 <div
-                                    className={`h-2 flex-1 rounded-full transition-colors ${step === s ? 'bg-primary' : idx < ['select-package', 'billing-info'].indexOf(step) ? 'bg-primary/50' : 'bg-muted'
-                                        }`}
+                                    className={`h-2 flex-1 rounded-full transition-colors ${step === s ? 'bg-primary' : idx < ['select-package', 'billing-info'].indexOf(step) ? 'bg-primary/50' : 'bg-muted'}`}
                                 />
                             </div>
                         ))}
@@ -171,7 +162,6 @@ export default function PaymentPage() {
                     <PaymentPackageSelector
                         onSelectPackage={handleSelectPackage}
                         selectedPackageId={selectedPackage?.id}
-                        selectedCycle={billingCycle}
                     />
                 )}
 
@@ -180,8 +170,7 @@ export default function PaymentPage() {
                         <CardHeader>
                             <CardTitle>Billing Information</CardTitle>
                             <CardDescription>
-                                Submit your request for {selectedPackage.name} (
-                                {billingCycle === 'monthly' ? 'Monthly' : 'Yearly'})
+                                Submit your request for {selectedPackage.name} ({selectedPackage.priceLabel.replace('/', '')})
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -241,9 +230,10 @@ export default function PaymentPage() {
                                                 style: 'currency',
                                                 currency: 'UGX',
                                                 minimumFractionDigits: 0,
-                                            }).format(
-                                                billingCycle === 'monthly' ? selectedPackage.price_monthly : selectedPackage.price_yearly
-                                            )}
+                                            }).format(selectedPackage.price)}
+                                            <span className="text-sm font-normal text-muted-foreground ml-1">
+                                                {selectedPackage.priceLabel}
+                                            </span>
                                         </span>
                                     </div>
 
@@ -280,12 +270,11 @@ export default function PaymentPage() {
                             </div>
                             <div className="bg-muted/50 rounded-lg p-4 text-sm text-left space-y-2">
                                 <p><strong>Package:</strong> {selectedPackage?.name}</p>
-                                <p><strong>Billing Cycle:</strong> {billingCycle === 'monthly' ? 'Monthly' : 'Yearly'}</p>
                                 <p><strong>Amount:</strong> {selectedPackage && new Intl.NumberFormat('en-UG', {
                                     style: 'currency',
                                     currency: 'UGX',
                                     minimumFractionDigits: 0,
-                                }).format(billingCycle === 'monthly' ? selectedPackage.price_monthly : selectedPackage.price_yearly)}</p>
+                                }).format(selectedPackage.price)} {selectedPackage?.priceLabel}</p>
                             </div>
                             <p className="text-sm text-muted-foreground">
                                 The admin will review your request and contact you within <strong>24-48 hours</strong> with payment instructions.
