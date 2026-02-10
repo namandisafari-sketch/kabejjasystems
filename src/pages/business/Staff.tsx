@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { UserCircle, Plus } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
 const Staff = () => {
@@ -71,33 +70,23 @@ const Staff = () => {
               </Button>
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Joined</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {staff.map((member) => (
-                    <TableRow key={member.id}>
-                      <TableCell className="font-medium">{member.full_name || 'N/A'}</TableCell>
-                      <TableCell>{member.phone || '-'}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="capitalize">
-                          {member.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(member.created_at || '').toLocaleDateString()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {staff.map((member) => (
+                <Card key={member.id} className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">{member.full_name || 'N/A'}</p>
+                      <p className="text-sm text-muted-foreground">{member.phone || '-'}</p>
+                    </div>
+                    <Badge variant="secondary" className="capitalize ml-2 shrink-0">
+                      {member.role}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Joined {new Date(member.created_at || '').toLocaleDateString()}
+                  </p>
+                </Card>
+              ))}
             </div>
           )}
         </CardContent>

@@ -5,7 +5,7 @@ import { useTenant } from "@/hooks/use-tenant";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -274,58 +274,47 @@ export default function AcademicTerms() {
               <p className="text-muted-foreground">Add your first academic term to get started</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Term Name</TableHead>
-                  <TableHead>Term #</TableHead>
-                  <TableHead>Year</TableHead>
-                  <TableHead>Start Date</TableHead>
-                  <TableHead>End Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {terms.map(term => (
-                  <TableRow key={term.id}>
-                    <TableCell className="font-medium">{term.name}</TableCell>
-                    <TableCell>{term.term_number}</TableCell>
-                    <TableCell>{term.year}</TableCell>
-                    <TableCell>{format(new Date(term.start_date), 'MMM d, yyyy')}</TableCell>
-                    <TableCell>{format(new Date(term.end_date), 'MMM d, yyyy')}</TableCell>
-                    <TableCell>
-                      {term.is_current ? (
-                        <Badge className="bg-green-500">Current</Badge>
-                      ) : (
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => setCurrentMutation.mutate(term.id)}
-                          disabled={setCurrentMutation.isPending}
-                        >
-                          <Check className="h-3 w-3 mr-1" />
-                          Set Current
-                        </Button>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button size="sm" variant="ghost" onClick={() => handleEdit(term)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {terms.map(term => (
+                <Card key={term.id} className="p-4 hover:border-primary/50 transition-colors">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="font-medium">{term.name}</p>
+                      <p className="text-sm text-muted-foreground">Term {term.term_number} • {term.year}</p>
+                    </div>
+                    {term.is_current ? (
+                      <Badge className="bg-green-500">Current</Badge>
+                    ) : (
                       <Button 
                         size="sm" 
-                        variant="ghost" 
-                        onClick={() => deleteMutation.mutate(term.id)}
-                        disabled={term.is_current}
+                        variant="outline"
+                        onClick={() => setCurrentMutation.mutate(term.id)}
+                        disabled={setCurrentMutation.isPending}
                       >
-                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <Check className="h-3 w-3 mr-1" />
+                        Set Current
                       </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    )}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    <p>{format(new Date(term.start_date), 'MMM d, yyyy')} – {format(new Date(term.end_date), 'MMM d, yyyy')}</p>
+                  </div>
+                  <div className="flex justify-end gap-1 mt-3">
+                    <Button size="sm" variant="ghost" onClick={() => handleEdit(term)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={() => deleteMutation.mutate(term.id)}
+                      disabled={term.is_current}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>

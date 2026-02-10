@@ -5,7 +5,7 @@ import { useTenant } from "@/hooks/use-tenant";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -363,41 +363,30 @@ export default function Classes() {
               <p className="text-muted-foreground">Add your first class to get started</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Class Name</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Section</TableHead>
-                  <TableHead>Capacity</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClasses.map(cls => (
-                  <TableRow key={cls.id}>
-                    <TableCell className="font-medium">{cls.name}</TableCell>
-                    <TableCell>{cls.level || "-"}</TableCell>
-                    <TableCell>{cls.section || "-"}</TableCell>
-                    <TableCell>{cls.capacity || "-"}</TableCell>
-                    <TableCell>
-                      <Badge variant={cls.is_active ? "default" : "secondary"}>
-                        {cls.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button size="sm" variant="ghost" onClick={() => handleEdit(cls)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(cls.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredClasses.map(cls => (
+                <Card key={cls.id} className="p-4 hover:border-primary/50 transition-colors">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="font-medium">{cls.name}</p>
+                      <p className="text-sm text-muted-foreground capitalize">{cls.level || "-"} {cls.section ? `• ${cls.section}` : ""}</p>
+                    </div>
+                    <Badge variant={cls.is_active ? "default" : "secondary"}>
+                      {cls.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                  {cls.capacity && <p className="text-sm text-muted-foreground">Capacity: {cls.capacity}</p>}
+                  <div className="flex justify-end gap-1 mt-3">
+                    <Button size="sm" variant="ghost" onClick={() => handleEdit(cls)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(cls.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
