@@ -115,7 +115,7 @@ export function ReportCardEditor({ reportCard, onClose }: ReportCardEditorProps)
     },
   });
 
-  // Fetch existing scores
+  // Fetch existing report card scores
   const { data: existingScores = [] } = useQuery({
     queryKey: ['report-card-scores', reportCard.id],
     queryFn: async () => {
@@ -127,6 +127,83 @@ export function ReportCardEditor({ reportCard, onClose }: ReportCardEditorProps)
       return data;
     },
   });
+
+  // Fetch exam scores from Marks Entry (student_exam_scores) to auto-populate
+  const { data: examScores = [] } = useQuery({
+    queryKey: ['student-exam-scores-for-report', reportCard.student_id, reportCard.term_id, reportCard.class_id],
+    enabled: !!reportCard.student_id && !!reportCard.term_id,
+    queryFn: async () => {
+      // Get all exams for this class and term
+      const { data: exams, error: examsError } = await supabase
+        .from('exams')
+        .select('id, subject_id, exam_type_id, max_marks, exam_types(name)')
+        .eq('class_id', reportCard.class_id)
+        .eq('term_id', reportCard.term_id);
+      if (examsError) throw examsError;
+      if (!exams || exams.length === 0) return [];
+
+      const examIds = exams.map(e => e.id);
+      const { data: scores, error: scoresError } = await supabase
+        .from('student_exam_scores')
+        .select('exam_id, marks_obtained')
+        .eq('student_id', reportCard.student_id)
+        .in('exam_id', examIds);
+      if (scoresError) throw scoresError;
+
+      // Map scores by subject_id with exam type info
+      const subjectScores: Record<string, { formative: number[]; exam: number[]; maxMarks: number }> = {};
+      for (const score of scores || []) {
+        const exam = exams.find(e => e.id === score.exam_id);
+        if (!exam || score.marks_obtained === null) continue;
+        const subjectId = exam.subject_id;
+        if (!subjectScores[subjectId]) {
+          subjectScores[subjectId] = { formative: [], exam: [], maxMarks: exam.max_marks || 100 };
+        }
+        const examTypeName = (exam as any).exam_types?.name?.toLowerCase() || '';
+        // "Beginning of Term" and "Mid-Term" → formative; "End of Term" / "Final" → school-based exam
+        if (examTypeName.includes('end') || examTypeName.includes('final')) {
+          subjectScores[subjectId].exam.push((score.marks_obtained / (exam.max_marks || 100)) * 100);
+        } else {
+          subjectScores[subjectId].formative.push((score.marks_obtained / (exam.max_marks || 100)) * 100);
+        }
+      }
+      return subjectScores;
+    },
+  });
+
+  // Initialize scores when subjects load — merge report_card_scores with student_exam_scores
+  useEffect(() => {
+    if (subjects.length > 0) {
+      const examScoreMap = (examScores && typeof examScores === 'object' && !Array.isArray(examScores))
+        ? examScores as Record<string, { formative: number[]; exam: number[]; maxMarks: number }>
+        : {} as Record<string, { formative: number[]; exam: number[]; maxMarks: number }>;
+
+      const initialScores = subjects.map(subject => {
+        const existing = existingScores.find(s => s.subject_id === subject.id);
+        // If no report_card_scores exist yet, try to pull from exam scores
+        const autoScores = examScoreMap[subject.id];
+        const avgFormative = autoScores?.formative?.length
+          ? Math.round(autoScores.formative.reduce((a, b) => a + b, 0) / autoScores.formative.length)
+          : 0;
+        const avgExam = autoScores?.exam?.length
+          ? Math.round(autoScores.exam.reduce((a, b) => a + b, 0) / autoScores.exam.length)
+          : 0;
+
+        return {
+          subject_id: subject.id,
+          subject_name: subject.name,
+          subject_code: subject.code,
+          formative_score: existing?.formative_score || avgFormative,
+          school_based_score: existing?.school_based_score || avgExam,
+          competency_score: existing?.competency_score || 0,
+          subject_remark: existing?.subject_remark || '',
+          teacher_name: existing?.teacher_name || '',
+          id: existing?.id,
+        };
+      });
+      setScores(initialScores);
+    }
+  }, [subjects, existingScores, examScores]);
 
   // Fetch existing skills
   const { data: existingSkills = [] } = useQuery({
@@ -153,27 +230,6 @@ export function ReportCardEditor({ reportCard, onClose }: ReportCardEditorProps)
       return data;
     },
   });
-
-  // Initialize scores when subjects load
-  useEffect(() => {
-    if (subjects.length > 0) {
-      const initialScores = subjects.map(subject => {
-        const existing = existingScores.find(s => s.subject_id === subject.id);
-        return {
-          subject_id: subject.id,
-          subject_name: subject.name,
-          subject_code: subject.code,
-          formative_score: existing?.formative_score || 0,
-          school_based_score: existing?.school_based_score || 0,
-          competency_score: existing?.competency_score || 0,
-          subject_remark: existing?.subject_remark || '',
-          teacher_name: existing?.teacher_name || '',
-          id: existing?.id,
-        };
-      });
-      setScores(initialScores);
-    }
-  }, [subjects, existingScores]);
 
   // Initialize skills
   useEffect(() => {
