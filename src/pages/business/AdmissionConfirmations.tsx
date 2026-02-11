@@ -228,67 +228,38 @@ export default function AdmissionConfirmations() {
         </CardHeader>
         <CardContent>
           {filteredConfirmations && filteredConfirmations.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Code</TableHead>
-                  <TableHead>Student Name</TableHead>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Parent</TableHead>
-                  <TableHead>Submitted</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredConfirmations.map((conf) => {
-                  const studentData = conf.student_data as StudentData;
-                  return (
-                    <TableRow key={conf.id}>
-                      <TableCell className="font-mono font-medium">
-                        {conf.confirmation_code}
-                      </TableCell>
-                      <TableCell>{studentData.full_name}</TableCell>
-                      <TableCell>{studentData.applying_for_class}</TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          <p>{studentData.parent_name}</p>
-                          <p className="text-muted-foreground">{studentData.parent_phone}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {format(new Date(conf.created_at), "MMM d, yyyy")}
-                      </TableCell>
-                      <TableCell>
-                        {conf.verified_at ? (
-                          <Badge variant="default" className="bg-green-600">
-                            <CheckCircle className="mr-1 h-3 w-3" />
-                            Verified
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary">
-                            <Clock className="mr-1 h-3 w-3" />
-                            Pending
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => setSelectedConfirmation(conf)}
-                            title="View details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredConfirmations.map((conf) => {
+                const studentData = conf.student_data as StudentData;
+                return (
+                  <Card key={conf.id} className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-mono font-medium text-sm">{conf.confirmation_code}</span>
+                      {conf.verified_at ? (
+                        <Badge variant="default" className="bg-green-600">
+                          <CheckCircle className="mr-1 h-3 w-3" />Verified
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">
+                          <Clock className="mr-1 h-3 w-3" />Pending
+                        </Badge>
+                      )}
+                    </div>
+                    <h4 className="font-semibold">{studentData.full_name}</h4>
+                    <p className="text-sm text-muted-foreground">{studentData.applying_for_class}</p>
+                    <div className="text-sm text-muted-foreground mt-2 space-y-1">
+                      <p>{studentData.parent_name} • {studentData.parent_phone}</p>
+                      <p>{format(new Date(conf.created_at), "MMM d, yyyy")}</p>
+                    </div>
+                    <div className="flex justify-end mt-3">
+                      <Button size="sm" variant="ghost" onClick={() => setSelectedConfirmation(conf)}>
+                        <Eye className="h-4 w-4 mr-1" /> View
+                      </Button>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
           ) : (
             <div className="text-center py-12 text-muted-foreground">
               <UserPlus className="h-12 w-12 mx-auto mb-4 opacity-50" />
