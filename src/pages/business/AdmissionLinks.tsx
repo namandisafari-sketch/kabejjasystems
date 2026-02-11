@@ -259,64 +259,33 @@ export default function AdmissionLinks() {
         </CardHeader>
         <CardContent>
           {links && links.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Payment Code</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Expires</TableHead>
-                  <TableHead>Used</TableHead>
-                  <TableHead>Notes</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {links.map((link) => {
-                  const status = getLinkStatus(link);
-                  const linkUrl = `${window.location.origin}/public/admission/${link.link_code}`;
-                  
-                  return (
-                    <TableRow key={link.id}>
-                      <TableCell className="font-mono font-medium">
-                        {link.payment_code}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={status.variant}>{status.label}</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {format(new Date(link.expires_at), "MMM d, yyyy h:mm a")}
-                      </TableCell>
-                      <TableCell>
-                        {link.registrations_used} / {link.max_registrations}
-                      </TableCell>
-                      <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
-                        {link.notes || "-"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => copyToClipboard(linkUrl, "Link")}
-                            title="Copy link"
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => deleteMutation.mutate(link.id)}
-                            title="Delete"
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {links.map((link) => {
+                const status = getLinkStatus(link);
+                const linkUrl = `${window.location.origin}/public/admission/${link.link_code}`;
+                return (
+                  <Card key={link.id} className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-mono font-medium">{link.payment_code}</span>
+                      <Badge variant={status.variant}>{status.label}</Badge>
+                    </div>
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      <p>Expires: {format(new Date(link.expires_at), "MMM d, yyyy h:mm a")}</p>
+                      <p>Used: {link.registrations_used} / {link.max_registrations}</p>
+                      {link.notes && <p className="truncate">Notes: {link.notes}</p>}
+                    </div>
+                    <div className="flex justify-end gap-1 mt-3">
+                      <Button size="icon" variant="ghost" onClick={() => copyToClipboard(linkUrl, "Link")} title="Copy link">
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" onClick={() => deleteMutation.mutate(link.id)} title="Delete">
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
           ) : (
             <div className="text-center py-12 text-muted-foreground">
               <Link className="h-12 w-12 mx-auto mb-4 opacity-50" />
