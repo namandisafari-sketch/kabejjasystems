@@ -113,62 +113,62 @@ export function ReportCardPreview({ reportCardId, onClose }: ReportCardPreviewPr
           <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Open Sans', sans-serif; font-size: 11px; line-height: 1.4; padding: 15px; background: #fff; }
-            .report-container { max-width: 210mm; margin: 0 auto; border: 3px solid #1e3a5f; border-radius: 8px; overflow: hidden; }
-            .header-section { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: white; padding: 20px; text-align: center; }
-            .header-section img { max-height: 70px; margin-bottom: 10px; }
-            .school-name { font-family: 'Merriweather', serif; font-size: 24px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
-            .school-motto { font-style: italic; font-size: 12px; opacity: 0.9; margin-bottom: 8px; }
-            .school-contacts { font-size: 10px; opacity: 0.85; }
-            .report-title { background: #f59e0b; color: #000; padding: 8px; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-            .term-info { background: #fef3c7; padding: 6px; font-weight: 600; font-size: 12px; border-bottom: 2px solid #f59e0b; }
+            body { font-family: 'Open Sans', sans-serif; font-size: 9px; line-height: 1.2; padding: 5px; background: #fff; }
+            .report-container { max-width: 210mm; margin: 0 auto; border: 2px solid #1e3a5f; border-radius: 4px; overflow: hidden; }
+            .header-section { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: white; padding: 8px 12px; text-align: center; }
+            .header-section img { max-height: 40px; margin-bottom: 4px; }
+            .school-name { font-family: 'Merriweather', serif; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+            .school-motto { font-style: italic; font-size: 9px; opacity: 0.9; margin-bottom: 3px; }
+            .school-contacts { font-size: 8px; opacity: 0.85; }
+            .report-title { background: #f59e0b; color: #000; padding: 4px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+            .term-info { background: #fef3c7; padding: 3px; font-weight: 600; font-size: 10px; border-bottom: 1px solid #f59e0b; }
             .student-grid { display: grid; grid-template-columns: repeat(3, 1fr); background: #f8fafc; }
-            .student-item { padding: 10px 15px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; font-size: 11px; }
+            .student-item { padding: 4px 8px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; font-size: 9px; }
             .student-item:nth-child(3n) { border-right: none; }
-            .student-label { color: #64748b; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
-            .student-value { font-weight: 600; color: #1e293b; }
+            .student-label { color: #64748b; font-size: 7px; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 1px; }
+            .student-value { font-weight: 600; color: #1e293b; font-size: 9px; }
             .section { margin: 0; }
-            .section-header { background: linear-gradient(90deg, #1e3a5f 0%, #2d5a87 100%); color: white; padding: 10px 15px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
-            .section-header svg { width: 18px; height: 18px; }
+            .section-header { background: linear-gradient(90deg, #1e3a5f 0%, #2d5a87 100%); color: white; padding: 4px 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px; }
+            .section-header svg { width: 12px; height: 12px; }
             table { width: 100%; border-collapse: collapse; }
-            th { background: #e2e8f0; color: #1e293b; font-weight: 600; padding: 10px 8px; text-align: left; font-size: 10px; text-transform: uppercase; border-bottom: 2px solid #cbd5e1; }
-            td { padding: 10px 8px; border-bottom: 1px solid #e2e8f0; font-size: 11px; }
+            th { background: #e2e8f0; color: #1e293b; font-weight: 600; padding: 3px 4px; text-align: left; font-size: 8px; text-transform: uppercase; border-bottom: 1px solid #cbd5e1; }
+            td { padding: 3px 4px; border-bottom: 1px solid #e2e8f0; font-size: 9px; }
             tr:nth-child(even) { background: #f8fafc; }
-            tr:hover { background: #f1f5f9; }
-            .grade-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-weight: 700; font-size: 11px; min-width: 35px; text-align: center; }
+            .grade-badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-weight: 700; font-size: 8px; min-width: 24px; text-align: center; }
             .total-row { background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%) !important; font-weight: 700; }
-            .total-row td { border-top: 2px solid #f59e0b; }
-            .grading-key { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 15px; background: #f8fafc; border-top: 1px solid #e2e8f0; justify-content: center; }
-            .grade-key-item { display: flex; align-items: center; gap: 4px; font-size: 9px; }
-            .grade-key-badge { padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 8px; }
+            .total-row td { border-top: 1px solid #f59e0b; }
+            .grading-key { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px 8px; background: #f8fafc; border-top: 1px solid #e2e8f0; justify-content: center; }
+            .grade-key-item { display: flex; align-items: center; gap: 2px; font-size: 7px; }
+            .grade-key-badge { padding: 1px 4px; border-radius: 2px; font-weight: 600; font-size: 7px; }
             .skills-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0; }
             .skills-column { border-right: 1px solid #e2e8f0; }
             .skills-column:last-child { border-right: none; }
             .activities-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
-            .activity-column { padding: 12px; border-right: 1px solid #e2e8f0; }
+            .activity-column { padding: 4px 6px; border-right: 1px solid #e2e8f0; }
             .activity-column:last-child { border-right: none; }
-            .activity-title { font-weight: 600; color: #1e3a5f; margin-bottom: 8px; font-size: 11px; text-transform: uppercase; }
-            .discipline-box { padding: 15px; background: #f0fdf4; border-left: 4px solid #22c55e; margin: 15px; border-radius: 0 8px 8px 0; }
-            .discipline-label { font-size: 10px; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
-            .discipline-value { font-size: 14px; font-weight: 600; color: #166534; }
-            .comments-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 15px; }
-            .comment-card { border: 2px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
-            .comment-header { background: #f1f5f9; padding: 10px 12px; font-weight: 600; font-size: 11px; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
-            .comment-body { padding: 12px; min-height: 60px; font-style: italic; color: #475569; font-size: 11px; line-height: 1.5; }
-            .signature-area { padding: 10px 12px; border-top: 1px dashed #cbd5e1; font-size: 10px; color: #64748b; }
-            .footer-section { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: white; padding: 15px; text-align: center; }
-            .footer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 10px; }
+            .activity-title { font-weight: 600; color: #1e3a5f; margin-bottom: 3px; font-size: 8px; text-transform: uppercase; }
+            .discipline-box { padding: 6px 8px; background: #f0fdf4; border-left: 3px solid #22c55e; margin: 4px 8px; border-radius: 0 4px 4px 0; }
+            .discipline-label { font-size: 7px; color: #64748b; text-transform: uppercase; margin-bottom: 1px; }
+            .discipline-value { font-size: 10px; font-weight: 600; color: #166534; }
+            .comments-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 6px 8px; }
+            .comment-card { border: 1px solid #e2e8f0; border-radius: 4px; overflow: hidden; }
+            .comment-header { background: #f1f5f9; padding: 3px 6px; font-weight: 600; font-size: 8px; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+            .comment-body { padding: 4px 6px; min-height: 30px; font-style: italic; color: #475569; font-size: 8px; line-height: 1.3; }
+            .signature-area { padding: 3px 6px; border-top: 1px dashed #cbd5e1; font-size: 8px; color: #64748b; }
+            .footer-section { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: white; padding: 6px 8px; text-align: center; }
+            .footer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 2px; }
             .footer-item { text-align: center; }
-            .footer-label { font-size: 9px; opacity: 0.8; text-transform: uppercase; margin-bottom: 4px; }
-            .footer-value { font-weight: 600; font-size: 11px; }
-            .generated-date { font-size: 9px; opacity: 0.7; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); }
-            .prefect-badge { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
-            .rank-highlight { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; padding: 8px 16px; border-radius: 8px; text-align: center; }
-            .rank-number { font-size: 24px; font-weight: 700; }
-            .rank-label { font-size: 9px; opacity: 0.9; text-transform: uppercase; }
+            .footer-label { font-size: 7px; opacity: 0.8; text-transform: uppercase; margin-bottom: 1px; }
+            .footer-value { font-weight: 600; font-size: 9px; }
+            .generated-date { font-size: 7px; opacity: 0.7; margin-top: 3px; padding-top: 3px; border-top: 1px solid rgba(255,255,255,0.2); }
+            .prefect-badge { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
+            .rank-highlight { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; padding: 4px 10px; border-radius: 6px; text-align: center; }
+            .rank-number { font-size: 16px; font-weight: 700; }
+            .rank-label { font-size: 7px; opacity: 0.9; text-transform: uppercase; }
             @media print { 
-              body { padding: 0; } 
-              .report-container { max-width: 100%; border-radius: 0; }
+              body { padding: 0; margin: 0; }
+              .report-container { max-width: 100%; border-radius: 0; border-width: 1px; }
+              @page { margin: 5mm; size: A4 portrait; }
             }
           </style>
         </head>
