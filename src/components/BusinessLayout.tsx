@@ -3,11 +3,15 @@ import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { BusinessSidebar } from "@/components/BusinessSidebar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
-import { AnnouncementBanner } from "@/components/AnnouncementBanner";
+
 import { TermsFooterLink } from "@/components/TermsFooterLink";
+import { NetworkStatusIndicator } from "@/components/NetworkStatusIndicator";
+import { FullscreenToggle } from "@/components/FullscreenToggle";
+import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionCheck } from "@/hooks/use-subscription-check";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface LocationState {
@@ -107,6 +111,9 @@ export function BusinessLayout() {
     }
   };
 
+  // Keyboard shortcuts
+  const { shortcuts } = useKeyboardShortcuts(businessType);
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background relative">
@@ -116,17 +123,24 @@ export function BusinessLayout() {
         </div>
         
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Announcement Banner - Always visible at top */}
-          <AnnouncementBanner />
           
           {/* Desktop header with sidebar trigger - hidden on mobile */}
           <header className="hidden md:flex h-14 border-b border-border items-center px-4 bg-card/95 backdrop-blur-sm sticky top-0 z-40">
             <SidebarTrigger className="touch-target" />
+            <div className="ml-auto flex items-center gap-1">
+              <NetworkStatusIndicator />
+              <KeyboardShortcutsHelp shortcuts={shortcuts} />
+              <FullscreenToggle />
+            </div>
           </header>
           
           {/* Mobile header - shown only on mobile (screens < 768px) */}
           <header className="flex md:hidden h-14 border-b border-border items-center px-4 bg-card/95 backdrop-blur-sm sticky top-0 z-40 safe-top">
-            <span className="font-semibold text-sm truncate">{businessName}</span>
+            <span className="font-semibold text-sm truncate flex-1">{businessName}</span>
+            <div className="flex items-center gap-1">
+              <NetworkStatusIndicator />
+              <FullscreenToggle />
+            </div>
           </header>
           
           {/* Main content - add bottom padding on mobile for bottom nav */}

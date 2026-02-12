@@ -27,15 +27,14 @@ import AdminPackages from "./pages/admin/AdminPackages";
 import AdminSchoolPackages from "./pages/admin/AdminSchoolPackages";
 import AdminRentalPackages from "./pages/admin/AdminRentalPackages";
 import AdminSettings from "./pages/admin/AdminSettings";
-import AdminTestimonials from "./pages/admin/AdminTestimonials";
-import AdminInstallations from "./pages/admin/AdminInstallations";
-import AdminMarketers from "./pages/admin/AdminMarketers";
 import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
-import AdminSubscriptionRequests from "./pages/admin/AdminSubscriptionRequests";
 import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
-import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
-import AdminSupportTickets from "./pages/admin/AdminSupportTickets";
-import AdminBulkActions from "./pages/admin/AdminBulkActions";
+import AdminCreateBusiness from "./pages/admin/AdminCreateBusiness";
+import AdminSystemHealth from "./pages/admin/AdminSystemHealth";
+import AdminFeatureFlags from "./pages/admin/AdminFeatureFlags";
+import AdminStorage from "./pages/admin/AdminStorage";
+import AdminBackups from "./pages/admin/AdminBackups";
+import AdminSponsors from "./pages/admin/AdminSponsors";
 import SubmitTestimonial from "./pages/SubmitTestimonial";
 import { BusinessLayout } from "./components/BusinessLayout";
 import BusinessDashboard from "./pages/business/BusinessDashboard";
@@ -106,6 +105,14 @@ import Requisitions from "./pages/business/Requisitions";
 import Timetable from "./pages/business/Timetable";
 import Exams from "./pages/business/Exams";
 import TermCalendar from "./pages/business/TermCalendar";
+import UNEBCandidates from "./pages/business/UNEBCandidates";
+import AcademicAnalytics from "./pages/business/AcademicAnalytics";
+
+import AdmissionLinks from "./pages/business/AdmissionLinks";
+import AdmissionConfirmations from "./pages/business/AdmissionConfirmations";
+import StudentLifecycle from "./pages/business/StudentLifecycle";
+import PromotionRules from "./pages/business/PromotionRules";
+import SchoolHolidays from "./pages/business/SchoolHolidays";
 import RentalDashboard from "./pages/business/rental/RentalDashboard";
 import RentalProperties from "./pages/business/rental/RentalProperties";
 import RentalUnits from "./pages/business/rental/RentalUnits";
@@ -119,6 +126,7 @@ import RentalTaxDashboard from "./pages/business/rental/RentalTaxDashboard";
 import PublicMenu from "./pages/public/PublicMenu";
 import SubmitPaymentProof from "./pages/public/SubmitPaymentProof";
 import JobStatus from "./pages/public/JobStatus";
+import SelfAdmission from "./pages/public/SelfAdmission";
 import ParentPortal from "./pages/ParentPortal";
 import ParentDashboard from "./pages/ParentDashboard";
 import ECDParentPortal from "./pages/ECDParentPortal";
@@ -164,21 +172,20 @@ const App = () => {
               {/* Admin Routes with Sidebar Layout */}
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
+                <Route path="create-business" element={<AdminCreateBusiness />} />
                 <Route path="tenants" element={<AdminTenants />} />
                 <Route path="tenants/:id" element={<AdminTenantDetails />} />
-                <Route path="installations" element={<AdminInstallations />} />
-                <Route path="subscription-requests" element={<AdminSubscriptionRequests />} />
                 <Route path="subscriptions" element={<AdminSubscriptions />} />
-                <Route path="marketers" element={<AdminMarketers />} />
                 <Route path="payments" element={<AdminPayments />} />
                 <Route path="packages" element={<AdminPackages />} />
                 <Route path="school-packages" element={<AdminSchoolPackages />} />
                 <Route path="rental-packages" element={<AdminRentalPackages />} />
+                <Route path="system-health" element={<AdminSystemHealth />} />
+                <Route path="feature-flags" element={<AdminFeatureFlags />} />
+                <Route path="storage" element={<AdminStorage />} />
+                <Route path="backups" element={<AdminBackups />} />
+                <Route path="sponsors" element={<AdminSponsors />} />
                 <Route path="audit-logs" element={<AdminAuditLogs />} />
-                <Route path="announcements" element={<AdminAnnouncements />} />
-                <Route path="support-tickets" element={<AdminSupportTickets />} />
-                <Route path="bulk-actions" element={<AdminBulkActions />} />
-                <Route path="testimonials" element={<AdminTestimonials />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
 
@@ -253,7 +260,17 @@ const App = () => {
                 {/* Phase 2: Academics, Timetable & Exams */}
                 <Route path="timetable" element={<Timetable />} />
                 <Route path="exams" element={<Exams />} />
+                <Route path="academic-analytics" element={<AcademicAnalytics />} />
                 <Route path="term-calendar" element={<TermCalendar />} />
+                {/* UNEB Candidate Management */}
+                <Route path="uneb-candidates" element={<UNEBCandidates />} />
+                {/* Admission Management */}
+                <Route path="admission-links" element={<AdmissionLinks />} />
+                <Route path="admission-confirmations" element={<AdmissionConfirmations />} />
+                {/* Student Lifecycle Management */}
+                <Route path="student-lifecycle" element={<StudentLifecycle />} />
+                <Route path="promotion-rules" element={<PromotionRules />} />
+                <Route path="school-holidays" element={<SchoolHolidays />} />
                 {/* Rental Management Routes */}
                 <Route path="rental-dashboard" element={<RentalDashboard />} />
                 <Route path="rental-tax-dashboard" element={<RentalTaxDashboard />} />
@@ -290,6 +307,7 @@ const App = () => {
               <Route path="/menu/:tenantId/:tableId" element={<PublicMenu />} />
               <Route path="/job-status" element={<JobStatus />} />
               <Route path="/submit-payment" element={<SubmitPaymentProof />} />
+              <Route path="/public/admission/:linkCode" element={<SelfAdmission />} />
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

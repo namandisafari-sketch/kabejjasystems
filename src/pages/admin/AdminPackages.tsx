@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Package, Building2, Pencil, Plus, Loader2, Users } from "lucide-react";
+import { Package, Building2, Pencil, Plus, Loader2, Users, Store } from "lucide-react";
 import { toast } from "sonner";
 
 interface RentalPackage {
@@ -27,12 +27,29 @@ interface RentalPackage {
   display_order: number;
 }
 
+interface BusinessPackage {
+  id: string;
+  name: string;
+  description: string | null;
+  max_branches: number;
+  max_products: number | null;
+  max_users: number;
+  monthly_price: number;
+  included_users: number;
+  price_per_additional_user: number;
+  features: any;
+  is_active: boolean;
+  display_order: number;
+}
+
 const AdminPackages = () => {
   const queryClient = useQueryClient();
   const [editingPackage, setEditingPackage] = useState<any>(null);
   const [editingRentalPackage, setEditingRentalPackage] = useState<RentalPackage | null>(null);
+  const [editingBusinessPackage, setEditingBusinessPackage] = useState<BusinessPackage | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isRentalDialogOpen, setIsRentalDialogOpen] = useState(false);
+  const [isBusinessDialogOpen, setIsBusinessDialogOpen] = useState(false);
 
   const { data: packages, isLoading } = useQuery({
     queryKey: ['all-packages'],
@@ -57,6 +74,19 @@ const AdminPackages = () => {
       
       if (error) throw error;
       return data as RentalPackage[];
+    },
+  });
+
+  const { data: businessPackages, isLoading: isLoadingBusiness } = useQuery({
+    queryKey: ['business-packages'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('business_packages')
+        .select('*')
+        .order('display_order', { ascending: true });
+      
+      if (error) throw error;
+      return data as BusinessPackage[];
     },
   });
 
@@ -136,6 +166,57 @@ const AdminPackages = () => {
     },
   });
 
+  // Business package mutations
+  const updateBusinessPackageMutation = useMutation({
+    mutationFn: async (pkg: BusinessPackage) => {
+      const { error } = await supabase
+        .from('business_packages')
+        .update({
+          name: pkg.name,
+          description: pkg.description,
+          max_branches: pkg.max_branches,
+          max_products: pkg.max_products,
+          max_users: pkg.max_users,
+          monthly_price: pkg.monthly_price,
+          included_users: pkg.included_users,
+          price_per_additional_user: pkg.price_per_additional_user,
+          is_active: pkg.is_active,
+          display_order: pkg.display_order,
+        })
+        .eq('id', pkg.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['business-packages'] });
+      setIsBusinessDialogOpen(false);
+      setEditingBusinessPackage(null);
+      toast.success('Business package updated successfully');
+    },
+    onError: () => {
+      toast.error('Failed to update business package');
+    },
+  });
+
+  const createBusinessPackageMutation = useMutation({
+    mutationFn: async (pkg: Omit<BusinessPackage, 'id'>) => {
+      const { error } = await supabase
+        .from('business_packages')
+        .insert([pkg]);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['business-packages'] });
+      setIsBusinessDialogOpen(false);
+      setEditingBusinessPackage(null);
+      toast.success('Business package created successfully');
+    },
+    onError: () => {
+      toast.error('Failed to create business package');
+    },
+  });
+
   const handleEditPackage = (pkg: any) => {
     setEditingPackage({ ...pkg });
     setIsDialogOpen(true);
@@ -144,6 +225,11 @@ const AdminPackages = () => {
   const handleEditRentalPackage = (pkg: RentalPackage) => {
     setEditingRentalPackage({ ...pkg });
     setIsRentalDialogOpen(true);
+  };
+
+  const handleEditBusinessPackage = (pkg: BusinessPackage) => {
+    setEditingBusinessPackage({ ...pkg });
+    setIsBusinessDialogOpen(true);
   };
 
   const handleCreateRentalPackage = () => {
@@ -163,6 +249,24 @@ const AdminPackages = () => {
     setIsRentalDialogOpen(true);
   };
 
+  const handleCreateBusinessPackage = () => {
+    setEditingBusinessPackage({
+      id: '',
+      name: '',
+      description: '',
+      max_branches: 1,
+      max_products: 100,
+      max_users: 2,
+      monthly_price: 30000,
+      included_users: 1,
+      price_per_additional_user: 10000,
+      features: [],
+      is_active: true,
+      display_order: (businessPackages?.length || 0) + 1,
+    });
+    setIsBusinessDialogOpen(true);
+  };
+
   const handleSavePackage = () => {
     if (!editingPackage) return;
     updatePackageMutation.mutate(editingPackage);
@@ -175,6 +279,16 @@ const AdminPackages = () => {
     } else {
       const { id, ...newPackage } = editingRentalPackage;
       createRentalPackageMutation.mutate(newPackage);
+    }
+  };
+
+  const handleSaveBusinessPackage = () => {
+    if (!editingBusinessPackage) return;
+    if (editingBusinessPackage.id) {
+      updateBusinessPackageMutation.mutate(editingBusinessPackage);
+    } else {
+      const { id, ...newPackage } = editingBusinessPackage;
+      createBusinessPackageMutation.mutate(newPackage);
     }
   };
 
@@ -200,6 +314,10 @@ const AdminPackages = () => {
           <TabsTrigger value="school" className="gap-2">
             <Package className="h-4 w-4" />
             School Packages
+          </TabsTrigger>
+          <TabsTrigger value="business" className="gap-2">
+            <Store className="h-4 w-4" />
+            Business Packages
           </TabsTrigger>
           <TabsTrigger value="rental" className="gap-2">
             <Building2 className="h-4 w-4" />
@@ -268,6 +386,96 @@ const AdminPackages = () => {
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Validity</span>
                         <span className="font-medium">{pkg.validity_days} days</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Business Packages Tab */}
+        <TabsContent value="business">
+          <div className="flex justify-end mb-4">
+            <Button onClick={handleCreateBusinessPackage} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Business Package
+            </Button>
+          </div>
+
+          {isLoadingBusiness ? (
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading business packages...
+            </div>
+          ) : businessPackages?.length === 0 ? (
+            <Card>
+              <CardContent className="py-12">
+                <div className="text-center">
+                  <Store className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground">No business packages found</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {businessPackages?.map((pkg) => (
+                <Card key={pkg.id} className="relative">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-xl">{pkg.name}</CardTitle>
+                        <CardDescription className="mt-2">
+                          {pkg.description || 'No description'}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {pkg.is_active ? (
+                          <Badge className="bg-success">Active</Badge>
+                        ) : (
+                          <Badge variant="secondary">Inactive</Badge>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditBusinessPackage(pkg)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <p className="text-3xl font-bold">
+                        {formatCurrency(pkg.monthly_price)}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        per month
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2 pt-4 border-t">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Branches</span>
+                        <span className="font-medium">Up to {pkg.max_branches}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Products</span>
+                        <span className="font-medium">{pkg.max_products ? `Up to ${pkg.max_products}` : 'Unlimited'}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Max Users</span>
+                        <span className="font-medium">{pkg.max_users}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Included Users</span>
+                        <span className="font-medium">{pkg.included_users}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Extra User</span>
+                        <span className="font-medium">{formatCurrency(pkg.price_per_additional_user)}/mo</span>
                       </div>
                     </div>
                   </CardContent>
@@ -548,6 +756,129 @@ const AdminPackages = () => {
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
                   {editingRentalPackage.id ? 'Save Changes' : 'Create Package'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit/Create Business Package Dialog */}
+      <Dialog open={isBusinessDialogOpen} onOpenChange={setIsBusinessDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {editingBusinessPackage?.id ? 'Edit Business Package' : 'Create Business Package'}
+            </DialogTitle>
+          </DialogHeader>
+          {editingBusinessPackage && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="business_name">Name</Label>
+                <Input
+                  id="business_name"
+                  value={editingBusinessPackage.name}
+                  onChange={(e) => setEditingBusinessPackage({ ...editingBusinessPackage, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="business_description">Description</Label>
+                <Textarea
+                  id="business_description"
+                  value={editingBusinessPackage.description || ''}
+                  onChange={(e) => setEditingBusinessPackage({ ...editingBusinessPackage, description: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="business_monthly_price">Monthly Price (UGX)</Label>
+                  <Input
+                    id="business_monthly_price"
+                    type="number"
+                    value={editingBusinessPackage.monthly_price}
+                    onChange={(e) => setEditingBusinessPackage({ ...editingBusinessPackage, monthly_price: Number(e.target.value) })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="business_display_order">Display Order</Label>
+                  <Input
+                    id="business_display_order"
+                    type="number"
+                    value={editingBusinessPackage.display_order}
+                    onChange={(e) => setEditingBusinessPackage({ ...editingBusinessPackage, display_order: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="max_branches">Max Branches</Label>
+                  <Input
+                    id="max_branches"
+                    type="number"
+                    value={editingBusinessPackage.max_branches}
+                    onChange={(e) => setEditingBusinessPackage({ ...editingBusinessPackage, max_branches: Number(e.target.value) })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="max_products">Max Products</Label>
+                  <Input
+                    id="max_products"
+                    type="number"
+                    value={editingBusinessPackage.max_products || ''}
+                    onChange={(e) => setEditingBusinessPackage({ ...editingBusinessPackage, max_products: e.target.value ? Number(e.target.value) : null })}
+                    placeholder="Leave empty for unlimited"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="business_max_users">Max Users</Label>
+                  <Input
+                    id="business_max_users"
+                    type="number"
+                    value={editingBusinessPackage.max_users}
+                    onChange={(e) => setEditingBusinessPackage({ ...editingBusinessPackage, max_users: Number(e.target.value) })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="business_included_users">Included Users</Label>
+                  <Input
+                    id="business_included_users"
+                    type="number"
+                    value={editingBusinessPackage.included_users}
+                    onChange={(e) => setEditingBusinessPackage({ ...editingBusinessPackage, included_users: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="business_price_per_user">Extra User Price</Label>
+                <Input
+                  id="business_price_per_user"
+                  type="number"
+                  value={editingBusinessPackage.price_per_additional_user}
+                  onChange={(e) => setEditingBusinessPackage({ ...editingBusinessPackage, price_per_additional_user: Number(e.target.value) })}
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="business_is_active"
+                  checked={editingBusinessPackage.is_active}
+                  onCheckedChange={(checked) => setEditingBusinessPackage({ ...editingBusinessPackage, is_active: checked })}
+                />
+                <Label htmlFor="business_is_active">Active</Label>
+              </div>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setIsBusinessDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSaveBusinessPackage}
+                  disabled={updateBusinessPackageMutation.isPending || createBusinessPackageMutation.isPending}
+                >
+                  {(updateBusinessPackageMutation.isPending || createBusinessPackageMutation.isPending) && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  {editingBusinessPackage.id ? 'Save Changes' : 'Create Package'}
                 </Button>
               </div>
             </div>

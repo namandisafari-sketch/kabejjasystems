@@ -193,9 +193,9 @@ export const GeneralImportPage = ({
       );
 
       // Insert to database
-      const { error } = await supabase
-        .from(config.databaseTable)
-        .insert(data);
+      const { error } = await (supabase
+        .from(config.databaseTable as any)
+        .insert(data as any) as any);
 
       if (error) {
         throw error;
@@ -228,7 +228,7 @@ export const GeneralImportPage = ({
   const handleDownloadTemplate = () => {
     try {
       const template = ExcelImportHelper.generateTemplate(config.systemFields);
-      const blob = new Blob([template], {
+      const blob = new Blob([new Uint8Array(template).buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
       const url = URL.createObjectURL(blob);
@@ -314,11 +314,12 @@ export const GeneralImportPage = ({
               <ColumnMappingUI
                 excelHeaders={excelHeaders}
                 systemFields={config.systemFields}
+                requiredFields={config.requiredFields}
                 onMappingChange={setColumnMapping}
                 onAutoDetect={() =>
                   toast({
-                    title: "Auto-Detected",
-                    description: "Columns detected automatically",
+                    title: "Smart Detection Complete",
+                    description: "Columns auto-detected from your Excel headers",
                   })
                 }
               />

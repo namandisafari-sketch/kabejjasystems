@@ -367,7 +367,15 @@
     padding-right: env(safe-area-inset-right);
   }
 
-  /* Hide scrollbar but keep scrollable */
+  /* Hide all scrollbars globally but keep scrollable */
+  * {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;

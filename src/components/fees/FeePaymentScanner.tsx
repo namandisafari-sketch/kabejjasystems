@@ -204,7 +204,7 @@ export function FeePaymentScanner({ tenantId }: FeePaymentScannerProps) {
     // Fetch all active students for this tenant - sorted by full_name to match ID card generation order
     const { data: allStudents, error: fetchError } = await supabase
       .from("students")
-      .select("id, full_name, admission_number, boarding_status, school_classes(name, level)")
+      .select("id, full_name, admission_number, boarding_status, school_classes!class_id(name, level)")
       .eq("tenant_id", tenantId)
       .eq("is_active", true)
       .order("full_name", { ascending: true });

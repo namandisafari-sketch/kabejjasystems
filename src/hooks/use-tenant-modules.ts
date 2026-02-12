@@ -242,6 +242,22 @@ export const moduleRoutes: Record<string, { url: string; icon: string }> = {
   exam_sessions: { url: '/business/exam-sessions', icon: 'Calendar' },
   exam_results_import: { url: '/business/exam-results-import', icon: 'Upload' },
   exam_import_permissions: { url: '/business/exam-import-permissions', icon: 'Shield' },
+  // UNEB Candidates
+  uneb_registration: { url: '/business/uneb-candidates', icon: 'GraduationCap' },
+  uneb_candidates: { url: '/business/uneb-candidates', icon: 'GraduationCap' },
+  // Self-Admission modules
+  admission_links: { url: '/business/admission-links', icon: 'Link' },
+  admission_confirmations: { url: '/business/admission-confirmations', icon: 'UserPlus' },
+  // Student Lifecycle Management modules
+  student_lifecycle: { url: '/business/student-lifecycle', icon: 'Users' },
+  promotion_rules: { url: '/business/promotion-rules', icon: 'TrendingUp' },
+  school_holidays: { url: '/business/school-holidays', icon: 'Calendar' },
+  // UNEB Exam modules
+  uneb_exam_results: { url: '/business/exam-results-lookup', icon: 'ClipboardCheck' },
+  exam_access: { url: '/business/exam-access', icon: 'ShieldAlert' },
+  // Additional school modules (marks_entry maps to exams page)
+  marks_entry: { url: '/business/exams', icon: 'Edit' },
+  academic_analytics: { url: '/business/academic-analytics', icon: 'BarChart3' },
   // Rental Management modules
   rental_dashboard: { url: '/business/rental-dashboard', icon: 'LayoutDashboard' },
   rental_properties: { url: '/business/rental-properties', icon: 'Building2' },

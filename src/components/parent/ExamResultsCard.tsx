@@ -1,324 +1,195 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Award, Search, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { GraduationCap, CheckCircle2, XCircle, AlertCircle, Loader } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 
-interface ExamResult {
+interface ExamSession {
   id: string;
-  index_number: string;
-  student_name: string;
-  exam_session_id: string;
-  subjects: Record<string, string>;
-  aggregate_grade: string;
-  result_status: string;
-  created_at: string;
-  exam_sessions?: {
-    session_name: string;
-    year: number;
-    level: string;
-  };
+  year: number;
+  level: string;
+  session_name: string;
 }
 
-interface ExamResultsCardProps {
-  studentAdmissionNumber?: string;
-  studentName?: string;
-  indexNumber?: string;
-}
+export function ExamResultsCard() {
+  const navigate = useNavigate();
+  const [indexNumber, setIndexNumber] = useState("");
+  const [sessionId, setSessionId] = useState("");
+  const [searching, setSearching] = useState(false);
 
-/**
- * Exam Results Card Component
- * Displays exam results in an easy-to-read card format
- * Can be used in parent portal or student dashboard
- */
-export const ExamResultsCard = ({
-  studentAdmissionNumber,
-  studentName,
-  indexNumber,
-}: ExamResultsCardProps) => {
-  const [examResults, setExamResults] = useState<ExamResult[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedResult, setSelectedResult] = useState<ExamResult | null>(null);
+  // Fetch available exam sessions
+  const { data: examSessions = [], isLoading: sessionsLoading } = useQuery({
+    queryKey: ["exam-sessions-parent"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("exam_sessions")
+        .select("id, year, level, session_name")
+        .eq("is_active", true)
+        .order("year", { ascending: false });
 
-  useEffect(() => {
-    const loadExamResults = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+      if (error) throw error;
+      return data as ExamSession[];
+    },
+  });
 
-        let query = supabase
-          .from("exam_results")
-          .select("*, exam_sessions(session_name, year, level)")
-          .eq("result_status", "published");
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-        // Filter by index number if provided
-        if (indexNumber) {
-          query = query.eq("index_number", indexNumber);
-        }
+    if (!indexNumber.trim()) {
+      toast.error("Please enter an index number");
+      return;
+    }
 
-        // Filter by student name if provided
-        if (studentName) {
-          query = query.eq("student_name", studentName);
-        }
+    if (!sessionId) {
+      toast.error("Please select an exam session");
+      return;
+    }
 
-        const { data, error: fetchError } = await query.order("created_at", {
-          ascending: false,
-        });
+    setSearching(true);
 
-        if (fetchError) {
-          throw fetchError;
-        }
+    try {
+      // Check if result exists
+      const { data: result, error } = await supabase
+        .from("exam_results")
+        .select("id")
+        .eq("index_number", indexNumber.toUpperCase())
+        .eq("exam_session_id", sessionId)
+        .eq("result_status", "published")
+        .single();
 
-        // Cast data to handle Json type from Supabase
-        const results = (data || []).map((item: any) => ({
-          id: item.id,
-          index_number: item.index_number,
-          student_name: item.student_name,
-          exam_session_id: item.exam_session_id,
-          subjects: typeof item.subjects === 'string' ? JSON.parse(item.subjects) : (item.subjects || {}),
-          aggregate_grade: item.aggregate_grade,
-          result_status: item.result_status,
-          created_at: item.created_at,
-          exam_sessions: item.exam_sessions,
-        })) as ExamResult[];
-
-        setExamResults(results);
-
-        if (!data || data.length === 0) {
-          setError("No exam results available yet");
-        }
-      } catch (err) {
-        console.error("Error loading exam results:", err);
-        setError("Failed to load exam results");
-      } finally {
-        setLoading(false);
+      if (error || !result) {
+        toast.error("No exam results found for this index number and session");
+        setSearching(false);
+        return;
       }
-    };
 
-    loadExamResults();
-  }, [indexNumber, studentName]);
+      // Log access
+      await supabase.from("exam_access_logs").insert({
+        index_number: indexNumber.toUpperCase(),
+        exam_session_id: sessionId,
+        access_status: "success",
+        ip_address: "client",
+        user_agent: navigator.userAgent,
+      });
 
-  // Determine grade color
-  const getGradeColor = (grade: string): string => {
-    switch (grade?.toUpperCase()) {
-      case "A":
-        return "bg-green-100 text-green-800";
-      case "B":
-        return "bg-blue-100 text-blue-800";
-      case "C":
-        return "bg-yellow-100 text-yellow-800";
-      case "D":
-        return "bg-orange-100 text-orange-800";
-      case "E":
-        return "bg-red-100 text-red-800";
-      case "O":
-        return "bg-purple-100 text-purple-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+      // Navigate to results page
+      navigate(`/exam-results/${result.id}`, {
+        state: {
+          indexNumber: indexNumber.toUpperCase(),
+          sessionId,
+        },
+      });
+    } catch (error) {
+      console.error("Search error:", error);
+      toast.error("An error occurred while searching");
+    } finally {
+      setSearching(false);
     }
   };
-
-  // Determine aggregate division color
-  const getDivisionColor = (division: string): string => {
-    switch (division) {
-      case "1":
-        return "bg-green-50 border-green-200 text-green-800";
-      case "2":
-        return "bg-blue-50 border-blue-200 text-blue-800";
-      case "3":
-        return "bg-yellow-50 border-yellow-200 text-yellow-800";
-      case "4":
-        return "bg-red-50 border-red-200 text-red-800";
-      default:
-        return "bg-gray-50 border-gray-200 text-gray-800";
-    }
-  };
-
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <GraduationCap className="h-5 w-5" />
-            Exam Results
-          </CardTitle>
-          <CardDescription>Loading exam results...</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-center py-8">
-            <Loader className="h-6 w-6 animate-spin text-gray-400" />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error && examResults.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <GraduationCap className="h-5 w-5" />
-            Exam Results
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
-    <Card className="border-2">
-      <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <GraduationCap className="h-5 w-5 text-blue-600" />
-            <div>
-              <CardTitle>Exam Results</CardTitle>
-              <CardDescription>
-                {examResults.length} result{examResults.length !== 1 ? "s" : ""} available
-              </CardDescription>
+    <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <Award className="h-5 w-5 text-primary" />
+          Check UNEB Exam Results
+        </CardTitle>
+        <CardDescription className="text-xs sm:text-sm">
+          Look up national examination results by index number
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSearch} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Index Number */}
+            <div className="space-y-1.5">
+              <Label htmlFor="index-number" className="text-xs sm:text-sm">
+                Index Number
+              </Label>
+              <Input
+                id="index-number"
+                placeholder="e.g., U0001/001"
+                value={indexNumber}
+                onChange={(e) => setIndexNumber(e.target.value.toUpperCase())}
+                className="h-9 text-sm"
+                disabled={searching}
+              />
+            </div>
+
+            {/* Exam Session */}
+            <div className="space-y-1.5">
+              <Label htmlFor="exam-session" className="text-xs sm:text-sm">
+                Exam Year & Level
+              </Label>
+              <Select
+                value={sessionId}
+                onValueChange={setSessionId}
+                disabled={searching || sessionsLoading}
+              >
+                <SelectTrigger id="exam-session" className="h-9 text-sm">
+                  <SelectValue placeholder="Select session..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {examSessions.length === 0 ? (
+                    <SelectItem value="none" disabled>
+                      No sessions available
+                    </SelectItem>
+                  ) : (
+                    examSessions.map((session) => (
+                      <SelectItem key={session.id} value={session.id}>
+                        {session.year} {session.level} - {session.session_name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
           </div>
-          <CheckCircle2 className="h-6 w-6 text-green-600" />
-        </div>
-      </CardHeader>
-      <CardContent className="pt-6">
-        <div className="space-y-4">
-          {examResults.map((result) => (
-            <div
-              key={result.id}
-              className={`p-4 border rounded-lg cursor-pointer transition hover:bg-gray-50 ${getDivisionColor(
-                result.aggregate_grade
-              )}`}
-              onClick={() =>
-                setSelectedResult(selectedResult?.id === result.id ? null : result)
-              }
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button
+              type="submit"
+              disabled={searching || examSessions.length === 0}
+              className="flex-1"
+              size="sm"
             >
-              {/* Header Row */}
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h3 className="font-semibold">
-                    {result.exam_sessions?.session_name || "Exam Session"}
-                  </h3>
-                  <p className="text-sm opacity-75">
-                    {result.exam_sessions?.year} • {result.exam_sessions?.level}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-semibold">Overall Grade</div>
-                  <Badge className={`${getGradeColor(result.aggregate_grade)} text-lg px-3 py-1`}>
-                    Division {result.aggregate_grade}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Index Number */}
-              <div className="text-sm mb-2 pb-2 border-b">
-                <span className="opacity-75">Index Number:</span>{" "}
-                <span className="font-mono font-semibold">{result.index_number}</span>
-              </div>
-
-              {/* Expanded View - Subject Grades */}
-              {selectedResult?.id === result.id && (
-                <div className="mt-4 pt-4 border-t">
-                  <h4 className="font-semibold mb-3 text-sm">Subject Results</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {Object.entries(result.subjects || {}).map(([subject, grade]) => (
-                      <div
-                        key={subject}
-                        className="p-3 bg-white rounded border text-center"
-                      >
-                        <p className="text-xs opacity-75 mb-1 truncate">{subject}</p>
-                        <Badge className={`${getGradeColor(grade)} text-base px-2 py-1`}>
-                          {grade}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Additional Info */}
-                  <div className="mt-4 pt-4 border-t space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="opacity-75">Status</span>
-                      <Badge variant="outline">
-                        {result.result_status === "published" ? (
-                          <>
-                            <CheckCircle2 className="h-3 w-3 mr-1 text-green-600" />
-                            Published
-                          </>
-                        ) : (
-                          <>
-                            <AlertCircle className="h-3 w-3 mr-1" />
-                            {result.result_status}
-                          </>
-                        )}
-                      </Badge>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="opacity-75">Released</span>
-                      <span>
-                        {new Date(result.created_at).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </span>
-                    </div>
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full mt-4"
-                    onClick={() =>
-                      window.open(`/exam-results/${result.id}`, "_blank")
-                    }
-                  >
-                    View Full Certificate
-                  </Button>
-                </div>
+              {searching ? (
+                <>
+                  <Search className="mr-2 h-4 w-4 animate-spin" />
+                  Searching...
+                </>
+              ) : (
+                <>
+                  <Search className="mr-2 h-4 w-4" />
+                  Check Results
+                </>
               )}
-
-              {/* Collapsed Summary */}
-              {selectedResult?.id !== result.id && (
-                <div className="text-xs opacity-75">
-                  Click to view all {Object.keys(result.subjects || {}).length} subjects
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Info Banner */}
-        {examResults.length > 0 && (
-          <Alert className="mt-4 bg-blue-50 border-blue-200">
-            <AlertCircle className="h-4 w-4 text-blue-600" />
-            <AlertDescription className="text-blue-800">
-              Click on any result to view detailed subject grades and certificates
-            </AlertDescription>
-          </Alert>
-        )}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/exam-results")}
+              className="flex-shrink-0"
+            >
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Full Lookup
+            </Button>
+          </div>
+        </form>
       </CardContent>
     </Card>
   );
-};
-
-export default ExamResultsCard;
+}

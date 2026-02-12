@@ -4,49 +4,100 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Sparkles } from 'lucide-react';
-import type { SubscriptionPackage } from '@/types/payment-types';
+import { useTenant } from '@/hooks/use-tenant';
+
+export interface NormalizedPackage {
+    id: string;
+    name: string;
+    description: string | null;
+    price: number;
+    priceLabel: string;
+    features: string[];
+}
 
 interface PaymentPackageSelectorProps {
-    onSelectPackage: (pkg: SubscriptionPackage, billingCycle: 'monthly' | 'yearly') => void;
+    onSelectPackage: (pkg: NormalizedPackage) => void;
     selectedPackageId?: string;
-    selectedCycle?: 'monthly' | 'yearly';
+}
+
+const SCHOOL_TYPES = ['primary_school', 'secondary_school', 'kindergarten', 'nursery', 'ecd_center'];
+const RENTAL_TYPES = ['rental_management', 'property_management'];
+
+function getSchoolLevel(businessType: string): string {
+    if (businessType === 'kindergarten' || businessType === 'nursery' || businessType === 'ecd_center') return 'kindergarten';
+    if (businessType === 'secondary_school') return 'secondary';
+    return 'primary';
 }
 
 export function PaymentPackageSelector({
     onSelectPackage,
     selectedPackageId,
-    selectedCycle = 'monthly',
 }: PaymentPackageSelectorProps) {
+    const { data: tenant } = useTenant();
+    const businessType = tenant?.businessType || '';
+
+    const isSchool = SCHOOL_TYPES.includes(businessType);
+    const isRental = RENTAL_TYPES.includes(businessType);
+
     const { data: packages, isLoading, error } = useQuery({
-        queryKey: ['subscription-packages'],
-        queryFn: async () => {
-            console.log('🔍 Fetching subscription packages...');
-
-            const { data, error } = await (supabase
-                .from('subscription_packages')
-                .select('*')
-                .eq('is_active', true)
-                .order('price_monthly', { ascending: true }) as any);
-
-            console.log('📦 Query result:', { data, error });
-
-            if (error) {
-                console.error('❌ Error fetching packages:', error);
-                throw error;
+        queryKey: ['payment-packages', businessType],
+        queryFn: async (): Promise<NormalizedPackage[]> => {
+            if (isSchool) {
+                const schoolLevel = getSchoolLevel(businessType);
+                const { data, error } = await (supabase
+                    .from('school_packages')
+                    .select('*')
+                    .eq('is_active', true)
+                    .or(`school_level.eq.${schoolLevel},school_level.eq.all`)
+                    .order('price_per_term', { ascending: true }) as any);
+                if (error) throw error;
+                return (data || []).map((p: any) => ({
+                    id: p.id,
+                    name: p.name,
+                    description: p.description,
+                    price: p.price_per_term,
+                    priceLabel: '/term',
+                    features: p.features || [],
+                }));
             }
 
-            console.log('✅ Packages loaded:', data?.length || 0);
-            return data as SubscriptionPackage[];
+            if (isRental) {
+                const { data, error } = await (supabase
+                    .from('rental_packages')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('monthly_price', { ascending: true }) as any);
+                if (error) throw error;
+                return (data || []).map((p: any) => ({
+                    id: p.id,
+                    name: p.name,
+                    description: p.description,
+                    price: p.monthly_price,
+                    priceLabel: '/mo',
+                    features: p.features || [],
+                }));
+            }
+
+            // Default: business packages
+            const { data, error } = await (supabase
+                .from('business_packages')
+                .select('*')
+                .eq('is_active', true)
+                .order('monthly_price', { ascending: true }) as any);
+            if (error) throw error;
+            return (data || []).map((p: any) => ({
+                id: p.id,
+                name: p.name,
+                description: p.description,
+                price: p.monthly_price,
+                priceLabel: '/mo',
+                features: p.features || [],
+            }));
         },
+        enabled: !!businessType,
     });
 
-    // Log error if present
-    if (error) {
-        console.error('❌ Query error:', error);
-    }
-
-
-    if (isLoading) {
+    if (isLoading || !businessType) {
         return (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {[1, 2, 3].map((i) => (
@@ -63,7 +114,7 @@ export function PaymentPackageSelector({
         return (
             <Card className="border-destructive">
                 <CardContent className="p-8 text-center space-y-4">
-                    <p className="text-destructive font-semibold">Error loading subscription packages</p>
+                    <p className="text-destructive font-semibold">Error loading packages</p>
                     <p className="text-sm text-muted-foreground">
                         {error instanceof Error ? error.message : 'An unknown error occurred'}
                     </p>
@@ -77,72 +128,31 @@ export function PaymentPackageSelector({
         return (
             <Card>
                 <CardContent className="p-8 text-center">
-                    <p className="text-muted-foreground">No subscription packages available at the moment.</p>
+                    <p className="text-muted-foreground">No packages available for your business type.</p>
                 </CardContent>
             </Card>
         );
     }
 
-    const calculatePrice = (pkg: SubscriptionPackage, cycle: 'monthly' | 'yearly') => {
-        if (cycle === 'yearly') {
-            return pkg.price_yearly;
-        }
-        return pkg.price_monthly;
-    };
-
-    const calculateSavings = (pkg: SubscriptionPackage) => {
-        const monthlyCost = pkg.price_monthly * 12;
-        const yearlyCost = pkg.price_yearly;
-        const savings = monthlyCost - yearlyCost;
-        const savingsPercent = Math.round((savings / monthlyCost) * 100);
-        return { amount: savings, percent: savingsPercent };
-    };
+    const categoryLabel = isSchool ? 'School' : isRental ? 'Rental' : 'Business';
 
     return (
         <div className="space-y-6">
-            {/* Billing Cycle Toggle */}
-            <div className="flex justify-center gap-4">
-                <Button
-                    variant={selectedCycle === 'monthly' ? 'default' : 'outline'}
-                    onClick={() => {
-                        // Trigger re-selection with new cycle
-                        if (selectedPackageId) {
-                            const pkg = packages.find((p) => p.id === selectedPackageId);
-                            if (pkg) onSelectPackage(pkg, 'monthly');
-                        }
-                    }}
-                >
-                    Monthly
-                </Button>
-                <Button
-                    variant={selectedCycle === 'yearly' ? 'default' : 'outline'}
-                    onClick={() => {
-                        if (selectedPackageId) {
-                            const pkg = packages.find((p) => p.id === selectedPackageId);
-                            if (pkg) onSelectPackage(pkg, 'yearly');
-                        }
-                    }}
-                >
-                    Yearly
-                    <Badge variant="secondary" className="ml-2">
-                        Save up to 20%
-                    </Badge>
-                </Button>
+            <div className="text-center">
+                <Badge variant="secondary" className="text-sm">
+                    {categoryLabel} Plans
+                </Badge>
             </div>
 
-            {/* Package Cards */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {packages.map((pkg) => {
-                    const price = calculatePrice(pkg, selectedCycle);
-                    const savings = calculateSavings(pkg);
+                {packages.map((pkg, idx) => {
                     const isSelected = pkg.id === selectedPackageId;
-                    const isPopular = pkg.name.toLowerCase().includes('professional') || pkg.name.toLowerCase().includes('pro');
+                    const isPopular = idx === Math.min(1, packages.length - 1) && packages.length > 1;
 
                     return (
                         <Card
                             key={pkg.id}
-                            className={`relative transition-all ${isSelected ? 'border-primary ring-2 ring-primary' : 'hover:border-primary/50'
-                                }`}
+                            className={`relative transition-all ${isSelected ? 'border-primary ring-2 ring-primary' : 'hover:border-primary/50'}`}
                         >
                             {isPopular && (
                                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -159,29 +169,20 @@ export function PaymentPackageSelector({
                             </CardHeader>
 
                             <CardContent className="space-y-4">
-                                {/* Pricing */}
-                                <div className="space-y-1">
-                                    <div className="flex items-baseline gap-2">
-                                        <span className="text-4xl font-bold">
-                                            {new Intl.NumberFormat('en-UG', {
-                                                style: 'currency',
-                                                currency: 'UGX',
-                                                minimumFractionDigits: 0,
-                                            }).format(price)}
-                                        </span>
-                                        <span className="text-muted-foreground">/{selectedCycle === 'monthly' ? 'mo' : 'yr'}</span>
-                                    </div>
-                                    {selectedCycle === 'yearly' && savings.percent > 0 && (
-                                        <p className="text-sm text-green-600 dark:text-green-400">
-                                            Save {savings.percent}% (UGX {savings.amount.toLocaleString()}) per year
-                                        </p>
-                                    )}
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-4xl font-bold">
+                                        {new Intl.NumberFormat('en-UG', {
+                                            style: 'currency',
+                                            currency: 'UGX',
+                                            minimumFractionDigits: 0,
+                                        }).format(pkg.price)}
+                                    </span>
+                                    <span className="text-muted-foreground">{pkg.priceLabel}</span>
                                 </div>
 
-                                {/* Features */}
                                 <ul className="space-y-2">
-                                    {(pkg.features || []).map((feature, idx) => (
-                                        <li key={idx} className="flex items-start gap-2 text-sm">
+                                    {pkg.features.map((feature, i) => (
+                                        <li key={i} className="flex items-start gap-2 text-sm">
                                             <Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                                             <span>{feature}</span>
                                         </li>
@@ -193,7 +194,7 @@ export function PaymentPackageSelector({
                                 <Button
                                     className="w-full"
                                     variant={isSelected ? 'default' : 'outline'}
-                                    onClick={() => onSelectPackage(pkg, selectedCycle)}
+                                    onClick={() => onSelectPackage(pkg)}
                                 >
                                     {isSelected ? 'Selected' : 'Select Plan'}
                                 </Button>

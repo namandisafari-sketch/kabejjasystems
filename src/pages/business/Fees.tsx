@@ -5,7 +5,6 @@ import { useTenant } from "@/hooks/use-tenant";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -113,7 +112,7 @@ export default function Fees() {
         .from('fee_payments')
         .select(`
           *,
-          student:students(id, full_name, admission_number, class:school_classes(name)),
+          student:students(id, full_name, admission_number, class:school_classes!class_id(name)),
           student_fee:student_fees(term:academic_terms(name, year))
         `)
         .eq('tenant_id', tenantData.tenantId)
@@ -535,49 +534,38 @@ export default function Fees() {
                 </div>
               ) : (
                 <>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Receipt #</TableHead>
-                        <TableHead>Student</TableHead>
-                        <TableHead>Class</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Method</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paginatedPayments.map((payment) => (
-                        <TableRow key={payment.id}>
-                          <TableCell className="font-mono text-sm">{payment.receipt_number || '-'}</TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{payment.student?.full_name}</p>
-                              <p className="text-xs text-muted-foreground">{payment.student?.admission_number}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell>{payment.student?.class?.name || '-'}</TableCell>
-                          <TableCell className="font-semibold text-green-600">{formatCurrency(payment.amount)}</TableCell>
-                          <TableCell>{getPaymentMethodBadge(payment.payment_method)}</TableCell>
-                          <TableCell>
-                            <div>
-                              <p>{format(new Date(payment.created_at), 'MMM d, yyyy')}</p>
-                              <p className="text-xs text-muted-foreground">{format(new Date(payment.created_at), 'h:mm a')}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="ghost" size="icon" onClick={() => handleEditPayment(payment)} title="Edit">
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleViewReceipt(payment)} title="View Receipt">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {paginatedPayments.map((payment) => (
+                      <Card key={payment.id} className="p-4 hover:border-primary/50 transition-colors">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium truncate">{payment.student?.full_name}</p>
+                            <p className="text-xs text-muted-foreground">{payment.student?.admission_number}</p>
+                          </div>
+                          <div className="text-right ml-2">
+                            <p className="font-semibold text-green-600">{formatCurrency(payment.amount)}</p>
+                            {getPaymentMethodBadge(payment.payment_method)}
+                          </div>
+                        </div>
+                        <div className="text-sm text-muted-foreground space-y-1">
+                          <p>Receipt: <span className="font-mono">{payment.receipt_number || '-'}</span></p>
+                          <p>Class: {payment.student?.class?.name || '-'}</p>
+                          <div className="flex justify-between">
+                            <span>{format(new Date(payment.created_at), 'MMM d, yyyy')}</span>
+                            <span>{format(new Date(payment.created_at), 'h:mm a')}</span>
+                          </div>
+                        </div>
+                        <div className="flex justify-end gap-1 mt-3">
+                          <Button variant="ghost" size="icon" onClick={() => handleEditPayment(payment)} title="Edit">
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleViewReceipt(payment)} title="View Receipt">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
 
                   {totalPages > 1 && (
                     <div className="mt-4">
@@ -833,41 +821,30 @@ export default function Fees() {
                   <p className="text-muted-foreground">Add fee structures to start billing students</p>
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Level</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {feeStructures.map(fee => (
-                      <TableRow key={fee.id}>
-                        <TableCell className="font-medium">{fee.name}</TableCell>
-                        <TableCell>{fee.level}</TableCell>
-                        <TableCell className="capitalize">{fee.fee_type}</TableCell>
-                        <TableCell>{formatCurrency(fee.amount)}</TableCell>
-                        <TableCell>
-                          <Badge variant={fee.is_active ? "default" : "secondary"}>
-                            {fee.is_active ? "Active" : "Inactive"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button size="sm" variant="ghost" onClick={() => handleEdit(fee)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(fee.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {feeStructures.map(fee => (
+                    <Card key={fee.id} className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-medium">{fee.name}</p>
+                          <p className="text-sm text-muted-foreground capitalize">{fee.level} • {fee.fee_type}</p>
+                        </div>
+                        <Badge variant={fee.is_active ? "default" : "secondary"}>
+                          {fee.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
+                      <p className="text-lg font-semibold">{formatCurrency(fee.amount)}</p>
+                      <div className="flex justify-end gap-1 mt-3">
+                        <Button size="sm" variant="ghost" onClick={() => handleEdit(fee)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(fee.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               )}
             </CardContent>
           </Card>
@@ -893,34 +870,35 @@ export default function Fees() {
                   <p className="text-muted-foreground">Fees will appear here when assigned to students</p>
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Student</TableHead>
-                      <TableHead>Admission No.</TableHead>
-                      <TableHead>Total</TableHead>
-                      <TableHead>Paid</TableHead>
-                      <TableHead>Balance</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {studentFees.map(sf => (
-                      <TableRow key={sf.id}>
-                        <TableCell className="font-medium">{sf.students?.full_name || "Unknown"}</TableCell>
-                        <TableCell>{sf.students?.admission_number || "-"}</TableCell>
-                        <TableCell>{formatCurrency(sf.total_amount)}</TableCell>
-                        <TableCell className="text-green-600">{formatCurrency(sf.amount_paid)}</TableCell>
-                        <TableCell className="text-orange-600">{formatCurrency(sf.balance || 0)}</TableCell>
-                        <TableCell>
-                          <Badge variant={sf.status === 'paid' ? "default" : sf.status === 'partial' ? "secondary" : "destructive"}>
-                            {sf.status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {studentFees.map(sf => (
+                    <Card key={sf.id} className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium truncate">{sf.students?.full_name || "Unknown"}</p>
+                          <p className="text-sm text-muted-foreground">{sf.students?.admission_number || "-"}</p>
+                        </div>
+                        <Badge variant={sf.status === 'paid' ? "default" : sf.status === 'partial' ? "secondary" : "destructive"}>
+                          {sf.status}
+                        </Badge>
+                      </div>
+                      <div className="text-sm space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Total</span>
+                          <span>{formatCurrency(sf.total_amount)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Paid</span>
+                          <span className="text-green-600">{formatCurrency(sf.amount_paid)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Balance</span>
+                          <span className="text-orange-600">{formatCurrency(sf.balance || 0)}</span>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               )}
             </CardContent>
           </Card>

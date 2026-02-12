@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Building2, Edit, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 import { Badge } from "@/components/ui/badge";
 import { z } from "zod";
 
@@ -261,54 +261,33 @@ const Branches = () => {
               </Button>
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {branches.map((branch) => (
-                    <TableRow key={branch.id}>
-                      <TableCell className="font-medium">{branch.name}</TableCell>
-                      <TableCell>{branch.location || '-'}</TableCell>
-                      <TableCell>{branch.phone || '-'}</TableCell>
-                      <TableCell>{branch.email || '-'}</TableCell>
-                      <TableCell>
-                        <Badge className={branch.is_active ? 'bg-success' : 'bg-muted'}>
-                          {branch.is_active ? 'Active' : 'Inactive'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEdit(branch)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            if (confirm('Are you sure you want to delete this branch?')) {
-                              deleteBranchMutation.mutate(branch.id);
-                            }
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {branches.map((branch) => (
+                <Card key={branch.id} className="p-4 hover:border-primary/50 transition-colors">
+                  <div className="flex items-start justify-between mb-2">
+                    <p className="font-medium">{branch.name}</p>
+                    <Badge className={branch.is_active ? 'bg-success' : 'bg-muted'}>
+                      {branch.is_active ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </div>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p>{branch.location || 'No location'}</p>
+                    <p>{branch.phone || '-'} • {branch.email || '-'}</p>
+                  </div>
+                  <div className="flex justify-end gap-1 mt-3">
+                    <Button size="sm" variant="ghost" onClick={() => handleEdit(branch)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => {
+                      if (confirm('Are you sure you want to delete this branch?')) {
+                        deleteBranchMutation.mutate(branch.id);
+                      }
+                    }}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </Card>
+              ))}
             </div>
           )}
         </CardContent>

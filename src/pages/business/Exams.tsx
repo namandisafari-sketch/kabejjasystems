@@ -461,86 +461,49 @@ export default function Exams() {
         <CardContent>
           {exams.length > 0 ? (
             <ScrollArea className="h-[500px]">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Class</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {exams.map((exam: any) => {
-                    const examType = examTypes.find((t: any) => t.id === exam.exam_type_id);
-                    const examClass = classes.find((c: any) => c.id === exam.class_id);
-                    const examSubject = subjects.find((s: any) => s.id === exam.subject_id);
-                    return (
-                      <TableRow key={exam.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            <BookOpen className="h-4 w-4 text-muted-foreground" />
-                            {examSubject?.name || "—"}
-                          </div>
-                        </TableCell>
-                        <TableCell>{examClass?.name || "—"}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{examType?.name || "—"}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          {exam.exam_date ? format(new Date(exam.exam_date), "MMM d, yyyy") : "—"}
-                        </TableCell>
-                        <TableCell>
-                          {exam.start_time ? exam.start_time.slice(0, 5) : "—"}
-                          {exam.end_time && ` - ${exam.end_time.slice(0, 5)}`}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(exam.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedExam(exam);
-                              setIsResultsDialogOpen(true);
-                            }}
-                          >
-                            <FileText className="h-4 w-4 mr-1" />
-                            Results
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setEditingExam(exam);
-                              setExamForm({
-                                term_id: exam.term_id,
-                                exam_type_id: exam.exam_type_id,
-                                class_id: exam.class_id,
-                                subject_id: exam.subject_id,
-                                exam_date: exam.exam_date,
-                                start_time: exam.start_time || "",
-                                end_time: exam.end_time || "",
-                                duration_minutes: exam.duration_minutes || 60,
-                                max_marks: exam.max_marks || 100,
-                                venue: exam.venue || "",
-                                instructions: exam.instructions || "",
-                              });
-                              setIsExamDialogOpen(true);
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {exams.map((exam: any) => {
+                  const examType = examTypes.find((t: any) => t.id === exam.exam_type_id);
+                  const examClass = classes.find((c: any) => c.id === exam.class_id);
+                  const examSubject = subjects.find((s: any) => s.id === exam.subject_id);
+                  return (
+                    <Card key={exam.id} className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <BookOpen className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <h4 className="font-semibold truncate">{examSubject?.name || "—"}</h4>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                        {getStatusBadge(exam.status)}
+                      </div>
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">{examType?.name || "—"}</Badge>
+                          <span>{examClass?.name || "—"}</span>
+                        </div>
+                        <p>{exam.exam_date ? format(new Date(exam.exam_date), "MMM d, yyyy") : "—"}</p>
+                        <p>{exam.start_time ? exam.start_time.slice(0, 5) : "—"}{exam.end_time && ` - ${exam.end_time.slice(0, 5)}`}</p>
+                      </div>
+                      <div className="flex justify-end gap-1 mt-3">
+                        <Button variant="outline" size="sm" onClick={() => { setSelectedExam(exam); setIsResultsDialogOpen(true); }}>
+                          <FileText className="h-4 w-4 mr-1" /> Results
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => {
+                          setEditingExam(exam);
+                          setExamForm({
+                            term_id: exam.term_id, exam_type_id: exam.exam_type_id, class_id: exam.class_id,
+                            subject_id: exam.subject_id, exam_date: exam.exam_date, start_time: exam.start_time || "",
+                            end_time: exam.end_time || "", duration_minutes: exam.duration_minutes || 60,
+                            max_marks: exam.max_marks || 100, venue: exam.venue || "", instructions: exam.instructions || "",
+                          });
+                          setIsExamDialogOpen(true);
+                        }}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
             </ScrollArea>
           ) : (
             <div className="text-center py-12">

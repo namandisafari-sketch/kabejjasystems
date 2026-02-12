@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -445,67 +445,49 @@ export default function Inventory() {
               <p className="text-muted-foreground">Get started by adding your first inventory item</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Item</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead className="text-right">Stock</TableHead>
-                    <TableHead className="text-right">Cost</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredItems.map((item) => {
-                    const isLowStock = item.min_stock_level && item.stock_quantity <= item.min_stock_level;
-                    const isOutOfStock = item.stock_quantity === 0;
-                    
-                    return (
-                      <TableRow key={item.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{item.name}</div>
-                            {item.sku && <div className="text-sm text-muted-foreground">{item.sku}</div>}
-                          </div>
-                        </TableCell>
-                        <TableCell>{item.category || "-"}</TableCell>
-                        <TableCell className="text-right">
-                          {item.stock_quantity} {item.unit_of_measure || ""}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {item.cost_price ? formatCurrency(item.cost_price) : "-"}
-                        </TableCell>
-                        <TableCell>
-                          {isOutOfStock ? (
-                            <Badge variant="destructive">Out of Stock</Badge>
-                          ) : isLowStock ? (
-                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Low Stock</Badge>
-                          ) : (
-                            <Badge variant="default">In Stock</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => deleteMutation.mutate(item.id)}
-                              disabled={deleteMutation.isPending}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredItems.map((item) => {
+                const isLowStock = item.min_stock_level && item.stock_quantity <= item.min_stock_level;
+                const isOutOfStock = item.stock_quantity === 0;
+                
+                return (
+                  <Card key={item.id} className="p-4 hover:border-primary/50 transition-colors">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate">{item.name}</p>
+                        {item.sku && <p className="text-sm text-muted-foreground">{item.sku}</p>}
+                      </div>
+                      {isOutOfStock ? (
+                        <Badge variant="destructive" className="ml-2 shrink-0">Out of Stock</Badge>
+                      ) : isLowStock ? (
+                        <Badge variant="secondary" className="ml-2 shrink-0 bg-yellow-100 text-yellow-800">Low Stock</Badge>
+                      ) : (
+                        <Badge variant="default" className="ml-2 shrink-0">In Stock</Badge>
+                      )}
+                    </div>
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      <p>Category: {item.category || "-"}</p>
+                      <div className="flex justify-between">
+                        <span>Stock: {item.stock_quantity} {item.unit_of_measure || ""}</span>
+                        <span>{item.cost_price ? formatCurrency(item.cost_price) : "-"}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-1 mt-3">
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => deleteMutation.mutate(item.id)}
+                        disabled={deleteMutation.isPending}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </CardContent>

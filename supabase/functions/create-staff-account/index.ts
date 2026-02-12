@@ -69,7 +69,7 @@ serve(async (req) => {
     }
 
     // Parse request body
-    const { action, email, password, full_name, phone, branch_id, allowed_modules, user_id } = await req.json();
+    const { action, email, password, full_name, phone, branch_id, allowed_modules, user_id, staff_type } = await req.json();
 
     // Handle password reset action
     if (action === 'reset_password') {
@@ -176,6 +176,7 @@ serve(async (req) => {
         tenant_id: profile.tenant_id,
         branch_id: branch_id || null,
         allowed_modules: allowed_modules || ['dashboard'],
+        staff_type: staff_type || 'general',
       });
 
     if (permissionsError) {

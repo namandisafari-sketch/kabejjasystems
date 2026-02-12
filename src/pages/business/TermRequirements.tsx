@@ -5,7 +5,7 @@ import { useTenant } from "@/hooks/use-tenant";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -190,61 +190,39 @@ export default function TermRequirements() {
     }
 
     return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-10"></TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Description</TableHead>
-            {showPrice && <TableHead>Price (UGX)</TableHead>}
-            <TableHead>Frequency</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {items.map((req) => {
-            const FreqIcon = frequencyLabels[req.frequency]?.icon || CalendarDays;
-            return (
-              <TableRow key={req.id}>
-                <TableCell>
-                  <GripVertical className="h-4 w-4 text-muted-foreground" />
-                </TableCell>
-                <TableCell className="font-medium">{req.name}</TableCell>
-                <TableCell className="text-muted-foreground">
-                  {req.description || "-"}
-                </TableCell>
-                {showPrice && (
-                  <TableCell className="font-medium">
-                    {(req.price || 0).toLocaleString()}
-                  </TableCell>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {items.map((req) => {
+          const FreqIcon = frequencyLabels[req.frequency]?.icon || CalendarDays;
+          return (
+            <Card key={req.id} className="p-4 hover:border-primary/50 transition-colors">
+              <div className="flex items-start justify-between mb-2">
+                <p className="font-medium">{req.name}</p>
+                {req.is_mandatory ? (
+                  <Badge variant="destructive">Mandatory</Badge>
+                ) : (
+                  <Badge variant="secondary">Optional</Badge>
                 )}
-                <TableCell>
-                  <Badge variant={frequencyLabels[req.frequency]?.color as any || "default"} className="flex items-center gap-1 w-fit">
-                    <FreqIcon className="h-3 w-3" />
-                    {frequencyLabels[req.frequency]?.label || req.frequency}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {req.is_mandatory ? (
-                    <Badge variant="destructive">Mandatory</Badge>
-                  ) : (
-                    <Badge variant="secondary">Optional</Badge>
-                  )}
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button size="sm" variant="ghost" onClick={() => handleEdit(req)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(req.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+              </div>
+              <p className="text-sm text-muted-foreground mb-2">{req.description || "-"}</p>
+              <div className="flex items-center gap-2 mb-2">
+                {showPrice && <span className="text-sm font-medium">{(req.price || 0).toLocaleString()} UGX</span>}
+                <Badge variant={frequencyLabels[req.frequency]?.color as any || "default"} className="flex items-center gap-1 w-fit">
+                  <FreqIcon className="h-3 w-3" />
+                  {frequencyLabels[req.frequency]?.label || req.frequency}
+                </Badge>
+              </div>
+              <div className="flex justify-end gap-1">
+                <Button size="sm" variant="ghost" onClick={() => handleEdit(req)}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(req.id)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
     );
   };
 

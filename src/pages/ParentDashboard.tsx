@@ -41,6 +41,8 @@ import {
   Wallet,
   BookOpen,
   ShieldAlert,
+  Award,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import { DisciplineCasesView } from "@/components/parent/DisciplineCasesView";
@@ -49,6 +51,7 @@ import { NotificationCenter } from "@/components/parent/NotificationCenter";
 import { RedListBanner } from "@/components/parent/RedListBanner";
 import { ExamResultsCard } from "@/components/parent/ExamResultsCard";
 import { useParentNotifications } from "@/hooks/use-parent-notifications";
+import { ExamResultsCard } from "@/components/parent/ExamResultsCard";
 
 interface Student {
   id: string;
@@ -532,6 +535,9 @@ export default function ParentDashboard() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Exam Results Check Card - Only for secondary schools */}
+            {isSecondary && <ExamResultsCard />}
 
             {/* Main Tabs - Different based on school type */}
             <Tabs defaultValue="attendance" className="space-y-4">

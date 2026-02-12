@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CreditCard, Package, Settings, LogOut, MessageSquare, GraduationCap, Wrench, UserCheck, Calendar, Shield, Megaphone, TicketCheck, Download, Building2, ClipboardList } from "lucide-react";
+import { LayoutDashboard, Users, CreditCard, Package, Settings, LogOut, GraduationCap, Building2, Shield, Activity, Flag, PlusCircle, HardDrive, Sparkles } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,20 +21,18 @@ import kabejjaLogo from "@/assets/kabejja-logo.png";
 
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
+  { title: "Create Business", url: "/admin/create-business", icon: PlusCircle },
   { title: "Tenants", url: "/admin/tenants", icon: Users },
-  { title: "Installations", url: "/admin/installations", icon: Wrench },
-  { title: "Subscription Requests", url: "/admin/subscription-requests", icon: ClipboardList },
-  { title: "Subscriptions", url: "/admin/subscriptions", icon: Calendar },
-  { title: "Marketers", url: "/admin/marketers", icon: UserCheck },
+  { title: "Subscriptions", url: "/admin/subscriptions", icon: CreditCard },
   { title: "Payments", url: "/admin/payments", icon: CreditCard },
   { title: "Packages", url: "/admin/packages", icon: Package },
   { title: "School Packages", url: "/admin/school-packages", icon: GraduationCap },
   { title: "Rental Packages", url: "/admin/rental-packages", icon: Building2 },
-  { title: "Support Tickets", url: "/admin/support-tickets", icon: TicketCheck },
-  { title: "Announcements", url: "/admin/announcements", icon: Megaphone },
-  { title: "Bulk Actions", url: "/admin/bulk-actions", icon: Download },
+  { title: "Sponsors", url: "/admin/sponsors", icon: Sparkles },
+  { title: "System Health", url: "/admin/system-health", icon: Activity },
+  { title: "Backups", url: "/admin/backups", icon: HardDrive },
+  { title: "Feature Flags", url: "/admin/feature-flags", icon: Flag },
   { title: "Audit Logs", url: "/admin/audit-logs", icon: Shield },
-  { title: "Testimonials", url: "/admin/testimonials", icon: MessageSquare },
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 

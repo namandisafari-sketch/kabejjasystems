@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ShoppingCart, History, UtensilsCrossed, Bug, Store, Search, Plus, Minus, Trash2, CreditCard, Banknote, Loader2, User, X, Eye, Printer, RotateCcw, MoreHorizontal } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useTenant } from "@/hooks/use-tenant";
@@ -231,74 +231,63 @@ const RetailSales = ({ tenant }: { tenant: any }) => {
               <p className="text-sm text-muted-foreground mt-1">Go to POS to make your first sale</p>
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>#</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Payment</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {orders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-bold">#{order.order_number}</TableCell>
-                      <TableCell className="text-muted-foreground">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {orders.map((order) => (
+                <Card key={order.id} className="p-4 hover:border-primary/50 transition-colors">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="font-bold">#{order.order_number}</p>
+                      <p className="text-sm text-muted-foreground">
                         {new Date(order.created_at || '').toLocaleDateString()} {new Date(order.created_at || '').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </TableCell>
-                      <TableCell>{order.customers?.name || 'Walk-in'}</TableCell>
-                      <TableCell className="font-medium">{formatCurrency(order.total_amount)}</TableCell>
-                      <TableCell className="capitalize">{order.payment_method || 'Cash'}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Badge variant={order.payment_status === 'paid' ? 'secondary' : 'destructive'}>
-                            {order.payment_status || 'paid'}
-                          </Badge>
-                          {order.return_status && (
-                            <Badge variant="outline" className="text-orange-600 border-orange-600">
-                              {order.return_status === 'voided' ? 'Voided' : 
-                               order.return_status === 'exchanged' ? 'Exchanged' :
-                               order.return_status === 'full_return' ? 'Returned' : 'Partial Return'}
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => setSelectedSaleId(order.id)}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Receipt
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge variant={order.payment_status === 'paid' ? 'secondary' : 'destructive'}>
+                        {order.payment_status || 'paid'}
+                      </Badge>
+                      {order.return_status && (
+                        <Badge variant="outline" className="text-orange-600 border-orange-600">
+                          {order.return_status === 'voided' ? 'Voided' : 
+                           order.return_status === 'exchanged' ? 'Exchanged' :
+                           order.return_status === 'full_return' ? 'Returned' : 'Partial Return'}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">{order.customers?.name || 'Walk-in'}</p>
+                    <p className="font-semibold">{formatCurrency(order.total_amount)}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground capitalize mt-1">{order.payment_method || 'Cash'}</p>
+                  <div className="flex justify-end gap-1 mt-3">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setSelectedSaleId(order.id)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Receipt
+                        </DropdownMenuItem>
+                        {!order.return_status && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => setReturnSaleId(order.id)}
+                              className="text-orange-600"
+                            >
+                              <RotateCcw className="h-4 w-4 mr-2" />
+                              Return / Exchange
                             </DropdownMenuItem>
-                            {!order.return_status && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem 
-                                  onClick={() => setReturnSaleId(order.id)}
-                                  className="text-orange-600"
-                                >
-                                  <RotateCcw className="h-4 w-4 mr-2" />
-                                  Return / Exchange
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </Card>
+              ))}
             </div>
           )}
         </CardContent>
@@ -679,39 +668,37 @@ const RestaurantSales = ({ tenant }: { tenant: any }) => {
                   <p className="text-muted-foreground">No orders yet</p>
                 </div>
               ) : (
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>#</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Table</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Payment</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Time</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {orders.map((order) => (
-                        <TableRow key={order.id}>
-                          <TableCell className="font-bold">#{order.order_number}</TableCell>
-                          <TableCell className="capitalize">{order.order_type?.replace('_', ' ') || 'Counter'}</TableCell>
-                          <TableCell>{order.restaurant_tables?.table_number || '-'}</TableCell>
-                          <TableCell className="font-medium">{formatCurrency(order.total_amount)}</TableCell>
-                          <TableCell className="capitalize">{order.payment_method || 'Cash'}</TableCell>
-                          <TableCell>
-                            <Badge className={getStatusColor(order.order_status || 'pending')}>
-                              {order.order_status || 'pending'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {new Date(order.created_at || '').toLocaleTimeString()}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {orders.map((order) => (
+                    <Card key={order.id} className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-bold">#{order.order_number}</p>
+                          <p className="text-xs text-muted-foreground capitalize">{order.order_type?.replace('_', ' ') || 'Counter'}</p>
+                        </div>
+                        <Badge className={getStatusColor(order.order_status || 'pending')}>
+                          {order.order_status || 'pending'}
+                        </Badge>
+                      </div>
+                      <div className="text-sm space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Table</span>
+                          <span>{order.restaurant_tables?.table_number || '-'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Amount</span>
+                          <span className="font-medium">{formatCurrency(order.total_amount)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Payment</span>
+                          <span className="capitalize">{order.payment_method || 'Cash'}</span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {new Date(order.created_at || '').toLocaleTimeString()}
+                      </p>
+                    </Card>
+                  ))}
                 </div>
               )}
             </CardContent>

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -43,7 +43,7 @@ export default function ECDPupils() {
     queryFn: async () => {
       let query = supabase
         .from('students')
-        .select('*, school_classes(name, section, level)')
+        .select('*, school_classes!class_id(name, section, level)')
         .eq('tenant_id', tenantId)
         .order('created_at', { ascending: false });
       
@@ -303,100 +303,66 @@ export default function ECDPupils() {
               </Button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Pupil</TableHead>
-                    <TableHead>Age</TableHead>
-                    <TableHead>Class Level</TableHead>
-                    <TableHead>Parent/Guardian</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Enrolled</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredPupils.map(pupil => (
-                    <TableRow key={pupil.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          {pupil.photo_url ? (
-                            <img 
-                              src={pupil.photo_url} 
-                              alt="" 
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                              <Baby className="h-5 w-5 text-primary" />
-                            </div>
-                          )}
-                          <div>
-                            <p className="font-medium">{pupil.full_name}</p>
-                            <p className="text-xs text-muted-foreground">{pupil.admission_number}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{calculateAge(pupil.date_of_birth)}</TableCell>
-                      <TableCell>
-                        {getLevelBadge(pupil.ecd_level)}
-                        {pupil.school_classes?.name && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {pupil.school_classes.name}
-                          </p>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="text-sm">{pupil.guardian_name || pupil.parent_name}</p>
-                          <p className="text-xs text-muted-foreground">{pupil.guardian_phone || pupil.parent_phone}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(pupil.admission_status || 'pending')}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {pupil.admission_date ? format(new Date(pupil.admission_date), 'dd MMM yyyy') : '-'}
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => { setEditingPupil(pupil); setShowEnrollmentDialog(true); }}>
-                              <Edit className="h-4 w-4 mr-2" /> Edit Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setLinkingPupil(pupil)}>
-                              <Users className="h-4 w-4 mr-2" /> Link Parents
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            {pupil.admission_status === 'pending' && (
-                              <>
-                                <DropdownMenuItem onClick={() => updateStatusMutation.mutate({ pupilId: pupil.id, status: 'approved' })}>
-                                  <CheckCircle className="h-4 w-4 mr-2" /> Approve
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  className="text-red-600"
-                                  onClick={() => updateStatusMutation.mutate({ pupilId: pupil.id, status: 'rejected' })}
-                                >
-                                  <XCircle className="h-4 w-4 mr-2" /> Reject
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                            {pupil.admission_status === 'approved' && (
-                              <DropdownMenuItem onClick={() => updateStatusMutation.mutate({ pupilId: pupil.id, status: 'enrolled' })}>
-                                <UserCheck className="h-4 w-4 mr-2" /> Mark as Enrolled
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredPupils.map(pupil => (
+                <Card key={pupil.id} className="p-4 hover:border-primary/50 transition-colors">
+                  <div className="flex items-start gap-3 mb-2">
+                    {pupil.photo_url ? (
+                      <img src={pupil.photo_url} alt="" className="w-10 h-10 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <Baby className="h-5 w-5 text-primary" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">{pupil.full_name}</p>
+                      <p className="text-xs text-muted-foreground">{pupil.admission_number}</p>
+                    </div>
+                    {getStatusBadge(pupil.admission_status || 'pending')}
+                  </div>
+                  <div className="text-sm space-y-1 mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">Age:</span>
+                      <span>{calculateAge(pupil.date_of_birth)}</span>
+                      {getLevelBadge(pupil.ecd_level)}
+                    </div>
+                    <p className="text-muted-foreground">
+                      {pupil.guardian_name || pupil.parent_name} • {pupil.guardian_phone || pupil.parent_phone}
+                    </p>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full">
+                        <MoreHorizontal className="h-4 w-4 mr-2" /> Actions
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => { setEditingPupil(pupil); setShowEnrollmentDialog(true); }}>
+                        <Edit className="h-4 w-4 mr-2" /> Edit Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setLinkingPupil(pupil)}>
+                        <Users className="h-4 w-4 mr-2" /> Link Parents
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      {pupil.admission_status === 'pending' && (
+                        <>
+                          <DropdownMenuItem onClick={() => updateStatusMutation.mutate({ pupilId: pupil.id, status: 'approved' })}>
+                            <CheckCircle className="h-4 w-4 mr-2" /> Approve
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600" onClick={() => updateStatusMutation.mutate({ pupilId: pupil.id, status: 'rejected' })}>
+                            <XCircle className="h-4 w-4 mr-2" /> Reject
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      {pupil.admission_status === 'approved' && (
+                        <DropdownMenuItem onClick={() => updateStatusMutation.mutate({ pupilId: pupil.id, status: 'enrolled' })}>
+                          <UserCheck className="h-4 w-4 mr-2" /> Mark as Enrolled
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </Card>
+              ))}
             </div>
           )}
         </CardContent>

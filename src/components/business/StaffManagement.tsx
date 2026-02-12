@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, UserCircle, Edit, Trash2, Shield, Key, MessageCircle, RefreshCw } from "lucide-react";
+import { Plus, UserCircle, Edit, Trash2, Shield, Key, MessageCircle, RefreshCw, GraduationCap, Eye, EyeOff } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TeacherAssignments } from "./TeacherAssignments";
 import { z } from "zod";
 
 interface StaffManagementProps {
@@ -32,14 +35,12 @@ const staffSchema = z.object({
   allowed_modules: z.array(z.string()),
 });
 
-// Schema for updating staff (email not required)
 const staffUpdateSchema = z.object({
   phone: z.string().optional(),
   branch_id: z.string().optional(),
   allowed_modules: z.array(z.string()),
 });
 
-// Generate a strong 6-character password
 const generatePassword = (): string => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$';
   let password = '';
@@ -49,11 +50,25 @@ const generatePassword = (): string => {
   return password;
 };
 
-// Sanitize business name for email domain
 const sanitizeForEmail = (name: string): string => {
   return name.toLowerCase()
     .replace(/\s+/g, '')
     .replace(/[^a-z0-9]/g, '');
+};
+
+// Check if business type is a school
+const isSchoolBusiness = (type: string | null): boolean => {
+  return ['kindergarten', 'primary_school', 'secondary_school', 'school'].includes(type || '');
+};
+
+// School module groups for organized display
+const SCHOOL_MODULE_GROUPS = {
+  academics: ['students', 'classes', 'subjects', 'marks_entry', 'report_cards', 'exams', 'timetable'],
+  attendance: ['attendance', 'gate_checkin'],
+  admission: ['admission_links', 'admission_confirmations', 'admission_settings'],
+  finance: ['fees', 'expenses', 'accounting'],
+  operations: ['parents', 'student_cards', 'letters', 'discipline', 'requisitions'],
+  uneb: ['uneb_candidates', 'exam_sessions', 'exam_results_import', 'exam_import_permissions', 'exam_access'],
 };
 
 export function StaffManagement({ tenantId, userLimit, businessName, businessCode, businessType }: StaffManagementProps) {
@@ -68,7 +83,6 @@ export function StaffManagement({ tenantId, userLimit, businessName, businessCod
     password: string;
     phone: string;
   } | null>(null);
-  // Store recently created staff with their credentials for quick actions
   const [recentlyCreatedStaff, setRecentlyCreatedStaff] = useState<Array<{
     id: string;
     full_name: string;
@@ -77,6 +91,17 @@ export function StaffManagement({ tenantId, userLimit, businessName, businessCod
     phone: string;
     created_at: Date;
   }>>([]);
+  
+  // Staff type: 'general' or 'teacher'
+  const [staffType, setStaffType] = useState<'general' | 'teacher'>('general');
+  
+  // Teacher-specific assignments
+  const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
+  const [selectedSubjects, setSelectedSubjects] = useState<{ subjectId: string; classId?: string }[]>([]);
+  const [isClassTeacher, setIsClassTeacher] = useState(false);
+  const [classTeacherId, setClassTeacherId] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -86,7 +111,8 @@ export function StaffManagement({ tenantId, userLimit, businessName, businessCod
     allowed_modules: ['dashboard'] as string[],
   });
 
-  // Auto-generate email when username changes
+  const isSchool = isSchoolBusiness(businessType);
+
   useEffect(() => {
     if (formData.username && businessName) {
       const domain = sanitizeForEmail(businessName);
@@ -97,7 +123,6 @@ export function StaffManagement({ tenantId, userLimit, businessName, businessCod
     }
   }, [formData.username, businessName]);
 
-  // Generate password when dialog opens for new staff
   useEffect(() => {
     if (isDialogOpen && !editingStaff) {
       setGeneratedPassword(generatePassword());
@@ -110,13 +135,12 @@ export function StaffManagement({ tenantId, userLimit, businessName, businessCod
     queryFn: async () => {
       const { data, error } = await supabase
         .from('business_modules')
-        .select('code, name, is_core, applicable_business_types')
+        .select('code, name, is_core, applicable_business_types, category')
         .eq('is_active', true)
         .order('display_order');
       
       if (error) throw error;
       
-      // Filter modules based on business type
       return data.filter(module => {
         if (module.is_core) return true;
         const applicableTypes = module.applicable_business_types || [];
@@ -164,15 +188,32 @@ export function StaffManagement({ tenantId, userLimit, businessName, businessCod
 
       if (permError) throw permError;
 
-      // Get emails from auth.users via edge function or just show what we have
+      // Get teacher assignments
+      const { data: classAssignments } = await supabase
+        .from('teacher_class_assignments')
+        .select('teacher_id, class_id, is_class_teacher, school_classes(name)')
+        .eq('tenant_id', tenantId);
+
+      const { data: subjectAssignments } = await supabase
+        .from('teacher_subject_assignments')
+        .select('teacher_id, subject_id, subjects(name)')
+        .eq('tenant_id', tenantId);
+
       return profiles.map(profile => {
         const perm = permissions?.find(p => p.profile_id === profile.id);
+        const teacherClasses = classAssignments?.filter(a => a.teacher_id === profile.id) || [];
+        const teacherSubjects = subjectAssignments?.filter(a => a.teacher_id === profile.id) || [];
+        
         return {
           ...profile,
           branch_id: perm?.branch_id || null,
           branch_name: perm?.branches?.name || null,
           allowed_modules: perm?.allowed_modules || [],
           permission_id: perm?.id || null,
+          staff_type: perm?.staff_type || 'general',
+          assigned_classes: teacherClasses,
+          assigned_subjects: teacherSubjects,
+          is_class_teacher: teacherClasses.some(c => c.is_class_teacher),
         };
       });
     },
@@ -182,7 +223,6 @@ export function StaffManagement({ tenantId, userLimit, businessName, businessCod
   // Create staff account mutation
   const createStaffMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      // Check user limit before creating
       const currentTotal = 1 + (staff?.length || 0);
       if (currentTotal >= userLimit) {
         throw new Error(`You've reached your user limit of ${userLimit}. Upgrade your package to add more team members.`);
@@ -193,7 +233,6 @@ export function StaffManagement({ tenantId, userLimit, businessName, businessCod
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) throw new Error("Not authenticated");
 
-      // Call edge function to create account
       const response = await supabase.functions.invoke('create-staff-account', {
         body: {
           email: validated.email,
@@ -202,6 +241,7 @@ export function StaffManagement({ tenantId, userLimit, businessName, businessCod
           phone: validated.phone || null,
           branch_id: validated.branch_id || null,
           allowed_modules: validated.allowed_modules,
+          staff_type: staffType,
         },
       });
 
@@ -211,6 +251,43 @@ export function StaffManagement({ tenantId, userLimit, businessName, businessCod
 
       if (response.data?.error) {
         throw new Error(response.data.error);
+      }
+
+      // If teacher, save class and subject assignments
+      if (staffType === 'teacher' && response.data?.profile_id) {
+        const profileId = response.data.profile_id;
+        
+        // Save class assignments
+        if (selectedClasses.length > 0) {
+          const classInserts = selectedClasses.map(classId => ({
+            teacher_id: profileId,
+            class_id: classId,
+            tenant_id: tenantId!,
+            is_class_teacher: classId === classTeacherId,
+          }));
+          
+          await supabase.from('teacher_class_assignments').insert(classInserts);
+        }
+        
+        // Save subject assignments
+        if (selectedSubjects.length > 0) {
+          const subjectInserts = selectedSubjects.map(({ subjectId, classId }) => ({
+            teacher_id: profileId,
+            subject_id: subjectId,
+            class_id: classId || null,
+            tenant_id: tenantId!,
+          }));
+          
+          await supabase.from('teacher_subject_assignments').insert(subjectInserts);
+        }
+        
+        // Update class teacher if set
+        if (classTeacherId) {
+          await supabase
+            .from('school_classes')
+            .update({ class_teacher_id: profileId })
+            .eq('id', classTeacherId);
+        }
       }
 
       return {
@@ -226,7 +303,6 @@ export function StaffManagement({ tenantId, userLimit, businessName, businessCod
       setIsDialogOpen(false);
       resetForm();
       
-      // Store credentials to show WhatsApp option
       setCreatedStaffCredentials({
         full_name: data.full_name,
         email: data.email,
@@ -234,7 +310,6 @@ export function StaffManagement({ tenantId, userLimit, businessName, businessCod
         phone: data.phone || '',
       });
       
-      // Add to recently created staff list (keep last 5)
       setRecentlyCreatedStaff(prev => [
         {
           id: data.profile_id || crypto.randomUUID(),
@@ -261,27 +336,26 @@ export function StaffManagement({ tenantId, userLimit, businessName, businessCod
     },
   });
 
-  // Function to open WhatsApp with credentials
   const openWhatsApp = (staffInfo: { full_name: string; email: string; password: string; phone: string }) => {
-    // Clean phone number - remove spaces, dashes, and ensure it starts with country code
     const cleanPhone = staffInfo.phone
       .replace(/[\s\-\(\)]/g, '')
-      .replace(/^0/, '256'); // Replace leading 0 with Uganda country code
+      .replace(/^0/, '256');
     
     const message = encodeURIComponent(
-`🏢 *${businessName}* Staff Account
+`🏫 *${businessName}* Staff Account
 
 👤 *Name:* ${staffInfo.full_name}
 📧 *Email:* ${staffInfo.email}
 🔑 *Password:* ${staffInfo.password}
-🏷️ *Business Code:* ${businessCode}
+🏷️ *School Code:* ${businessCode}
 
 📲 *Login Link:* ${window.location.origin}/login
 
-Please login with your email and password. Use the business code if prompted.`
+⚠️ *Important:* When logging in, you MUST enter the School Code: *${businessCode}*
+
+Please login with your email, password, and school code.`
     );
     
-    // If phone number provided, open direct chat, otherwise just pre-fill message
     const whatsappUrl = cleanPhone 
       ? `https://wa.me/${cleanPhone}?text=${message}`
       : `https://wa.me/?text=${message}`;
@@ -293,7 +367,6 @@ Please login with your email and password. Use the business code if prompted.`
   const saveStaffMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       if (editingStaff) {
-        // Use update schema for editing (no email required)
         const validated = staffUpdateSchema.parse(data);
         
         const { error } = await supabase
@@ -304,6 +377,7 @@ Please login with your email and password. Use the business code if prompted.`
             tenant_id: tenantId!,
             branch_id: validated.branch_id || null,
             allowed_modules: validated.allowed_modules,
+            staff_type: staffType,
           }, {
             onConflict: 'profile_id,tenant_id',
           });
@@ -314,6 +388,50 @@ Please login with your email and password. Use the business code if prompted.`
             .from('profiles')
             .update({ phone: validated.phone })
             .eq('id', editingStaff.id);
+        }
+
+        // Update teacher assignments if teacher type
+        if (staffType === 'teacher') {
+          // Clear existing assignments
+          await supabase.from('teacher_class_assignments').delete().eq('teacher_id', editingStaff.id);
+          await supabase.from('teacher_subject_assignments').delete().eq('teacher_id', editingStaff.id);
+          
+          // Insert new class assignments
+          if (selectedClasses.length > 0) {
+            const classInserts = selectedClasses.map(classId => ({
+              teacher_id: editingStaff.id,
+              class_id: classId,
+              tenant_id: tenantId!,
+              is_class_teacher: classId === classTeacherId,
+            }));
+            await supabase.from('teacher_class_assignments').insert(classInserts);
+          }
+          
+          // Insert new subject assignments
+          if (selectedSubjects.length > 0) {
+            const subjectInserts = selectedSubjects.map(({ subjectId, classId }) => ({
+              teacher_id: editingStaff.id,
+              subject_id: subjectId,
+              class_id: classId || null,
+              tenant_id: tenantId!,
+            }));
+            await supabase.from('teacher_subject_assignments').insert(subjectInserts);
+          }
+          
+          // Update class teacher
+          if (classTeacherId) {
+            // Clear previous class teacher assignments for this teacher
+            await supabase
+              .from('school_classes')
+              .update({ class_teacher_id: null })
+              .eq('class_teacher_id', editingStaff.id);
+            
+            // Set new class teacher
+            await supabase
+              .from('school_classes')
+              .update({ class_teacher_id: editingStaff.id })
+              .eq('id', classTeacherId);
+          }
         }
       }
     },
@@ -338,6 +456,16 @@ Please login with your email and password. Use the business code if prompted.`
 
   const deletePermissionsMutation = useMutation({
     mutationFn: async (profileId: string) => {
+      // Delete teacher assignments first
+      await supabase.from('teacher_class_assignments').delete().eq('teacher_id', profileId);
+      await supabase.from('teacher_subject_assignments').delete().eq('teacher_id', profileId);
+      
+      // Clear class teacher
+      await supabase
+        .from('school_classes')
+        .update({ class_teacher_id: null })
+        .eq('class_teacher_id', profileId);
+      
       const { error } = await supabase
         .from('staff_permissions')
         .delete()
@@ -354,7 +482,6 @@ Please login with your email and password. Use the business code if prompted.`
     },
   });
 
-  // Reset password and send credentials mutation
   const [resettingStaffId, setResettingStaffId] = useState<string | null>(null);
   
   const resetPasswordMutation = useMutation({
@@ -385,7 +512,6 @@ Please login with your email and password. Use the business code if prompted.`
     },
     onSuccess: (data) => {
       setResettingStaffId(null);
-      // Open WhatsApp with new credentials
       openWhatsApp({
         full_name: data.full_name,
         email: data.email,
@@ -417,10 +543,16 @@ Please login with your email and password. Use the business code if prompted.`
       allowed_modules: ['dashboard'],
     });
     setGeneratedPassword(generatePassword());
+    setStaffType('general');
+    setSelectedClasses([]);
+    setSelectedSubjects([]);
+    setIsClassTeacher(false);
+    setClassTeacherId('');
   };
 
   const handleEdit = (member: any) => {
     setEditingStaff(member);
+    setStaffType(member.staff_type || 'general');
     setFormData({
       username: "",
       email: "",
@@ -429,6 +561,20 @@ Please login with your email and password. Use the business code if prompted.`
       branch_id: member.branch_id || "",
       allowed_modules: member.allowed_modules?.length > 0 ? member.allowed_modules : ['dashboard'],
     });
+    
+    // Load teacher assignments
+    if (member.assigned_classes) {
+      setSelectedClasses(member.assigned_classes.map((c: any) => c.class_id));
+      const classTeacher = member.assigned_classes.find((c: any) => c.is_class_teacher);
+      if (classTeacher) {
+        setClassTeacherId(classTeacher.class_id);
+        setIsClassTeacher(true);
+      }
+    }
+    if (member.assigned_subjects) {
+      setSelectedSubjects(member.assigned_subjects.map((s: any) => ({ subjectId: s.subject_id })));
+    }
+    
     setIsDialogOpen(true);
   };
 
@@ -451,13 +597,18 @@ Please login with your email and password. Use the business code if prompted.`
     });
   };
 
-  // Calculate total users: owner (1) + staff
+  // Group modules by category for school display
+  const getModulesByGroup = (group: string) => {
+    const codes = SCHOOL_MODULE_GROUPS[group as keyof typeof SCHOOL_MODULE_GROUPS] || [];
+    return availableModules.filter(m => codes.includes(m.code));
+  };
+
   const totalUsers = 1 + (staff?.length || 0);
   const canAddUser = totalUsers < userLimit;
 
   return (
     <>
-      {/* WhatsApp Share Dialog for newly created staff */}
+      {/* WhatsApp Share Dialog */}
       <Dialog open={!!createdStaffCredentials} onOpenChange={(open) => !open && setCreatedStaffCredentials(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -474,8 +625,14 @@ Please login with your email and password. Use the business code if prompted.`
               <p><strong>Name:</strong> {createdStaffCredentials?.full_name}</p>
               <p><strong>Email:</strong> {createdStaffCredentials?.email}</p>
               <p><strong>Password:</strong> {createdStaffCredentials?.password}</p>
-              <p><strong>Business Code:</strong> {businessCode}</p>
+              <p><strong>School Code:</strong> {businessCode}</p>
             </div>
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Staff must enter the school code <strong>{businessCode}</strong> when logging in.
+              </AlertDescription>
+            </Alert>
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -521,76 +678,115 @@ Please login with your email and password. Use the business code if prompted.`
                   Add Staff
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>{editingStaff ? "Edit Staff Permissions" : "Add Staff Member"}</DialogTitle>
                   <DialogDescription>
                     {editingStaff 
-                      ? "Update staff permissions and branch assignment"
+                      ? "Update staff permissions and assignments"
                       : "Create a new staff account with login credentials"
                     }
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Staff Type Selection (Schools only) */}
+                  {isSchool && (
+                    <div>
+                      <Label className="mb-2 block">Staff Type</Label>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant={staffType === 'general' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setStaffType('general')}
+                        >
+                          General Staff
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={staffType === 'teacher' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setStaffType('teacher')}
+                          className="flex items-center gap-2"
+                        >
+                          <GraduationCap className="h-4 w-4" />
+                          Teacher
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   {!editingStaff && (
                     <>
-                      <div>
-                        <Label htmlFor="full_name">Full Name *</Label>
-                        <Input
-                          id="full_name"
-                          value={formData.full_name}
-                          onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
-                          placeholder="e.g. John Doe"
-                          required
-                        />
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="full_name">Full Name *</Label>
+                          <Input
+                            id="full_name"
+                            value={formData.full_name}
+                            onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+                            placeholder="e.g. John Doe"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="username">Username *</Label>
+                          <Input
+                            id="username"
+                            value={formData.username}
+                            onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value.toLowerCase().replace(/\s+/g, '') }))}
+                            placeholder="e.g. johndoe"
+                            required
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <Label htmlFor="username">Username *</Label>
-                        <Input
-                          id="username"
-                          value={formData.username}
-                          onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value.toLowerCase().replace(/\s+/g, '') }))}
-                          placeholder="e.g. johndoe"
-                          required
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          No spaces allowed. Email will be auto-generated.
-                        </p>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="email">Generated Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={formData.email}
+                            readOnly
+                            className="bg-muted"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="phone">WhatsApp Number *</Label>
+                          <Input
+                            id="phone"
+                            value={formData.phone}
+                            onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                            placeholder="e.g. 0700123456"
+                            required
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <Label htmlFor="email">Generated Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={formData.email}
-                          readOnly
-                          className="bg-muted"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="phone">WhatsApp Number *</Label>
-                        <Input
-                          id="phone"
-                          value={formData.phone}
-                          onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                          placeholder="e.g. 0700123456 or +256700123456"
-                          required
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Used to send login credentials via WhatsApp
-                        </p>
-                      </div>
+                      
                       <div className="p-3 border rounded-md bg-muted/50">
                         <div className="flex items-center gap-2 mb-2">
                           <Key className="h-4 w-4" />
                           <Label>Generated Password</Label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Input
-                            value={generatedPassword}
-                            readOnly
-                            className="font-mono bg-background"
-                          />
+                          <div className="relative flex-1">
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              value={generatedPassword}
+                              readOnly
+                              className="font-mono bg-background pr-10"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                          </div>
                           <Button
                             type="button"
                             variant="outline"
@@ -637,28 +833,84 @@ Please login with your email and password. Use the business code if prompted.`
                     </div>
                   )}
 
+                  <Separator />
+
+                  {/* Teacher Assignments (Schools only, when teacher type selected) */}
+                  {isSchool && staffType === 'teacher' && tenantId && (
+                    <TeacherAssignments
+                      tenantId={tenantId}
+                      selectedClasses={selectedClasses}
+                      selectedSubjects={selectedSubjects}
+                      onClassesChange={setSelectedClasses}
+                      onSubjectsChange={setSelectedSubjects}
+                      isClassTeacher={isClassTeacher}
+                      onClassTeacherChange={setIsClassTeacher}
+                      classTeacherId={classTeacherId}
+                      onClassTeacherIdChange={setClassTeacherId}
+                    />
+                  )}
+
+                  {/* Module Permissions */}
                   <div>
                     <Label className="flex items-center gap-2 mb-3">
                       <Shield className="h-4 w-4" />
                       Page Access Permissions
                     </Label>
-                    <div className="grid grid-cols-2 gap-2 border rounded-md p-3">
-                      {availableModules.map((module) => (
-                        <div key={module.code} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={module.code}
-                            checked={formData.allowed_modules.includes(module.code)}
-                            onCheckedChange={() => toggleModule(module.code)}
-                            disabled={module.code === 'dashboard'}
-                          />
-                          <Label htmlFor={module.code} className="text-sm font-normal cursor-pointer">
-                            {module.name}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
+                    
+                    {isSchool ? (
+                      <Tabs defaultValue="academics" className="w-full">
+                        <TabsList className="grid w-full grid-cols-6 h-auto">
+                          <TabsTrigger value="academics" className="text-xs">Academic</TabsTrigger>
+                          <TabsTrigger value="attendance" className="text-xs">Attendance</TabsTrigger>
+                          <TabsTrigger value="admission" className="text-xs">Admission</TabsTrigger>
+                          <TabsTrigger value="finance" className="text-xs">Finance</TabsTrigger>
+                          <TabsTrigger value="operations" className="text-xs">Operations</TabsTrigger>
+                          <TabsTrigger value="uneb" className="text-xs">UNEB</TabsTrigger>
+                        </TabsList>
+                        
+                        {Object.keys(SCHOOL_MODULE_GROUPS).map(group => (
+                          <TabsContent key={group} value={group} className="border rounded-md p-3 mt-2">
+                            <div className="grid grid-cols-2 gap-2">
+                              {getModulesByGroup(group).map((module) => (
+                                <div key={module.code} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={module.code}
+                                    checked={formData.allowed_modules.includes(module.code)}
+                                    onCheckedChange={() => toggleModule(module.code)}
+                                    disabled={module.code === 'dashboard'}
+                                  />
+                                  <Label htmlFor={module.code} className="text-sm font-normal cursor-pointer">
+                                    {module.name}
+                                  </Label>
+                                </div>
+                              ))}
+                              {getModulesByGroup(group).length === 0 && (
+                                <p className="text-sm text-muted-foreground col-span-2">No modules in this category</p>
+                              )}
+                            </div>
+                          </TabsContent>
+                        ))}
+                      </Tabs>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2 border rounded-md p-3">
+                        {availableModules.map((module) => (
+                          <div key={module.code} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={module.code}
+                              checked={formData.allowed_modules.includes(module.code)}
+                              onCheckedChange={() => toggleModule(module.code)}
+                              disabled={module.code === 'dashboard'}
+                            />
+                            <Label htmlFor={module.code} className="text-sm font-normal cursor-pointer">
+                              {module.name}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
                     <p className="text-xs text-muted-foreground mt-1">
-                      Dashboard is always accessible
+                      Dashboard is always accessible. {staffType === 'teacher' && 'Teachers are automatically restricted to their assigned classes.'}
                     </p>
                   </div>
 
@@ -719,7 +971,7 @@ Please login with your email and password. Use the business code if prompted.`
                       <p className="font-medium">{recentStaff.full_name}</p>
                       <p className="text-sm text-muted-foreground">{recentStaff.email}</p>
                       <p className="text-xs text-muted-foreground font-mono">
-                        Password: {recentStaff.password}
+                        Password: {recentStaff.password} | Code: {businessCode}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -728,7 +980,7 @@ Please login with your email and password. Use the business code if prompted.`
                         variant="outline"
                         onClick={() => {
                           navigator.clipboard.writeText(
-                            `Email: ${recentStaff.email}\nPassword: ${recentStaff.password}\nBusiness Code: ${businessCode}`
+                            `Email: ${recentStaff.email}\nPassword: ${recentStaff.password}\nSchool Code: ${businessCode}`
                           );
                           toast({
                             title: "Copied",
@@ -779,19 +1031,57 @@ Please login with your email and password. Use the business code if prompted.`
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Branch</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Assignments</TableHead>
                     <TableHead>Page Access</TableHead>
-                    <TableHead>Role</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {staff.map((member) => (
                     <TableRow key={member.id}>
-                      <TableCell className="font-medium">{member.full_name || 'N/A'}</TableCell>
-                      <TableCell>{member.phone || '-'}</TableCell>
-                      <TableCell>{member.branch_name || 'All branches'}</TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{member.full_name || 'N/A'}</p>
+                          <p className="text-xs text-muted-foreground">{member.phone || '-'}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={member.staff_type === 'teacher' ? 'default' : 'secondary'} className="capitalize">
+                          {member.staff_type === 'teacher' ? (
+                            <><GraduationCap className="h-3 w-3 mr-1" /> Teacher</>
+                          ) : (
+                            member.role
+                          )}
+                        </Badge>
+                        {member.is_class_teacher && (
+                          <Badge variant="outline" className="ml-1 text-xs">CT</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {member.assigned_classes?.slice(0, 2).map((c: any) => (
+                            <Badge key={c.class_id} variant="outline" className="text-xs">
+                              {c.school_classes?.name}
+                            </Badge>
+                          ))}
+                          {(member.assigned_classes?.length || 0) > 2 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{member.assigned_classes.length - 2}
+                            </Badge>
+                          )}
+                          {member.assigned_subjects?.slice(0, 1).map((s: any) => (
+                            <Badge key={s.subject_id} variant="secondary" className="text-xs">
+                              {s.subjects?.name}
+                            </Badge>
+                          ))}
+                          {(member.assigned_subjects?.length || 0) > 1 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{member.assigned_subjects.length - 1} subj
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {member.allowed_modules?.length > 0 ? (
@@ -809,11 +1099,6 @@ Please login with your email and password. Use the business code if prompted.`
                             </Badge>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="capitalize">
-                          {member.role}
-                        </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <Button

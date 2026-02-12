@@ -308,8 +308,8 @@ const ExamResultsLookup = () => {
         {/* Footer Info */}
         <div className="mt-8 text-center text-sm text-gray-600">
           <p>
-            This is an official UNEB exam results portal. Your data is secure and
-            confidential.
+            <strong>Note:</strong> This is <em>not</em> an official UNEB portal. It is a school 
+            management service by TennaHub that displays results uploaded by your school.
           </p>
         </div>
       </div>

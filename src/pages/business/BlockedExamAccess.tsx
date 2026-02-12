@@ -69,7 +69,7 @@ const BlockedExamAccess = () => {
           .eq('id', session.user.id)
           .single();
 
-        if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
+        if (!profile || !['admin', 'superadmin', 'tenant_owner'].includes(profile.role)) {
           toast({
             title: "Unauthorized",
             description: "Only school administrators can manage exam access blocks",

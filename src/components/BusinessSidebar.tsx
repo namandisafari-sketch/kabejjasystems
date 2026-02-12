@@ -3,7 +3,7 @@ import {
   QrCode, Wallet, Bed, CalendarDays, Package, UtensilsCrossed, Receipt, ChefHat,
   Scissors, Calendar, Pill, HeartPulse, Wrench, Cog, PackageMinus, Truck, Tags, AlertTriangle, 
   ClipboardList, CreditCard, Wallet2, Sparkles, GraduationCap, ClipboardCheck, Award, BookOpen, FileText, ScanLine,
-  ShieldAlert, Building2, DoorOpen, Calculator, Home, Upload, Shield
+  ShieldAlert, Building2, DoorOpen, Calculator, Home, Upload, Shield, Link, UserPlus
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
@@ -73,6 +73,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Home,
   Upload,
   Shield,
+  Link,
+  UserPlus,
 };
 
 export function BusinessSidebar({ businessName, businessType, devMode }: { businessName?: string; businessType?: string; devMode?: boolean }) {

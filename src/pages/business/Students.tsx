@@ -5,13 +5,13 @@ import { useTenant } from "@/hooks/use-tenant";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Pencil, Trash2, Users, Eye, UserPlus } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Users, Eye, UserPlus, RotateCcw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { StudentEnrollmentForm } from "@/components/students/StudentEnrollmentForm";
+import { ReturningStudentDialog } from "@/components/students/ReturningStudentDialog";
 
 interface Student {
   id: string;
@@ -35,8 +35,10 @@ export default function Students() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isReturningDialogOpen, setIsReturningDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<any>(null);
   const [viewingStudent, setViewingStudent] = useState<any>(null);
+  const [isReEnrollment, setIsReEnrollment] = useState(false);
 
   const { data: students = [], isLoading } = useQuery({
     queryKey: ['students', tenantData?.tenantId],
@@ -44,7 +46,7 @@ export default function Students() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('students')
-        .select('*, school_classes(name, level, grade)')
+        .select('*, school_classes!class_id(name, level, grade)')
         .eq('tenant_id', tenantData!.tenantId)
         .order('full_name');
       if (error) throw error;
@@ -117,6 +119,7 @@ export default function Students() {
       toast({ title: "Student enrolled successfully" });
       setIsDialogOpen(false);
       setEditingStudent(null);
+      setIsReEnrollment(false);
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -196,9 +199,12 @@ export default function Students() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['students'] });
       queryClient.invalidateQueries({ queryKey: ['student-fees'] });
-      toast({ title: "Student updated successfully" });
+      toast({ 
+        title: isReEnrollment ? "Student re-enrolled successfully" : "Student updated successfully" 
+      });
       setIsDialogOpen(false);
       setEditingStudent(null);
+      setIsReEnrollment(false);
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -236,7 +242,7 @@ export default function Students() {
   const handleView = async (student: Student) => {
     const { data } = await supabase
       .from('students')
-      .select('*, school_classes(name, level, grade)')
+      .select('*, school_classes!class_id(name, level, grade)')
       .eq('id', student.id)
       .single();
     
@@ -250,7 +256,22 @@ export default function Students() {
     requirements: any[], 
     selectedFees: { fee_id: string; amount: number }[] = []
   ) => {
-    if (editingStudent?.id) {
+    // For re-enrollment, we update the existing student to reactivate them
+    if (editingStudent?.id && isReEnrollment) {
+      // Reactivate the student with new class
+      updateMutation.mutate({ 
+        id: editingStudent.id, 
+        formData: {
+          ...formData,
+          status: 'active',
+          is_active: true,
+          // Keep their previous index number in a field for reference
+          previous_uneb_index: editingStudent.previous_index_number || null,
+        }, 
+        requirements, 
+        selectedFees 
+      });
+    } else if (editingStudent?.id) {
       updateMutation.mutate({ id: editingStudent.id, formData, requirements, selectedFees });
     } else {
       createMutation.mutate({ formData, requirements, selectedFees });
@@ -263,6 +284,23 @@ export default function Students() {
     s.guardian_name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Handle re-enrollment of a returning student
+  const handleReEnrollStudent = (formerStudent: any) => {
+    setIsReturningDialogOpen(false);
+    setIsReEnrollment(true);
+    // Pre-fill the form with student data, update status to reactivate
+    setEditingStudent({
+      ...formerStudent,
+      // Clear class_id so they must select new class (e.g., S5 for A-Level)
+      class_id: '',
+      // Keep their UCE index number for reference
+      previous_index_number: formerStudent.previous_index_number || '',
+      // Mark as returning for special handling
+      _isReturning: true,
+    });
+    setIsDialogOpen(true);
+  };
+
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
       <div className="flex items-center justify-between">
@@ -270,27 +308,70 @@ export default function Students() {
           <h1 className="text-2xl font-bold text-foreground">Students</h1>
           <p className="text-muted-foreground">Manage student enrollment and records</p>
         </div>
-        <Button onClick={() => { setEditingStudent(null); setIsDialogOpen(true); }}>
-          <UserPlus className="h-4 w-4 mr-2" />
-          Enroll Student
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setIsReturningDialogOpen(true)}>
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Re-enroll Returning
+          </Button>
+          <Button onClick={() => { setEditingStudent(null); setIsReEnrollment(false); setIsDialogOpen(true); }}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Enroll Student
+          </Button>
+        </div>
       </div>
 
+      {/* Returning Student Selection Dialog */}
+      {tenantData?.tenantId && (
+        <ReturningStudentDialog
+          open={isReturningDialogOpen}
+          onOpenChange={setIsReturningDialogOpen}
+          tenantId={tenantData.tenantId}
+          onSelectStudent={handleReEnrollStudent}
+        />
+      )}
+
       {/* Enrollment Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        if (!open) {
+          setEditingStudent(null);
+          setIsReEnrollment(false);
+        }
+      }}>
         <DialogContent className="max-w-4xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5" />
-              {editingStudent ? "Edit Student" : "Student Enrollment Form"}
+              {isReEnrollment ? (
+                <>
+                  <RotateCcw className="h-5 w-5" />
+                  Re-enroll Returning Student
+                </>
+              ) : (
+                <>
+                  <UserPlus className="h-5 w-5" />
+                  {editingStudent ? "Edit Student" : "Student Enrollment Form"}
+                </>
+              )}
             </DialogTitle>
+            {isReEnrollment && editingStudent && (
+              <p className="text-sm text-muted-foreground">
+                Re-enrolling <strong>{editingStudent.full_name}</strong>. 
+                {editingStudent.previous_index_number && (
+                  <> Previous UCE Index: <strong>{editingStudent.previous_index_number}</strong></>
+                )}
+              </p>
+            )}
           </DialogHeader>
           {tenantData?.tenantId && (
             <StudentEnrollmentForm
               tenantId={tenantData.tenantId}
               initialData={editingStudent || undefined}
               onSubmit={handleFormSubmit}
-              onCancel={() => { setIsDialogOpen(false); setEditingStudent(null); }}
+              onCancel={() => { 
+                setIsDialogOpen(false); 
+                setEditingStudent(null); 
+                setIsReEnrollment(false);
+              }}
               isSubmitting={createMutation.isPending || updateMutation.isPending}
             />
           )}
@@ -422,45 +503,36 @@ export default function Students() {
               </Button>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Admission No.</TableHead>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Guardian</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredStudents.map(student => (
-                  <TableRow key={student.id}>
-                    <TableCell className="font-medium">{student.full_name}</TableCell>
-                    <TableCell>{student.admission_number || "-"}</TableCell>
-                    <TableCell>
-                      {student.school_classes 
-                        ? `${student.school_classes.name}`
-                        : "-"
-                      }
-                    </TableCell>
-                    <TableCell>{student.guardian_name || student.parent_name || "-"}</TableCell>
-                    <TableCell>{student.guardian_phone || student.parent_phone || "-"}</TableCell>
-                    <TableCell className="text-right">
-                      <Button size="sm" variant="ghost" onClick={() => handleView(student)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => handleEdit(student)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(student.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredStudents.map(student => (
+                <Card key={student.id} className="p-4 hover:border-primary/50 transition-colors">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">{student.full_name}</p>
+                      <p className="text-sm text-muted-foreground">{student.admission_number || "No Adm. No."}</p>
+                    </div>
+                    {student.school_classes && (
+                      <Badge variant="secondary" className="ml-2 shrink-0">{student.school_classes.name}</Badge>
+                    )}
+                  </div>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p>Guardian: {student.guardian_name || student.parent_name || "-"}</p>
+                    <p>Phone: {student.guardian_phone || student.parent_phone || "-"}</p>
+                  </div>
+                  <div className="flex justify-end gap-1 mt-3">
+                    <Button size="sm" variant="ghost" onClick={() => handleView(student)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleEdit(student)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(student.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,10 +18,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Upload, AlertCircle, CheckCircle, Trash2, Plus } from "lucide-react";
+import { Upload, AlertCircle, CheckCircle, Trash2, Search, Users, GraduationCap } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { useTenant } from "@/hooks/use-tenant";
+import { useQuery } from "@tanstack/react-query";
 
 interface ExamSession {
   id: string;
@@ -30,19 +34,22 @@ interface ExamSession {
   session_name: string;
 }
 
-interface StudentResult {
+interface StudentCandidate {
   id: string;
-  indexNumber: string;
-  studentName: string;
-  englishLanguage: string;
-  mathematics: string;
-  physics: string;
-  chemistry: string;
-  biology: string;
-  aggregateGrade: string;
+  student_id: string;
+  index_number: string | null;
+  exam_type: 'UCE' | 'UACE';
+  student: {
+    id: string;
+    full_name: string;
+    admission_number: string;
+    class: { name: string } | null;
+  };
+  selected?: boolean;
+  grades: Record<string, string>;
 }
 
-const UNEB_SUBJECTS = [
+const UNEB_SUBJECTS_UCE = [
   "English Language",
   "Mathematics",
   "Physics",
@@ -50,40 +57,42 @@ const UNEB_SUBJECTS = [
   "Biology",
   "History",
   "Geography",
-  "Christian Religious Education",
-  "Luganda",
-  "Art & Design",
+  "CRE",
   "Agriculture",
-  "Political Education",
+];
+
+const UNEB_SUBJECTS_UACE = [
+  "General Paper",
+  "Subsidiary ICT",
+  "Subsidiary Math",
+  "Physics",
+  "Chemistry",
+  "Biology",
+  "Economics",
+  "Geography",
+  "History",
+  "Entrepreneurship",
 ];
 
 const ImportExamResults = () => {
   const { toast } = useToast();
+  const { data: tenantData } = useTenant();
+  const tenantId = tenantData?.tenantId;
+  
   const [sessions, setSessions] = useState<ExamSession[]>([]);
   const [selectedSession, setSelectedSession] = useState("");
-  const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
-  const [students, setStudents] = useState<StudentResult[]>([
-    { id: "1", indexNumber: "", studentName: "", englishLanguage: "", mathematics: "", physics: "", chemistry: "", biology: "", aggregateGrade: "" }
-  ]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCandidates, setSelectedCandidates] = useState<StudentCandidate[]>([]);
   const [isTenant, setIsTenant] = useState(false);
+  const [examType, setExamType] = useState<'UCE' | 'UACE'>('UCE');
 
   // Check authorization
   useEffect(() => {
     const checkAccess = async () => {
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          toast({
-            title: "Authentication Error",
-            description: "Failed to get session: " + sessionError.message,
-            variant: "destructive",
-          });
-          return;
-        }
-
+        const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           toast({
             title: "Unauthorized",
@@ -93,44 +102,23 @@ const ImportExamResults = () => {
           return;
         }
 
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile } = await supabase
           .from('profiles')
           .select('role, tenant_id, permissions')
           .eq('id', session.user.id)
           .single();
 
-        if (profileError) {
-          console.error('Profile fetch error:', profileError);
-          toast({
-            title: "Database Error",
-            description: "Failed to load profile: " + profileError.message + ". Please try refreshing the page.",
-            variant: "destructive",
-          });
-          return;
-        }
+        if (!profile) return;
 
-        if (!profile) {
-          console.error('Profile not found for user:', session.user.id);
-          toast({
-            title: "Profile Not Found",
-            description: "Your profile does not exist. Please contact support.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        console.log('User profile loaded:', { role: profile.role, hasPermission: profile.permissions?.exam_import_access });
-
-        // Allow if: tenant_owner, superadmin, or granted exam_import permission
         const canImport = 
           profile.role === 'tenant_owner' || 
           profile.role === 'superadmin' ||
-          (profile.permissions && profile.permissions.exam_import_access === true);
+          (profile.permissions && (profile.permissions as any).exam_import_access === true);
 
         if (!canImport) {
           toast({
             title: "Unauthorized",
-            description: "Only the school owner or authorized staff can import results. Ask your school owner to grant you access.",
+            description: "Only the school owner or authorized staff can import results.",
             variant: "destructive",
           });
           return;
@@ -158,68 +146,108 @@ const ImportExamResults = () => {
         setSessions(data || []);
       } catch (error) {
         console.error('Error fetching sessions:', error);
-        toast({
-          title: "Error",
-          description: "Could not load exam sessions",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchSessions();
-  }, [toast]);
+  }, []);
 
-  const addStudent = () => {
-    const newId = Math.max(...students.map(s => parseInt(s.id)), 0) + 1;
-    setStudents([...students, { 
-      id: newId.toString(), 
-      indexNumber: "", 
-      studentName: "", 
-      englishLanguage: "", 
-      mathematics: "", 
-      physics: "", 
-      chemistry: "", 
-      biology: "", 
-      aggregateGrade: "" 
-    }]);
-  };
+  // Fetch UNEB candidates (registered students)
+  const { data: candidates = [], isLoading: loadingCandidates } = useQuery({
+    queryKey: ['uneb-candidates-for-import', tenantId, examType],
+    enabled: !!tenantId && currentStep >= 2,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('uneb_candidate_registrations')
+        .select(`
+          id,
+          student_id,
+          index_number,
+          exam_type,
+          student:students(
+            id,
+            full_name,
+            admission_number,
+            class:school_classes!class_id(name)
+          )
+        `)
+        .eq('tenant_id', tenantId!)
+        .eq('exam_type', examType)
+        .eq('registration_status', 'registered')
+        .order('created_at', { ascending: false });
 
-  const removeStudent = (id: string) => {
-    if (students.length === 1) {
-      toast({
-        title: "Cannot remove",
-        description: "You must have at least one student",
-        variant: "destructive",
-      });
-      return;
+      if (error) throw error;
+      return (data || []).map(c => ({
+        ...c,
+        selected: false,
+        grades: {},
+      })) as StudentCandidate[];
+    },
+  });
+
+  // Filter candidates by search
+  const filteredCandidates = useMemo(() => {
+    if (!searchTerm) return candidates;
+    const search = searchTerm.toLowerCase();
+    return candidates.filter(c => 
+      c.student?.full_name?.toLowerCase().includes(search) ||
+      c.student?.admission_number?.toLowerCase().includes(search) ||
+      c.index_number?.toLowerCase().includes(search)
+    );
+  }, [candidates, searchTerm]);
+
+  const subjects = examType === 'UCE' ? UNEB_SUBJECTS_UCE : UNEB_SUBJECTS_UACE;
+
+  const toggleCandidateSelection = (candidateId: string) => {
+    const candidate = candidates.find(c => c.id === candidateId);
+    if (!candidate) return;
+
+    const isCurrentlySelected = selectedCandidates.some(sc => sc.id === candidateId);
+    
+    if (isCurrentlySelected) {
+      setSelectedCandidates(prev => prev.filter(sc => sc.id !== candidateId));
+    } else {
+      setSelectedCandidates(prev => [...prev, { ...candidate, grades: {} }]);
     }
-    setStudents(students.filter(s => s.id !== id));
   };
 
-  const updateStudent = (id: string, field: keyof StudentResult, value: string) => {
-    setStudents(students.map(s => 
-      s.id === id ? { ...s, [field]: value } : s
-    ));
+  const selectAllVisible = () => {
+    const visibleIds = new Set(filteredCandidates.map(c => c.id));
+    const newSelections = filteredCandidates.filter(
+      c => !selectedCandidates.some(sc => sc.id === c.id)
+    ).map(c => ({ ...c, grades: {} }));
+    
+    setSelectedCandidates(prev => [...prev, ...newSelections]);
+  };
+
+  const deselectAll = () => {
+    setSelectedCandidates([]);
+  };
+
+  const updateGrade = (candidateId: string, subject: string, grade: string) => {
+    setSelectedCandidates(prev => 
+      prev.map(c => 
+        c.id === candidateId 
+          ? { ...c, grades: { ...c.grades, [subject]: grade } }
+          : c
+      )
+    );
   };
 
   const handleImport = async () => {
-    // Validate
-    const emptyFields = students.filter(s => !s.indexNumber || !s.studentName);
-    if (emptyFields.length > 0) {
-      toast({
-        title: "Missing Required Fields",
-        description: `Please fill in Index Number and Student Name for all students`,
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (!selectedSession) {
       toast({
         title: "Required",
         description: "Please select an exam session",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedCandidates.length === 0) {
+      toast({
+        title: "No Students Selected",
+        description: "Please select at least one student to import results for",
         variant: "destructive",
       });
       return;
@@ -240,39 +268,24 @@ const ImportExamResults = () => {
       if (!profile?.tenant_id) throw new Error("School not found");
 
       // Convert grades to subjects array format
-      const resultsToInsert = students.map((result) => {
-        // Build subjects array with entered grades
-        const subjectsArray = [];
-        if (result.englishLanguage) {
-          subjectsArray.push({ name: "English Language", grade: result.englishLanguage });
-        }
-        if (result.mathematics) {
-          subjectsArray.push({ name: "Mathematics", grade: result.mathematics });
-        }
-        if (result.physics) {
-          subjectsArray.push({ name: "Physics", grade: result.physics });
-        }
-        if (result.chemistry) {
-          subjectsArray.push({ name: "Chemistry", grade: result.chemistry });
-        }
-        if (result.biology) {
-          subjectsArray.push({ name: "Biology", grade: result.biology });
-        }
+      const resultsToInsert = selectedCandidates.map((candidate) => {
+        const subjectsArray = Object.entries(candidate.grades)
+          .filter(([_, grade]) => grade && grade !== '')
+          .map(([name, grade]) => ({ name, grade }));
 
         return {
-          index_number: result.indexNumber.toUpperCase(),
+          index_number: candidate.index_number?.toUpperCase() || candidate.student?.admission_number?.toUpperCase(),
           exam_session_id: selectedSession,
-          student_name: result.studentName,
-          school_name: result.studentName, // Using student name as placeholder
+          student_name: candidate.student?.full_name,
+          school_name: candidate.student?.full_name,
           school_id: profile.tenant_id,
           subjects: subjectsArray,
           total_points: subjectsArray.length,
-          aggregate_grade: result.aggregateGrade || "Ungraded",
+          aggregate_grade: 'Pending',
           result_status: 'published',
         };
       });
 
-      // Insert results
       const { data, error } = await supabase
         .from('exam_results')
         .insert(resultsToInsert)
@@ -285,8 +298,8 @@ const ImportExamResults = () => {
         description: `Imported ${data?.length || 0} exam results`,
       });
 
-      // Clear form and reset to step 1
-      setStudents([{ id: "1", indexNumber: "", studentName: "", englishLanguage: "", mathematics: "", physics: "", chemistry: "", biology: "", aggregateGrade: "" }]);
+      // Reset form
+      setSelectedCandidates([]);
       setSelectedSession("");
       setCurrentStep(1);
     } catch (error: any) {
@@ -309,7 +322,7 @@ const ImportExamResults = () => {
             <CardTitle>Unauthorized</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               You don't have permission to import exam results.
             </p>
           </CardContent>
@@ -322,22 +335,22 @@ const ImportExamResults = () => {
     <div className="space-y-6 p-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Import Exam Results</h1>
-        <p className="text-gray-600 mt-2">
-          Add student exam results easily using our simple table form
+        <h1 className="text-3xl font-bold">Import Exam Results</h1>
+        <p className="text-muted-foreground mt-2">
+          Add exam results for registered UNEB candidates from your school
         </p>
       </div>
 
       {/* Step Indicator */}
       <div className="flex gap-4 mb-8">
-        <div className={`flex-1 p-4 rounded-lg text-center font-semibold ${currentStep === 1 ? "bg-blue-100 text-blue-900" : "bg-gray-100 text-gray-600"}`}>
+        <div className={`flex-1 p-4 rounded-lg text-center font-semibold ${currentStep === 1 ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
           Step 1: Select Session
         </div>
-        <div className={`flex-1 p-4 rounded-lg text-center font-semibold ${currentStep === 2 ? "bg-blue-100 text-blue-900" : "bg-gray-100 text-gray-600"}`}>
-          Step 2: Enter Results
+        <div className={`flex-1 p-4 rounded-lg text-center font-semibold ${currentStep === 2 ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+          Step 2: Select Students
         </div>
-        <div className={`flex-1 p-4 rounded-lg text-center font-semibold ${currentStep === 3 ? "bg-blue-100 text-blue-900" : "bg-gray-100 text-gray-600"}`}>
-          Step 3: Review & Import
+        <div className={`flex-1 p-4 rounded-lg text-center font-semibold ${currentStep === 3 ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+          Step 3: Enter Results
         </div>
       </div>
 
@@ -345,188 +358,244 @@ const ImportExamResults = () => {
       {currentStep === 1 && (
         <Card>
           <CardHeader>
-            <CardTitle>Step 1: Select Exam Session</CardTitle>
+            <CardTitle>Step 1: Select Exam Session & Type</CardTitle>
             <CardDescription>
-              Choose which exam session these results belong to
+              Choose which exam session and type these results belong to
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div>
-              <Label htmlFor="session">Exam Session *</Label>
-              <Select value={selectedSession} onValueChange={setSelectedSession}>
-                <SelectTrigger id="session">
-                  <SelectValue placeholder="Select exam session..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {sessions.length === 0 ? (
-                    <SelectItem value="none" disabled>
-                      No exam sessions available
-                    </SelectItem>
-                  ) : (
-                    sessions.map((session) => (
-                      <SelectItem key={session.id} value={session.id}>
-                        {session.year} {session.level} - {session.session_name}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="session">Exam Session *</Label>
+                <Select value={selectedSession} onValueChange={setSelectedSession}>
+                  <SelectTrigger id="session">
+                    <SelectValue placeholder="Select exam session..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sessions.length === 0 ? (
+                      <SelectItem value="none" disabled>
+                        No exam sessions available
                       </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-              {sessions.length === 0 && (
-                <Alert className="mt-4">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    No exam sessions available. Superadmin needs to create sessions first.
-                  </AlertDescription>
-                </Alert>
-              )}
+                    ) : (
+                      sessions.map((session) => (
+                        <SelectItem key={session.id} value={session.id}>
+                          {session.year} {session.level} - {session.session_name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label>Exam Type *</Label>
+                <Select value={examType} onValueChange={(v) => setExamType(v as 'UCE' | 'UACE')}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="UCE">UCE (O-Level)</SelectItem>
+                    <SelectItem value="UACE">UACE (A-Level)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+
+            {sessions.length === 0 && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  No exam sessions available. Please create one in Exam Sessions first.
+                </AlertDescription>
+              </Alert>
+            )}
 
             <Button 
               onClick={() => selectedSession && setCurrentStep(2)}
               disabled={!selectedSession}
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full"
             >
-              Continue to Results Entry
+              Continue to Student Selection
             </Button>
           </CardContent>
         </Card>
       )}
 
-      {/* Step 2: Enter Results */}
+      {/* Step 2: Select Students from UNEB Candidates */}
       {currentStep === 2 && (
         <Card>
           <CardHeader>
-            <CardTitle>Step 2: Enter Student Results</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Step 2: Select Students
+            </CardTitle>
             <CardDescription>
-              Fill in the exam results for your students. You can add more rows as needed.
+              Select registered {examType} candidates to enter their results. 
+              Only students who have been registered as UNEB candidates will appear here.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="overflow-x-auto">
+          <CardContent className="space-y-4">
+            {/* Search and filters */}
+            <div className="flex gap-4 items-center">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name, admission no, or index no..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Button variant="outline" size="sm" onClick={selectAllVisible}>
+                Select All
+              </Button>
+              <Button variant="outline" size="sm" onClick={deselectAll}>
+                Deselect All
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">
+                {selectedCandidates.length} selected
+              </Badge>
+              <Badge variant="outline">
+                {filteredCandidates.length} candidates found
+              </Badge>
+            </div>
+
+            {loadingCandidates ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Loading registered candidates...
+              </div>
+            ) : filteredCandidates.length === 0 ? (
+              <div className="text-center py-8">
+                <GraduationCap className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No registered {examType} candidates found.</p>
+                <p className="text-sm text-muted-foreground">
+                  Students must be registered as UNEB candidates first.
+                </p>
+              </div>
+            ) : (
+              <div className="border rounded-lg max-h-96 overflow-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12"></TableHead>
+                      <TableHead>Student Name</TableHead>
+                      <TableHead>Admission No.</TableHead>
+                      <TableHead>Index No.</TableHead>
+                      <TableHead>Class</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredCandidates.map((candidate) => (
+                      <TableRow 
+                        key={candidate.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => toggleCandidateSelection(candidate.id)}
+                      >
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedCandidates.some(sc => sc.id === candidate.id)}
+                            onCheckedChange={() => toggleCandidateSelection(candidate.id)}
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {candidate.student?.full_name}
+                        </TableCell>
+                        <TableCell>{candidate.student?.admission_number}</TableCell>
+                        <TableCell>
+                          {candidate.index_number || <span className="text-muted-foreground">-</span>}
+                        </TableCell>
+                        <TableCell>{candidate.student?.class?.name || '-'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            <div className="flex gap-2 justify-between pt-4">
+              <Button variant="outline" onClick={() => setCurrentStep(1)}>
+                Back
+              </Button>
+              <Button 
+                onClick={() => setCurrentStep(3)}
+                disabled={selectedCandidates.length === 0}
+              >
+                Continue to Enter Results ({selectedCandidates.length} selected)
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 3: Enter Results */}
+      {currentStep === 3 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Step 3: Enter Results for Selected Students</CardTitle>
+            <CardDescription>
+              Enter grades for each subject. Scroll horizontally to see all subjects.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="overflow-x-auto border rounded-lg">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Index Number*</TableHead>
-                    <TableHead>Student Name*</TableHead>
-                    <TableHead>English</TableHead>
-                    <TableHead>Math</TableHead>
-                    <TableHead>Physics</TableHead>
-                    <TableHead>Chemistry</TableHead>
-                    <TableHead>Biology</TableHead>
-                    <TableHead>Grade</TableHead>
-                    <TableHead>Action</TableHead>
+                    <TableHead className="sticky left-0 bg-background z-10 min-w-[200px]">Student</TableHead>
+                    <TableHead className="min-w-[100px]">Index No.</TableHead>
+                    {subjects.map(subject => (
+                      <TableHead key={subject} className="min-w-[100px] text-center">
+                        {subject.length > 12 ? subject.substring(0, 12) + '...' : subject}
+                      </TableHead>
+                    ))}
+                    <TableHead className="w-12">Remove</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {students.map((student) => (
-                    <TableRow key={student.id}>
-                      <TableCell>
-                        <Input
-                          placeholder="e.g., U0000/001"
-                          value={student.indexNumber}
-                          onChange={(e) => updateStudent(student.id, "indexNumber", e.target.value)}
-                          className="text-xs"
-                        />
+                  {selectedCandidates.map((candidate) => (
+                    <TableRow key={candidate.id}>
+                      <TableCell className="sticky left-0 bg-background z-10 font-medium">
+                        {candidate.student?.full_name}
                       </TableCell>
-                      <TableCell>
-                        <Input
-                          placeholder="e.g., John Doe"
-                          value={student.studentName}
-                          onChange={(e) => updateStudent(student.id, "studentName", e.target.value)}
-                          className="text-xs"
-                        />
+                      <TableCell className="text-muted-foreground">
+                        {candidate.index_number || candidate.student?.admission_number}
                       </TableCell>
-                      <TableCell>
-                        <Select value={student.englishLanguage} onValueChange={(v) => updateStudent(student.id, "englishLanguage", v)}>
-                          <SelectTrigger className="text-xs">
-                            <SelectValue placeholder="Grade" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="A">A</SelectItem>
-                            <SelectItem value="B">B</SelectItem>
-                            <SelectItem value="C">C</SelectItem>
-                            <SelectItem value="D">D</SelectItem>
-                            <SelectItem value="E">E</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Select value={student.mathematics} onValueChange={(v) => updateStudent(student.id, "mathematics", v)}>
-                          <SelectTrigger className="text-xs">
-                            <SelectValue placeholder="Grade" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="A">A</SelectItem>
-                            <SelectItem value="B">B</SelectItem>
-                            <SelectItem value="C">C</SelectItem>
-                            <SelectItem value="D">D</SelectItem>
-                            <SelectItem value="E">E</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Select value={student.physics} onValueChange={(v) => updateStudent(student.id, "physics", v)}>
-                          <SelectTrigger className="text-xs">
-                            <SelectValue placeholder="Grade" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="A">A</SelectItem>
-                            <SelectItem value="B">B</SelectItem>
-                            <SelectItem value="C">C</SelectItem>
-                            <SelectItem value="D">D</SelectItem>
-                            <SelectItem value="E">E</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Select value={student.chemistry} onValueChange={(v) => updateStudent(student.id, "chemistry", v)}>
-                          <SelectTrigger className="text-xs">
-                            <SelectValue placeholder="Grade" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="A">A</SelectItem>
-                            <SelectItem value="B">B</SelectItem>
-                            <SelectItem value="C">C</SelectItem>
-                            <SelectItem value="D">D</SelectItem>
-                            <SelectItem value="E">E</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Select value={student.biology} onValueChange={(v) => updateStudent(student.id, "biology", v)}>
-                          <SelectTrigger className="text-xs">
-                            <SelectValue placeholder="Grade" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="A">A</SelectItem>
-                            <SelectItem value="B">B</SelectItem>
-                            <SelectItem value="C">C</SelectItem>
-                            <SelectItem value="D">D</SelectItem>
-                            <SelectItem value="E">E</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Select value={student.aggregateGrade} onValueChange={(v) => updateStudent(student.id, "aggregateGrade", v)}>
-                          <SelectTrigger className="text-xs">
-                            <SelectValue placeholder="Grade" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="A">A</SelectItem>
-                            <SelectItem value="B">B</SelectItem>
-                            <SelectItem value="C">C</SelectItem>
-                            <SelectItem value="D">D</SelectItem>
-                            <SelectItem value="E">E</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
+                      {subjects.map(subject => (
+                        <TableCell key={subject}>
+                          <Select 
+                            value={candidate.grades[subject] || ''} 
+                            onValueChange={(v) => updateGrade(candidate.id, subject, v)}
+                          >
+                            <SelectTrigger className="w-20">
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="D1">D1</SelectItem>
+                              <SelectItem value="D2">D2</SelectItem>
+                              <SelectItem value="C3">C3</SelectItem>
+                              <SelectItem value="C4">C4</SelectItem>
+                              <SelectItem value="C5">C5</SelectItem>
+                              <SelectItem value="C6">C6</SelectItem>
+                              <SelectItem value="P7">P7</SelectItem>
+                              <SelectItem value="P8">P8</SelectItem>
+                              <SelectItem value="F9">F9</SelectItem>
+                              <SelectItem value="X">X</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      ))}
                       <TableCell>
                         <Button
-                          size="sm"
                           variant="ghost"
-                          onClick={() => removeStudent(student.id)}
+                          size="icon"
+                          onClick={() => setSelectedCandidates(prev => 
+                            prev.filter(c => c.id !== candidate.id)
+                          )}
                         >
-                          <Trash2 className="h-4 w-4 text-red-600" />
+                          <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -535,125 +604,27 @@ const ImportExamResults = () => {
               </Table>
             </div>
 
-            <Button
-              onClick={addStudent}
-              variant="outline"
-              className="w-full"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Another Student
-            </Button>
-
-            <div className="flex gap-4 pt-4">
-              <Button 
-                onClick={() => setCurrentStep(1)}
-                variant="outline"
-                className="flex-1"
-              >
-                Back
+            <div className="flex gap-2 justify-between pt-4">
+              <Button variant="outline" onClick={() => setCurrentStep(2)}>
+                Back to Selection
               </Button>
               <Button 
-                onClick={() => setCurrentStep(3)}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                onClick={handleImport}
+                disabled={importing || selectedCandidates.length === 0}
+                className="min-w-[150px]"
               >
-                Review & Import
+                {importing ? (
+                  <>Importing...</>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Import {selectedCandidates.length} Results
+                  </>
+                )}
               </Button>
             </div>
           </CardContent>
         </Card>
-      )}
-
-      {/* Step 3: Review & Import */}
-      {currentStep === 3 && (
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Step 3: Review Results</CardTitle>
-              <CardDescription>
-                Review the data before importing. Make sure all information is correct.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Index Number</TableHead>
-                      <TableHead>Student Name</TableHead>
-                      <TableHead>English</TableHead>
-                      <TableHead>Math</TableHead>
-                      <TableHead>Physics</TableHead>
-                      <TableHead>Chemistry</TableHead>
-                      <TableHead>Biology</TableHead>
-                      <TableHead>Aggregate</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {students.map((student) => (
-                      <TableRow key={student.id}>
-                        <TableCell className="font-semibold">{student.indexNumber}</TableCell>
-                        <TableCell>{student.studentName}</TableCell>
-                        <TableCell>{student.englishLanguage || "-"}</TableCell>
-                        <TableCell>{student.mathematics || "-"}</TableCell>
-                        <TableCell>{student.physics || "-"}</TableCell>
-                        <TableCell>{student.chemistry || "-"}</TableCell>
-                        <TableCell>{student.biology || "-"}</TableCell>
-                        <TableCell>
-                          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold">
-                            {student.aggregateGrade || "-"}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="bg-green-50 border border-green-200 rounded p-4 mb-6">
-                <div className="flex gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-semibold text-green-900">Ready to import</p>
-                    <p className="text-sm text-green-700">
-                      {students.length} student(s) will be imported to the {sessions.find(s => s.id === selectedSession)?.year} {sessions.find(s => s.id === selectedSession)?.level} exam session
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <Button 
-                  onClick={() => setCurrentStep(2)}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  Back to Edit
-                </Button>
-                <Button 
-                  onClick={handleImport}
-                  disabled={importing}
-                  className="flex-1 bg-green-600 hover:bg-green-700"
-                >
-                  {importing ? (
-                    <>
-                      <Upload className="mr-2 h-4 w-4 animate-spin" />
-                      Importing...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="mr-2 h-4 w-4" />
-                      Import Results
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       )}
     </div>
   );
