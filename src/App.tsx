@@ -106,6 +106,7 @@ import Timetable from "./pages/business/Timetable";
 import Exams from "./pages/business/Exams";
 import TermCalendar from "./pages/business/TermCalendar";
 import UNEBCandidates from "./pages/business/UNEBCandidates";
+import AcademicAnalytics from "./pages/business/AcademicAnalytics";
 
 import AdmissionLinks from "./pages/business/AdmissionLinks";
 import AdmissionConfirmations from "./pages/business/AdmissionConfirmations";
@@ -259,6 +260,7 @@ const App = () => {
                 {/* Phase 2: Academics, Timetable & Exams */}
                 <Route path="timetable" element={<Timetable />} />
                 <Route path="exams" element={<Exams />} />
+                <Route path="academic-analytics" element={<AcademicAnalytics />} />
                 <Route path="term-calendar" element={<TermCalendar />} />
                 {/* UNEB Candidate Management */}
                 <Route path="uneb-candidates" element={<UNEBCandidates />} />

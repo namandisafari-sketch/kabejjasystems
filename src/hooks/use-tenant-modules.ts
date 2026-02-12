@@ -257,6 +257,7 @@ export const moduleRoutes: Record<string, { url: string; icon: string }> = {
   exam_access: { url: '/business/exam-access', icon: 'ShieldAlert' },
   // Additional school modules (marks_entry maps to exams page)
   marks_entry: { url: '/business/exams', icon: 'Edit' },
+  academic_analytics: { url: '/business/academic-analytics', icon: 'BarChart3' },
   // Rental Management modules
   rental_dashboard: { url: '/business/rental-dashboard', icon: 'LayoutDashboard' },
   rental_properties: { url: '/business/rental-properties', icon: 'Building2' },
