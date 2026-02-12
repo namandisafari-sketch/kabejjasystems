@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Plus, Trash2, Wand2 } from "lucide-react";
+import { generateClassTeacherRemark, generateHeadTeacherRemark } from "@/pages/business/AcademicAnalytics";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 // Uganda 8-level grading scale
@@ -798,7 +799,28 @@ export function ReportCardEditor({ reportCard, onClose }: ReportCardEditorProps)
         <TabsContent value="comments" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Teacher Comments & Signatures</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Teacher Comments & Signatures</CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const validScores = scores.filter(s => s.formative_score > 0 || s.school_based_score > 0);
+                    const avg = validScores.length > 0
+                      ? validScores.reduce((sum, s) => sum + (s.formative_score * 0.2 + s.school_based_score * 0.8), 0) / validScores.length
+                      : 0;
+                    const name = student?.full_name || 'Student';
+                    setFormData(prev => ({
+                      ...prev,
+                      class_teacher_comment: generateClassTeacherRemark(avg, name),
+                      head_teacher_comment: generateHeadTeacherRemark(avg, name),
+                    }));
+                  }}
+                >
+                  <Wand2 className="h-4 w-4 mr-2" />
+                  Auto-Generate
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-2 gap-6">
