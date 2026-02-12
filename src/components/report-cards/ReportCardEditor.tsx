@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save, Plus, Trash2, Wand2 } from "lucide-react";
-import { generateClassTeacherRemark, generateHeadTeacherRemark } from "@/pages/business/AcademicAnalytics";
+import { generateClassTeacherRemark, generateHeadTeacherRemark, generateSubjectRemark, generateDisciplineRemark, generateAttendanceRemark } from "@/lib/remarksGenerator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 // Uganda 8-level grading scale
@@ -263,11 +263,18 @@ export function ReportCardEditor({ reportCard, onClose }: ReportCardEditorProps)
       }, 0);
       const averageScore = validScores.length > 0 ? totalScore / validScores.length : 0;
 
-      // Update report card
+      // Auto-fill remarks if not manually entered
+      const studentName = student?.full_name || 'Student';
+      const classTeacherComment = formData.class_teacher_comment || generateClassTeacherRemark(averageScore, studentName);
+      const headTeacherComment = formData.head_teacher_comment || generateHeadTeacherRemark(averageScore, studentName);
+
+      // Update report card with auto-generated remarks
       const { error: rcError } = await supabase
         .from('student_report_cards')
         .update({
           ...formData,
+          class_teacher_comment: classTeacherComment,
+          head_teacher_comment: headTeacherComment,
           total_score: totalScore,
           average_score: averageScore,
           updated_at: new Date().toISOString(),
@@ -275,10 +282,11 @@ export function ReportCardEditor({ reportCard, onClose }: ReportCardEditorProps)
         .eq('id', reportCard.id);
       if (rcError) throw rcError;
 
-      // Upsert scores
+      // Upsert scores with auto-generated subject remarks
       for (const score of scores) {
         const totalScore = (score.formative_score * 0.2) + (score.school_based_score * 0.8);
         const { grade, descriptor } = getGradeFromScore(totalScore);
+        const autoSubjectRemark = score.subject_remark || generateSubjectRemark(totalScore, score.subject_name);
 
         const scoreData = {
           report_card_id: reportCard.id,
@@ -288,7 +296,7 @@ export function ReportCardEditor({ reportCard, onClose }: ReportCardEditorProps)
           competency_score: score.competency_score,
           grade,
           grade_descriptor: descriptor,
-          subject_remark: score.subject_remark,
+          subject_remark: autoSubjectRemark,
           teacher_name: score.teacher_name,
         };
 
@@ -815,6 +823,7 @@ export function ReportCardEditor({ reportCard, onClose }: ReportCardEditorProps)
                       class_teacher_comment: generateClassTeacherRemark(avg, name),
                       head_teacher_comment: generateHeadTeacherRemark(avg, name),
                     }));
+                    toast.success('Remarks auto-generated based on student performance!');
                   }}
                 >
                   <Wand2 className="h-4 w-4 mr-2" />

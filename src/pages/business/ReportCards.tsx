@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/use-tenant";
@@ -12,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, FileText, Search, Eye, Edit, Printer, Download } from "lucide-react";
+import { Plus, FileText, Search, Eye, Edit, Printer, Download, BookOpen } from "lucide-react";
 import { ReportCardEditor } from "@/components/report-cards/ReportCardEditor";
 import { ReportCardPreview } from "@/components/report-cards/ReportCardPreview";
 import { ALevelReportCardEditor } from "@/components/report-cards/ALevelReportCardEditor";
@@ -31,6 +32,7 @@ const isALevel = (className?: string, level?: string) => {
 
 export default function ReportCards() {
   const { data: tenantData } = useTenant();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
@@ -242,10 +244,20 @@ export default function ReportCards() {
             <h1 className="text-2xl font-bold text-foreground">Report Cards</h1>
             <p className="text-muted-foreground">Manage student report cards and academic records</p>
           </div>
-          <TabsList>
-            <TabsTrigger value="report-cards">Report Cards</TabsTrigger>
-            <TabsTrigger value="subjects">Subjects</TabsTrigger>
-          </TabsList>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => navigate('/business/marks-entry')}
+              variant="outline"
+              className="gap-2"
+            >
+              <BookOpen className="h-4 w-4" />
+              Marks Entry
+            </Button>
+            <TabsList>
+              <TabsTrigger value="report-cards">Report Cards</TabsTrigger>
+              <TabsTrigger value="subjects">Subjects</TabsTrigger>
+            </TabsList>
+          </div>
         </div>
 
         <TabsContent value="report-cards" className="space-y-6">

@@ -90,6 +90,7 @@ import SubjectsImport from "./pages/business/SubjectsImport";
 import StudentCards from "./pages/business/StudentCards";
 import TermRequirements from "./pages/business/TermRequirements";
 import ReportCards from "./pages/business/ReportCards";
+import MarksEntry from "./pages/business/MarksEntry";
 import GateCheckin from "./pages/business/GateCheckin";
 import VisitorRegister from "./pages/business/VisitorRegister";
 import Parents from "./pages/business/Parents";
@@ -238,6 +239,7 @@ const App = () => {
                 <Route path="student-cards" element={<StudentCards />} />
                 <Route path="term-requirements" element={<TermRequirements />} />
                 <Route path="report-cards" element={<ReportCards />} />
+                <Route path="marks-entry" element={<MarksEntry />} />
                 <Route path="staff" element={<Staff />} />
                 <Route path="staff-import" element={<StaffImport />} />
                 <Route path="parents" element={<Parents />} />

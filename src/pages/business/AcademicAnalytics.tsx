@@ -8,6 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Printer, BarChart3, Trophy, MessageSquare, TrendingUp, TrendingDown, Minus, Users } from "lucide-react";
+import { 
+  generateClassTeacherRemark, 
+  generateHeadTeacherRemark,
+  getPerformanceLevel
+} from "@/lib/remarksGenerator";
 
 // Uganda grading scale
 const getGrade = (score: number) => {
@@ -19,27 +24,6 @@ const getGrade = (score: number) => {
   if (score >= 40) return { grade: 'E', descriptor: 'Subsidiary Pass', color: 'bg-orange-600' };
   if (score >= 30) return { grade: 'F', descriptor: 'Failure', color: 'bg-red-500' };
   return { grade: 'G', descriptor: 'Unclassified', color: 'bg-red-700' };
-};
-
-// Auto-generate class teacher remark based on average
-export const generateClassTeacherRemark = (avg: number, name: string): string => {
-  const firstName = name?.split(' ')[0] || 'The student';
-  if (avg >= 90) return `${firstName} has demonstrated outstanding academic excellence. A truly remarkable performance that sets a benchmark for the entire class. Keep it up!`;
-  if (avg >= 80) return `${firstName} has performed exceptionally well this term. Shows great dedication and understanding across all subjects. Encouraged to maintain this standard.`;
-  if (avg >= 70) return `${firstName} has shown commendable effort and delivered good results. With continued focus, even higher achievement is within reach.`;
-  if (avg >= 60) return `${firstName} has put in a fair effort this term. There is room for improvement in some subjects. Encouraged to seek extra help where needed.`;
-  if (avg >= 50) return `${firstName} has achieved a pass but needs to work harder in several subjects. More consistent study habits and class participation are recommended.`;
-  if (avg >= 40) return `${firstName} needs significant improvement. Parents/guardians are encouraged to provide extra academic support and monitor homework regularly.`;
-  return `${firstName} is struggling academically and requires urgent intervention. Extra lessons, remedial work, and close supervision are strongly recommended.`;
-};
-
-// Auto-generate head teacher remark
-export const generateHeadTeacherRemark = (avg: number, name: string): string => {
-  const firstName = name?.split(' ')[0] || 'The student';
-  if (avg >= 80) return `Congratulations to ${firstName} on an excellent performance. The school is proud of this achievement. We encourage continued hard work and dedication.`;
-  if (avg >= 60) return `${firstName} has performed well this term. We encourage more effort to achieve even better results next term. The school is committed to supporting every learner.`;
-  if (avg >= 40) return `${firstName}'s performance requires improvement. We urge parents to work closely with the school to support the learner's academic progress.`;
-  return `${firstName}'s academic performance is a cause for concern. We request an urgent meeting with the parents/guardians to discuss a way forward and an improvement plan.`;
 };
 
 export default function AcademicAnalytics() {
