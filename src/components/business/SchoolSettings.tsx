@@ -11,6 +11,7 @@ import { Plus, X, Save, Loader2, GraduationCap, Copy, Users, CreditCard, Hash } 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { UNEBSettings } from "./UNEBSettings";
+import { SchoolPaySettings } from "@/components/fees/SchoolPaySettings";
 import { AdmissionSettings } from "./AdmissionSettings";
 import { useTenant } from "@/hooks/use-tenant";
 
@@ -362,6 +363,14 @@ export function SchoolSettings({ tenantId }: SchoolSettingsProps) {
         {isSchool && tenantId && (
           <>
             <AdmissionSettings tenantId={tenantId} />
+            <Separator />
+          </>
+        )}
+
+        {/* SchoolPay Integration */}
+        {isSchool && tenantId && (
+          <>
+            <SchoolPaySettings tenantId={tenantId} />
             <Separator />
           </>
         )}

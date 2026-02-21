@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SchoolPayTransactions } from "@/components/fees/SchoolPayTransactions";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/use-tenant";
@@ -419,6 +420,10 @@ export default function Fees() {
           <TabsTrigger value="bursar" className="flex items-center gap-2">
             <ShieldAlert className="h-4 w-4 text-destructive" />
             Bursar Rules
+          </TabsTrigger>
+          <TabsTrigger value="schoolpay" className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4" />
+            SchoolPay
           </TabsTrigger>
         </TabsList>
 
@@ -907,6 +912,12 @@ export default function Fees() {
         <TabsContent value="bursar" className="mt-4 space-y-6">
           <BursarRulesManager />
           <OverrideRequestsPanel showPendingOnly={false} maxHeight="500px" />
+        </TabsContent>
+
+        <TabsContent value="schoolpay" className="mt-4">
+          {tenantData?.tenantId && (
+            <SchoolPayTransactions tenantId={tenantData.tenantId} />
+          )}
         </TabsContent>
       </Tabs>
     </div>
