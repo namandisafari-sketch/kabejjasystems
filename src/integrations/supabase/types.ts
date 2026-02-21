@@ -7528,6 +7528,144 @@ export type Database = {
           },
         ]
       }
+      schoolpay_settings: {
+        Row: {
+          api_password: string
+          auto_reconcile: boolean
+          created_at: string
+          id: string
+          last_sync_at: string | null
+          school_code: string
+          tenant_id: string
+          updated_at: string
+          webhook_enabled: boolean
+        }
+        Insert: {
+          api_password: string
+          auto_reconcile?: boolean
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          school_code: string
+          tenant_id: string
+          updated_at?: string
+          webhook_enabled?: boolean
+        }
+        Update: {
+          api_password?: string
+          auto_reconcile?: boolean
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          school_code?: string
+          tenant_id?: string
+          updated_at?: string
+          webhook_enabled?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schoolpay_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schoolpay_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          fee_payment_id: string | null
+          id: string
+          matched_student_id: string | null
+          payment_channel: string | null
+          payment_date: string | null
+          raw_payload: Json | null
+          reconciled_at: string | null
+          reconciliation_notes: string | null
+          reconciliation_status: string
+          schoolpay_receipt_number: string
+          settlement_bank: string | null
+          student_class: string | null
+          student_name: string | null
+          student_payment_code: string | null
+          student_registration_number: string | null
+          supplementary_fee_description: string | null
+          tenant_id: string
+          transaction_id: string | null
+          transaction_type: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          fee_payment_id?: string | null
+          id?: string
+          matched_student_id?: string | null
+          payment_channel?: string | null
+          payment_date?: string | null
+          raw_payload?: Json | null
+          reconciled_at?: string | null
+          reconciliation_notes?: string | null
+          reconciliation_status?: string
+          schoolpay_receipt_number: string
+          settlement_bank?: string | null
+          student_class?: string | null
+          student_name?: string | null
+          student_payment_code?: string | null
+          student_registration_number?: string | null
+          supplementary_fee_description?: string | null
+          tenant_id: string
+          transaction_id?: string | null
+          transaction_type?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          fee_payment_id?: string | null
+          id?: string
+          matched_student_id?: string | null
+          payment_channel?: string | null
+          payment_date?: string | null
+          raw_payload?: Json | null
+          reconciled_at?: string | null
+          reconciliation_notes?: string | null
+          reconciliation_status?: string
+          schoolpay_receipt_number?: string
+          settlement_bank?: string | null
+          student_class?: string | null
+          student_name?: string | null
+          student_payment_code?: string | null
+          student_registration_number?: string | null
+          supplementary_fee_description?: string | null
+          tenant_id?: string
+          transaction_id?: string | null
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schoolpay_transactions_fee_payment_id_fkey"
+            columns: ["fee_payment_id"]
+            isOneToOne: false
+            referencedRelation: "fee_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schoolpay_transactions_matched_student_id_fkey"
+            columns: ["matched_student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schoolpay_transactions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       send_home_records: {
         Row: {
           cleared_at: string | null
@@ -8669,6 +8807,7 @@ export type Database = {
           promotion_conditions: string | null
           promotion_status: string | null
           religion: string | null
+          schoolpay_payment_code: string | null
           status: string | null
           student_national_id: string | null
           suggested_class_level: string | null
@@ -8747,6 +8886,7 @@ export type Database = {
           promotion_conditions?: string | null
           promotion_status?: string | null
           religion?: string | null
+          schoolpay_payment_code?: string | null
           status?: string | null
           student_national_id?: string | null
           suggested_class_level?: string | null
@@ -8825,6 +8965,7 @@ export type Database = {
           promotion_conditions?: string | null
           promotion_status?: string | null
           religion?: string | null
+          schoolpay_payment_code?: string | null
           status?: string | null
           student_national_id?: string | null
           suggested_class_level?: string | null
