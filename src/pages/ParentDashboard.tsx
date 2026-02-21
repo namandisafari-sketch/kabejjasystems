@@ -51,7 +51,6 @@ import { NotificationCenter } from "@/components/parent/NotificationCenter";
 import { RedListBanner } from "@/components/parent/RedListBanner";
 import { ExamResultsCard } from "@/components/parent/ExamResultsCard";
 import { useParentNotifications } from "@/hooks/use-parent-notifications";
-import { ExamResultsCard } from "@/components/parent/ExamResultsCard";
 
 interface Student {
   id: string;
@@ -1053,10 +1052,7 @@ export default function ParentDashboard() {
               {!isECD && (
                 <TabsContent value="exams" className="space-y-4">
                   {selectedStudentData && (
-                    <ExamResultsCard 
-                      studentName={selectedStudentData.full_name}
-                      studentAdmissionNumber={selectedStudentData.admission_number}
-                    />
+                    <ExamResultsCard />
                   )}
                 </TabsContent>
               )}

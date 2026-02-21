@@ -150,10 +150,10 @@ export default function MarksEntry() {
         .select(`
           id,
           student_id,
-          academic_scores (
+          report_card_scores (
             id,
             subject_id,
-            score
+            total_score
           )
         `)
         .eq("tenant_id", tenantId!)
@@ -163,12 +163,12 @@ export default function MarksEntry() {
       if (error) throw error;
 
       const marks: MarksData = {};
-      data?.forEach((rc) => {
+      (data as any[])?.forEach((rc: any) => {
         marks[rc.student_id] = {};
-        rc.academic_scores?.forEach((score) => {
+        rc.report_card_scores?.forEach((score: any) => {
           marks[rc.student_id][score.subject_id] = {
-            score: score.score || 0,
-            grade: getGradeFromScore(score.score || 0),
+            score: score.total_score || 0,
+            grade: getGradeFromScore(score.total_score || 0),
           };
         });
       });
@@ -223,8 +223,8 @@ export default function MarksEntry() {
           const score = marksData[studentId][subjectId].score;
 
           // Check if score exists
-          const { data: existingScore } = await supabase
-            .from("academic_scores")
+          const { data: existingScore } = await (supabase
+            .from("report_card_scores") as any)
             .select("id")
             .eq("report_card_id", reportCardId)
             .eq("subject_id", subjectId)
@@ -232,18 +232,18 @@ export default function MarksEntry() {
 
           if (existingScore?.id) {
             // Update
-            await supabase
-              .from("academic_scores")
-              .update({ score })
+            await (supabase
+              .from("report_card_scores") as any)
+              .update({ total_score: score })
               .eq("id", existingScore.id);
           } else {
             // Insert
-            await supabase
-              .from("academic_scores")
+            await (supabase
+              .from("report_card_scores") as any)
               .insert({
                 report_card_id: reportCardId,
                 subject_id: subjectId,
-                score,
+                total_score: score,
               });
           }
         }

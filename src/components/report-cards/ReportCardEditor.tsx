@@ -823,7 +823,7 @@ export function ReportCardEditor({ reportCard, onClose }: ReportCardEditorProps)
                       class_teacher_comment: generateClassTeacherRemark(avg, name),
                       head_teacher_comment: generateHeadTeacherRemark(avg, name),
                     }));
-                    toast.success('Remarks auto-generated based on student performance!');
+                    toast({ title: 'Remarks auto-generated based on student performance!' });
                   }}
                 >
                   <Wand2 className="h-4 w-4 mr-2" />
