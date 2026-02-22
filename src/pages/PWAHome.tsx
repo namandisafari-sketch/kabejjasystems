@@ -278,6 +278,12 @@ export default function PWAHome() {
               <p className="text-emerald-200/70 text-xs max-w-xs">
                 Wishing all Muslims a blessed and peaceful holy month 🤲
               </p>
+              <div className="mt-3 pt-3 border-t border-emerald-700/40 w-full">
+                <p className="text-white font-semibold text-sm">✝️ Happy Lenten Season</p>
+                <p className="text-emerald-200/70 text-xs max-w-xs mx-auto">
+                  Wishing all Christians a reflective and blessed season of prayer & fasting 🙏
+                </p>
+              </div>
             </div>
           </div>
         </div>
