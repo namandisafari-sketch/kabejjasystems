@@ -3,7 +3,7 @@ import {
   GraduationCap, ShoppingCart, UtensilsCrossed, Bed, 
   Scissors, Pill, Wrench, Building2, LogIn,
   Sparkles, Users, BookOpen, Briefcase, RefreshCw, Download,
-  Award, FileSearch
+  Award, FileSearch, Moon, Star
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -253,8 +253,38 @@ export default function PWAHome() {
         </div>
       </header>
 
+      {/* Ramadan Kareem Banner */}
+      <section className="px-4 pt-6 pb-2">
+        <div className="max-w-2xl mx-auto">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 p-5 text-center shadow-lg">
+            {/* Decorative stars */}
+            {[...Array(8)].map((_, i) => (
+              <Star
+                key={i}
+                className="absolute text-yellow-300/20 animate-pulse"
+                size={Math.random() * 10 + 5}
+                style={{
+                  top: `${Math.random() * 100}%`,
+                  left: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 3}s`,
+                }}
+                fill="currentColor"
+              />
+            ))}
+            <div className="relative z-10 flex flex-col items-center gap-2">
+              <Moon className="text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,0.4)]" size={36} strokeWidth={1.5} />
+              <p className="text-yellow-400/90 text-lg font-light" style={{ fontFamily: 'serif' }}>رمضان كريم</p>
+              <h3 className="text-xl font-bold text-white tracking-tight">Ramadan Kareem 🌙</h3>
+              <p className="text-emerald-200/70 text-xs max-w-xs">
+                Wishing all Muslims a blessed and peaceful holy month 🤲
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Hero Section */}
-      <section className="px-4 py-8 text-center">
+      <section className="px-4 py-6 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-4 rounded-full bg-primary/10 text-primary text-sm font-medium">
           <Sparkles className="w-4 h-4" />
           Made for Uganda
