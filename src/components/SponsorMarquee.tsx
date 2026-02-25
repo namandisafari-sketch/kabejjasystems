@@ -31,17 +31,17 @@ export function SponsorMarquee() {
   const duplicatedSponsors = [...sponsors, ...sponsors];
 
   return (
-    <section className="py-6 overflow-hidden bg-muted/30 border-y border-border/50">
+    <section className="py-6 overflow-hidden bg-black border-y border-border/50">
       <div className="max-w-2xl mx-auto px-4 mb-4 text-center">
-        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+        <h3 className="text-sm font-medium text-white/60 uppercase tracking-wider">
           Our Sponsors & Partners
         </h3>
       </div>
       
       <div className="relative">
         {/* Gradient overlays for smooth fade effect */}
-        <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-muted/30 to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-muted/30 to-transparent z-10 pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-black to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-black to-transparent z-10 pointer-events-none" />
         
         {/* Marquee container */}
         <div className="flex animate-marquee">
