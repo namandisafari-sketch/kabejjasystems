@@ -9,6 +9,7 @@ import { InstallPrompt } from "@/components/InstallPrompt";
 import { useWelcomeNotifications } from "@/hooks/use-welcome-notifications";
 import { ProtectedAdminRoute } from "@/components/ProtectedAdminRoute";
 import PWAHome from "./pages/PWAHome";
+import OnboardingGate from "./components/OnboardingGate";
 import Signup from "./pages/Signup";
 import AdminSignup from "./pages/AdminSignup";
 import Login from "./pages/Login";
@@ -155,7 +156,8 @@ const App = () => {
           <InstallPrompt />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<PWAHome />} />
+              <Route path="/" element={<OnboardingGate />} />
+              <Route path="/home" element={<PWAHome />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/admin-signup" element={<AdminSignup />} />
               <Route path="/login" element={<Login />} />
