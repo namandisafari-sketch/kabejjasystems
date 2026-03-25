@@ -142,7 +142,13 @@ export default function AdminCreateBusiness() {
         },
       });
 
-      if (error) throw error;
+      console.log("admin-create-business response:", { data, error });
+
+      // The functions.invoke returns the error body in data when status is non-2xx
+      if (error) {
+        const errorMsg = data?.error || error.message || "Failed to create business account";
+        throw new Error(errorMsg);
+      }
       if (!data?.success) throw new Error(data?.error || "Failed to create business account");
 
       toast({
