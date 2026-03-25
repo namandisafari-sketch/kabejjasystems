@@ -36,6 +36,8 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
+    console.log("admin-create-business: Starting, URL:", supabaseUrl ? "set" : "missing");
+
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
@@ -43,6 +45,7 @@ serve(async (req) => {
     // Verify requesting user
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      console.log("admin-create-business: No authorization header");
       return new Response(JSON.stringify({ error: "No authorization header" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -50,17 +53,21 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
+    console.log("admin-create-business: Verifying token...");
     const {
       data: { user },
       error: authError,
     } = await supabaseAdmin.auth.getUser(token);
 
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Invalid token" }), {
+      console.log("admin-create-business: Auth error:", authError?.message || "No user");
+      return new Response(JSON.stringify({ error: "Invalid token", details: authError?.message }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    console.log("admin-create-business: User verified:", user.id);
 
     // Enforce admin-only access (server-side)
     const { data: roles, error: rolesError } = await supabaseAdmin
