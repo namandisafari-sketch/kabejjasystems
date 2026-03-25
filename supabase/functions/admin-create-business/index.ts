@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 type CreateBusinessPayload = {
@@ -36,6 +36,8 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
+    console.log("admin-create-business: Starting, URL:", supabaseUrl ? "set" : "missing");
+
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
@@ -43,6 +45,7 @@ serve(async (req) => {
     // Verify requesting user
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      console.log("admin-create-business: No authorization header");
       return new Response(JSON.stringify({ error: "No authorization header" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -50,17 +53,21 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
+    console.log("admin-create-business: Verifying token...");
     const {
       data: { user },
       error: authError,
     } = await supabaseAdmin.auth.getUser(token);
 
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Invalid token" }), {
+      console.log("admin-create-business: Auth error:", authError?.message || "No user");
+      return new Response(JSON.stringify({ error: "Invalid token", details: authError?.message }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    console.log("admin-create-business: User verified:", user.id);
 
     // Enforce admin-only access (server-side)
     const { data: roles, error: rolesError } = await supabaseAdmin
@@ -68,14 +75,17 @@ serve(async (req) => {
       .select("role")
       .eq("user_id", user.id);
 
+    console.log("admin-create-business: Roles query result:", JSON.stringify(roles), "error:", rolesError?.message);
+
     if (rolesError) {
-      return new Response(JSON.stringify({ error: "Failed to verify admin role" }), {
+      return new Response(JSON.stringify({ error: "Failed to verify admin role", details: rolesError.message }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const isAdmin = (roles || []).some((r) => r.role === "admin" || r.role === "superadmin");
+    console.log("admin-create-business: isAdmin:", isAdmin);
     if (!isAdmin) {
       return new Response(JSON.stringify({ error: "Unauthorized - Admin access required" }), {
         status: 403,
