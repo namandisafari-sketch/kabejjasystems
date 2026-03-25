@@ -75,14 +75,17 @@ serve(async (req) => {
       .select("role")
       .eq("user_id", user.id);
 
+    console.log("admin-create-business: Roles query result:", JSON.stringify(roles), "error:", rolesError?.message);
+
     if (rolesError) {
-      return new Response(JSON.stringify({ error: "Failed to verify admin role" }), {
+      return new Response(JSON.stringify({ error: "Failed to verify admin role", details: rolesError.message }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const isAdmin = (roles || []).some((r) => r.role === "admin" || r.role === "superadmin");
+    console.log("admin-create-business: isAdmin:", isAdmin);
     if (!isAdmin) {
       return new Response(JSON.stringify({ error: "Unauthorized - Admin access required" }), {
         status: 403,
