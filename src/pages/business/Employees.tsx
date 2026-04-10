@@ -11,7 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Loader2, Users, UserCheck, Wallet, Search, Phone, Mail } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/i18n";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Drawer,
   DrawerContent,
