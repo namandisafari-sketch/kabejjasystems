@@ -28,6 +28,7 @@ import { useTenantModules, moduleRoutes, ecdRouteOverrides, ecdNameOverrides } f
 import { useTenant } from "@/hooks/use-tenant";
 import { useStaffPermissions } from "@/hooks/use-staff-permissions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLanguage } from "@/i18n";
 
 // Icon mapping - keep in sync with MobileBottomNav
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -80,6 +81,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 export function BusinessSidebar({ businessName, businessType, devMode }: { businessName?: string; businessType?: string; devMode?: boolean }) {
   const { state } = useSidebar();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const isCollapsed = state === "collapsed";
   const { data: tenantData } = useTenant();
   // In dev mode, pass business type to get modules from config instead of DB
@@ -142,7 +144,7 @@ export function BusinessSidebar({ businessName, businessType, devMode }: { busin
             <img src={kabejjaLogo} alt="Kabejja" className="h-8 w-auto" />
             <div>
               <h2 className="text-sm font-bold text-foreground truncate">{businessName || "Business"}</h2>
-              <p className="text-xs text-muted-foreground">Management Portal</p>
+              <p className="text-xs text-muted-foreground">{t.nav.managementPortal}</p>
             </div>
           </div>
         )}
@@ -156,7 +158,7 @@ export function BusinessSidebar({ businessName, businessType, devMode }: { busin
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className={isCollapsed ? "sr-only" : ""}>
-            Navigation
+            {t.nav.navigation}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -202,7 +204,7 @@ export function BusinessSidebar({ businessName, businessType, devMode }: { busin
           className="w-full justify-start"
         >
           <LogOut className="h-4 w-4" />
-          {!isCollapsed && <span className="ml-2">Logout</span>}
+          {!isCollapsed && <span className="ml-2 rtl:mr-2 rtl:ml-0">{t.auth.logout}</span>}
         </Button>
       </SidebarFooter>
     </Sidebar>

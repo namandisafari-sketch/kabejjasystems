@@ -413,3 +413,25 @@
     animation: gradient-shift 15s ease infinite;
   }
 }
+
+/* RTL Support */
+html.rtl {
+  direction: rtl;
+}
+
+html.rtl .sidebar {
+  border-right: none;
+  border-left: 1px solid hsl(var(--border));
+}
+
+html.rtl .space-x-1 > :not([hidden]) ~ :not([hidden]),
+html.rtl .space-x-2 > :not([hidden]) ~ :not([hidden]),
+html.rtl .space-x-3 > :not([hidden]) ~ :not([hidden]),
+html.rtl .space-x-4 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+}
+
+/* Arabic font support */
+html[lang="ar"] {
+  font-family: 'Segoe UI', 'Tahoma', 'Arial', 'Noto Sans Arabic', sans-serif;
+}

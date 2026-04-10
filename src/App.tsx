@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { LanguageProvider } from "@/i18n";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { useWelcomeNotifications } from "@/hooks/use-welcome-notifications";
@@ -147,6 +148,7 @@ const App = () => {
   useWelcomeNotifications();
 
   return (
+    <LanguageProvider>
     <ThemeProvider defaultTheme="light" storageKey="kabejja-ui-theme">
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
@@ -320,6 +322,7 @@ const App = () => {
         </TooltipProvider>
       </QueryClientProvider>
     </ThemeProvider>
+    </LanguageProvider>
   );
 };
 
