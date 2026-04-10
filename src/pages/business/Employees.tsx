@@ -236,7 +236,7 @@ export default function Employees() {
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
         <DrawerContent className="max-h-[90vh]">
           <DrawerHeader>
-            <DrawerTitle>{isSchool ? "Add Staff Member" : "Add Employee"}</DrawerTitle>
+            <DrawerTitle>{t.staff.addStaff}</DrawerTitle>
           </DrawerHeader>
           <ScrollArea className="flex-1 px-4 max-h-[60vh]">
             <div className="space-y-4 pb-4">
