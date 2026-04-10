@@ -224,8 +224,6 @@ export default function Employees() {
                       onClick={() => toggleStatus.mutate({ id: employee.id, is_active: employee.is_active })}
                     >
                       {employee.is_active ? t.staff.deactivate : t.staff.activate}
-                    >
-                      {employee.is_active ? "Deactivate" : "Activate"}
                     </Button>
                   </div>
                 </div>
