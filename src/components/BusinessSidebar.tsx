@@ -144,7 +144,7 @@ export function BusinessSidebar({ businessName, businessType, devMode }: { busin
             <img src={kabejjaLogo} alt="Kabejja" className="h-8 w-auto" />
             <div>
               <h2 className="text-sm font-bold text-foreground truncate">{businessName || "Business"}</h2>
-              <p className="text-xs text-muted-foreground">Management Portal</p>
+              <p className="text-xs text-muted-foreground">{t.nav.managementPortal}</p>
             </div>
           </div>
         )}
@@ -158,7 +158,7 @@ export function BusinessSidebar({ businessName, businessType, devMode }: { busin
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className={isCollapsed ? "sr-only" : ""}>
-            Navigation
+            {t.nav.navigation}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
