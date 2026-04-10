@@ -204,7 +204,7 @@ export function BusinessSidebar({ businessName, businessType, devMode }: { busin
           className="w-full justify-start"
         >
           <LogOut className="h-4 w-4" />
-          {!isCollapsed && <span className="ml-2">Logout</span>}
+          {!isCollapsed && <span className="ml-2 rtl:mr-2 rtl:ml-0">{t.auth.logout}</span>}
         </Button>
       </SidebarFooter>
     </Sidebar>
