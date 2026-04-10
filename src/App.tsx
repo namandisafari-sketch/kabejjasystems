@@ -322,6 +322,7 @@ const App = () => {
         </TooltipProvider>
       </QueryClientProvider>
     </ThemeProvider>
+    </LanguageProvider>
   );
 };
 
