@@ -3,6 +3,7 @@ import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { BusinessSidebar } from "@/components/BusinessSidebar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 import { TermsFooterLink } from "@/components/TermsFooterLink";
 import { NetworkStatusIndicator } from "@/components/NetworkStatusIndicator";
@@ -128,6 +129,7 @@ export function BusinessLayout() {
           <header className="hidden md:flex h-14 border-b border-border items-center px-4 bg-card/95 backdrop-blur-sm sticky top-0 z-40">
             <SidebarTrigger className="touch-target" />
             <div className="ml-auto flex items-center gap-1">
+              <LanguageSwitcher />
               <NetworkStatusIndicator />
               <KeyboardShortcutsHelp shortcuts={shortcuts} />
               <FullscreenToggle />
@@ -138,6 +140,7 @@ export function BusinessLayout() {
           <header className="flex md:hidden h-14 border-b border-border items-center px-4 bg-card/95 backdrop-blur-sm sticky top-0 z-40 safe-top">
             <span className="font-semibold text-sm truncate flex-1">{businessName}</span>
             <div className="flex items-center gap-1">
+              <LanguageSwitcher />
               <NetworkStatusIndicator />
               <FullscreenToggle />
             </div>
