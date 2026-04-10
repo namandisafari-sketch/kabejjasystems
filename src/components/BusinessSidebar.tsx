@@ -28,6 +28,9 @@ import { useTenantModules, moduleRoutes, ecdRouteOverrides, ecdNameOverrides } f
 import { useTenant } from "@/hooks/use-tenant";
 import { useStaffPermissions } from "@/hooks/use-staff-permissions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLanguage } from "@/i18n";
+import { useStaffPermissions } from "@/hooks/use-staff-permissions";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Icon mapping - keep in sync with MobileBottomNav
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
