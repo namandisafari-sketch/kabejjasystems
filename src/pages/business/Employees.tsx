@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Loader2, Users, UserCheck, Wallet, Search, Phone, Mail } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useLanguage } from "@/i18n";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Drawer,
   DrawerContent,
@@ -33,6 +35,7 @@ const RETAIL_ROLES = ["Manager", "Supervisor", "Staff", "Intern"];
 
 export default function Employees() {
   const tenantQuery = useTenant();
+  const { t } = useLanguage();
   const businessType = tenantQuery.data?.businessType;
   const isSchool = businessType?.includes('school') || false;
   const DEPARTMENTS = isSchool ? SCHOOL_DEPARTMENTS : RETAIL_DEPARTMENTS;
@@ -133,17 +136,17 @@ export default function Employees() {
       <div className="p-4 border-b bg-background sticky top-0 z-10">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h1 className="text-xl font-bold">{isSchool ? "Staff" : "Employees"}</h1>
-            <p className="text-xs text-muted-foreground">{employees?.length || 0} members</p>
+            <h1 className="text-xl font-bold">{isSchool ? t.staff.title : t.nav.employees}</h1>
+            <p className="text-xs text-muted-foreground">{employees?.length || 0} {t.common.members}</p>
           </div>
           <Button size="sm" onClick={() => { resetForm(); setIsDrawerOpen(true); }}>
-            <Plus className="h-4 w-4 mr-1" />
-            Add
+            <Plus className="h-4 w-4 mr-1 rtl:ml-1 rtl:mr-0" />
+            {t.common.add}
           </Button>
         </div>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 h-10" />
+          <Search className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder={t.common.search} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 rtl:pr-9 rtl:pl-3 h-10" />
         </div>
       </div>
 
@@ -153,7 +156,7 @@ export default function Employees() {
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-muted-foreground" />
             <div>
-              <p className="text-xs text-muted-foreground">Total</p>
+              <p className="text-xs text-muted-foreground">{t.staff.totalStaff}</p>
               <p className="text-lg font-bold">{employees?.length || 0}</p>
             </div>
           </div>
@@ -162,7 +165,7 @@ export default function Employees() {
           <div className="flex items-center gap-2">
             <UserCheck className="h-4 w-4 text-muted-foreground" />
             <div>
-              <p className="text-xs text-muted-foreground">Active</p>
+              <p className="text-xs text-muted-foreground">{t.staff.activeStaff}</p>
               <p className="text-lg font-bold">{activeEmployees}</p>
             </div>
           </div>
@@ -171,7 +174,7 @@ export default function Employees() {
           <div className="flex items-center gap-2">
             <Wallet className="h-4 w-4 text-muted-foreground" />
             <div>
-              <p className="text-xs text-muted-foreground">Payroll</p>
+              <p className="text-xs text-muted-foreground">{t.staff.totalPayroll}</p>
               <p className="text-sm font-bold">{(totalSalary / 1000000).toFixed(1)}M</p>
             </div>
           </div>
@@ -183,9 +186,9 @@ export default function Employees() {
         {!filteredEmployees?.length ? (
           <div className="text-center py-12">
             <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">No employees found</p>
+            <p className="text-muted-foreground">{t.staff.noStaffFound}</p>
             <Button variant="outline" className="mt-4" onClick={() => setIsDrawerOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" /> Add Employee
+              <Plus className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" /> {t.staff.addStaff}
             </Button>
           </div>
         ) : (
@@ -197,7 +200,7 @@ export default function Employees() {
                     <div className="flex items-center gap-2">
                       <p className="font-medium truncate">{employee.full_name}</p>
                       <Badge variant={employee.is_active ? "default" : "secondary"} className="text-xs">
-                        {employee.is_active ? "Active" : "Inactive"}
+                        {employee.is_active ? t.common.active : t.common.inactive}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
@@ -219,6 +222,8 @@ export default function Employees() {
                       size="sm"
                       className="text-xs h-6 px-2"
                       onClick={() => toggleStatus.mutate({ id: employee.id, is_active: employee.is_active })}
+                    >
+                      {employee.is_active ? t.staff.deactivate : t.staff.activate}
                     >
                       {employee.is_active ? "Deactivate" : "Activate"}
                     </Button>
