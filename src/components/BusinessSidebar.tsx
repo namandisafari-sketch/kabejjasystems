@@ -81,6 +81,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 export function BusinessSidebar({ businessName, businessType, devMode }: { businessName?: string; businessType?: string; devMode?: boolean }) {
   const { state } = useSidebar();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const isCollapsed = state === "collapsed";
   const { data: tenantData } = useTenant();
   // In dev mode, pass business type to get modules from config instead of DB
