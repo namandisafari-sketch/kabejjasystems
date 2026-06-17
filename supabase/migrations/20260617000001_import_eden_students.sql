@@ -1,0 +1,22 @@
+-- Add extended student fields for EDEN HIGH SCHOOL import
+ALTER TABLE public.students
+  ADD COLUMN IF NOT EXISTS first_name TEXT,
+  ADD COLUMN IF NOT EXISTS last_name TEXT,
+  ADD COLUMN IF NOT EXISTS nationality TEXT DEFAULT 'Ugandan',
+  ADD COLUMN IF NOT EXISTS place_of_birth TEXT,
+  ADD COLUMN IF NOT EXISTS home_district TEXT,
+  ADD COLUMN IF NOT EXISTS religion TEXT,
+  ADD COLUMN IF NOT EXISTS special_talent TEXT,
+  ADD COLUMN IF NOT EXISTS guardian_relationship TEXT,
+  ADD COLUMN IF NOT EXISTS guardian_occupation TEXT,
+  ADD COLUMN IF NOT EXISTS guardian_address TEXT,
+  ADD COLUMN IF NOT EXISTS blood_group TEXT,
+  ADD COLUMN IF NOT EXISTS medical_conditions TEXT,
+  ADD COLUMN IF NOT EXISTS allergies TEXT,
+  ADD COLUMN IF NOT EXISTS emergency_contact_name TEXT,
+  ADD COLUMN IF NOT EXISTS emergency_contact_phone TEXT,
+  ADD COLUMN IF NOT EXISTS previous_school TEXT,
+  ADD COLUMN IF NOT EXISTS previous_class TEXT,
+  ADD COLUMN IF NOT EXISTS reason_for_leaving TEXT,
+  ADD COLUMN IF NOT EXISTS nin_number TEXT,
+  ADD COLUMN IF NOT EXISTS birth_certificate_no TEXT;
