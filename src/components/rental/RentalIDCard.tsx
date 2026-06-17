@@ -1,5 +1,11 @@
 import { forwardRef } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import {
+  CARD_WIDTH, CARD_HEIGHT,
+  GuillochePattern, CardHeaderBand, HologramSeal,
+  SecurityBorder, GhostStamp, MicroTextLine,
+  MagneticStripe, SignaturePanel,
+} from "@/components/id-cards/CardPatterns";
 
 interface RentalIDCardProps {
   cardNumber: string;
@@ -16,121 +22,202 @@ interface RentalIDCardProps {
   side?: 'front' | 'back' | 'both';
 }
 
+const DARK = '#0f172a';
+const TEAL = '#14b8a6';
+const CARD_RADIUS = 10;
+
 const RentalIDCard = forwardRef<HTMLDivElement, RentalIDCardProps>(
   ({ cardNumber, unitNumber, propertyName, holderName, propertyCode, businessName, businessPhone, businessAddress, logoUrl, issuedDate, forPrint = false, side = 'both' }, ref) => {
     const qrValue = JSON.stringify({
       type: 'rental_id',
       card: cardNumber,
       property: propertyCode,
-      unit: unitNumber
+      unit: unitNumber,
+      t: Date.now(),
     });
 
-    // CR80 card: 85.6mm x 54mm, safe zone is 3mm from each edge
-    const cardStyle = forPrint ? {
+    const cardStyle: React.CSSProperties = forPrint ? {
       width: '85.6mm',
       height: '54mm',
       display: 'inline-block',
       margin: '0',
-      pageBreakInside: 'avoid' as const,
+      pageBreakInside: 'avoid',
     } : {};
 
-    // Safe zone padding: 3mm converted to approximate pixels (at screen resolution)
-    const safeZonePadding = forPrint ? '3mm' : '12px';
-
     const FrontCard = () => (
-      <div 
-        style={cardStyle}
-        className={`bg-gradient-to-br from-slate-800 to-slate-900 text-white rounded-xl overflow-hidden shadow-lg ${!forPrint ? 'w-[340px] aspect-[1.586/1]' : ''}`}
+      <div
+        ref={forPrint ? undefined : ref}
+        style={{
+          ...cardStyle,
+          width: forPrint ? '85.6mm' : `${CARD_WIDTH}px`,
+          height: forPrint ? '54mm' : `${CARD_HEIGHT}px`,
+          background: `linear-gradient(145deg, ${DARK}, #1a2332)`,
+          borderRadius: `${CARD_RADIUS}px`,
+          position: 'relative',
+          overflow: 'hidden',
+          color: 'white',
+          border: `1px solid ${TEAL}44`,
+          boxShadow: `0 2px 8px rgba(0,0,0,0.2)`,
+        }}
+        data-card-front
       >
-        <div className="h-full flex flex-col" style={{ padding: safeZonePadding }}>
+        <GuillochePattern opacity={0.05} />
+        <CardHeaderBand color={TEAL} height={4} />
+        <SecurityBorder color={TEAL} />
+        <GhostStamp text="PROPERTY ID" color={TEAL} />
+
+        <div style={{ padding: '12px 14px 10px', position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
           {/* Header */}
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              {logoUrl ? (
-                <img src={logoUrl} alt={businessName} className="w-7 h-7 rounded object-contain bg-white/10" />
-              ) : (
-                <div className="w-7 h-7 rounded bg-white/20 flex items-center justify-center text-xs font-bold">
-                  {businessName.charAt(0)}
-                </div>
-              )}
-              <div>
-                <div className="text-[9px] font-medium leading-tight">{businessName}</div>
-                <div className="text-[7px] text-slate-400">Property ID Card</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', marginTop: '2px' }}>
+            {logoUrl ? (
+              <img src={logoUrl} alt={businessName} style={{ width: '28px', height: '28px', borderRadius: '6px', objectFit: 'contain', background: 'rgba(255,255,255,0.1)', padding: '2px' }} />
+            ) : (
+              <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: `linear-gradient(135deg, ${TEAL}, ${TEAL}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: 'white' }}>
+                {businessName.charAt(0)}
               </div>
+            )}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '9px', fontWeight: 'bold', lineHeight: 1.2, color: 'white' }}>{businessName}</div>
+              <div style={{ fontSize: '6px', color: TEAL, letterSpacing: '2px', fontWeight: 700, textTransform: 'uppercase' }}>Property ID Card</div>
             </div>
-            <div className="text-right">
-              <div className="text-[7px] text-slate-400">Card No.</div>
-              <div className="font-mono text-[10px] font-bold tracking-wider">{cardNumber}</div>
-            </div>
+            <HologramSeal size={24} />
           </div>
 
-          {/* Main Info */}
-          <div className="flex-1 flex items-center justify-between">
-            <div className="space-y-0.5">
+          {/* Main content */}
+          <div style={{ display: 'flex', gap: '8px', flex: 1, alignItems: 'center' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
               <div>
-                <div className="text-[7px] text-slate-400 uppercase tracking-wider">Property</div>
-                <div className="text-xs font-semibold leading-tight">{propertyName}</div>
+                <div style={{ fontSize: '6px', color: `${TEAL}99`, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '1px' }}>Card Number</div>
+                <div style={{ fontWeight: 700, fontSize: '9px', fontFamily: 'monospace', letterSpacing: '1px', color: 'white' }}>{cardNumber}</div>
               </div>
               <div>
-                <div className="text-[7px] text-slate-400 uppercase tracking-wider">Unit</div>
-                <div className="text-base font-bold text-cyan-400 leading-tight">{unitNumber}</div>
+                <div style={{ fontSize: '6px', color: `${TEAL}99`, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '1px' }}>Property</div>
+                <div style={{ fontWeight: 600, fontSize: '8px', color: 'white' }}>{propertyName}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '6px', color: `${TEAL}99`, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '1px' }}>Unit</div>
+                <div style={{ fontWeight: 800, fontSize: '13px', color: TEAL }}>{unitNumber}</div>
               </div>
               {holderName && (
                 <div>
-                  <div className="text-[7px] text-slate-400 uppercase tracking-wider">Holder</div>
-                  <div className="text-[10px] font-medium leading-tight">{holderName}</div>
+                  <div style={{ fontSize: '6px', color: `${TEAL}99`, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '1px' }}>Holder</div>
+                  <div style={{ fontWeight: 600, fontSize: '8px', color: 'white' }}>{holderName}</div>
                 </div>
               )}
             </div>
-            <div className="bg-white p-1 rounded">
-              <QRCodeSVG value={qrValue} size={52} level="M" />
+            <div style={{
+              background: 'white',
+              padding: '3px',
+              borderRadius: '4px',
+              border: `1px solid ${TEAL}66`,
+              flexShrink: 0,
+            }}>
+              <QRCodeSVG value={qrValue} size={48} level="M" />
             </div>
           </div>
 
           {/* Footer */}
-          <div className="flex justify-between items-end text-[7px] text-slate-400 pt-1 border-t border-slate-700">
-            <span>Code: {propertyCode}</span>
-            {issuedDate && <span>Issued: {issuedDate}</span>}
+          <div style={{
+            display: 'flex', justifyContent: 'space-between',
+            fontSize: '5px', color: '#64748b',
+            borderTop: `1px solid ${TEAL}22`,
+            paddingTop: '3px', marginTop: '2px',
+            fontFamily: 'monospace',
+          }}>
+            <span>CODE: {propertyCode}</span>
+            {issuedDate && <span>ISSUED: {issuedDate}</span>}
           </div>
         </div>
+
+        <MicroTextLine text={`${businessName.toUpperCase()} • PROPERTY ID • ${businessName.toUpperCase()} • `} color={TEAL} />
       </div>
     );
 
     const BackCard = () => (
-      <div 
-        style={cardStyle}
-        className={`bg-white text-slate-800 rounded-xl overflow-hidden shadow-lg border ${!forPrint ? 'w-[340px] aspect-[1.586/1]' : ''}`}
+      <div
+        ref={forPrint ? undefined : ref}
+        style={{
+          ...cardStyle,
+          width: forPrint ? '85.6mm' : `${CARD_WIDTH}px`,
+          height: forPrint ? '54mm' : `${CARD_HEIGHT}px`,
+          background: '#ffffff',
+          borderRadius: `${CARD_RADIUS}px`,
+          position: 'relative',
+          overflow: 'hidden',
+          border: `1px solid ${DARK}22`,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+        }}
+        data-card-back
       >
-        <div className="h-full flex flex-col" style={{ padding: safeZonePadding }}>
-          {/* Header */}
-          <div className="text-center mb-1 pb-1 border-b border-slate-200">
-            <div className="font-bold text-xs">{businessName}</div>
-            <div className="text-[8px] text-slate-500">Tenant Identification Card</div>
+        <GuillochePattern opacity={0.025} />
+        <CardHeaderBand color={TEAL} height={4} />
+        <SecurityBorder color={DARK} />
+
+        <div style={{ padding: '12px 14px 10px', position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <MagneticStripe />
+
+          {/* Title */}
+          <div style={{ fontSize: '7px', fontWeight: 700, color: DARK, letterSpacing: '1px', textTransform: 'uppercase', textAlign: 'center', marginBottom: '4px', opacity: 0.7 }}>
+            Tenant Identification Card
           </div>
 
           {/* Payment Instructions */}
-          <div className="flex-1 space-y-1.5">
-            <div className="bg-emerald-50 border border-emerald-200 rounded p-1.5">
-              <div className="text-[8px] font-bold text-emerald-700 uppercase mb-0.5">Payment Instructions</div>
-              <div className="text-[7px] space-y-0.5 text-slate-600">
-                <p>1. Pay rent via MTN MoMo / Airtel Money / Bank</p>
-                <p>2. Use card number: <span className="font-mono font-bold">{cardNumber}</span></p>
-                <p>3. Submit proof at the renter portal</p>
-              </div>
+          <div style={{
+            background: `${TEAL}06`,
+            border: `1px solid ${TEAL}22`,
+            borderRadius: '4px',
+            padding: '5px 8px',
+            marginBottom: '4px',
+            flex: 1,
+          }}>
+            <div style={{ fontSize: '6px', fontWeight: 700, color: DARK, marginBottom: '2px', letterSpacing: '0.5px' }}>Payment Instructions</div>
+            <div style={{ fontSize: '6px', color: '#475569', lineHeight: 1.6 }}>
+              1. Pay via MTN MoMo / Airtel Money / Bank Transfer
             </div>
-
-            <div className="text-[7px] space-y-0.5 text-slate-600">
-              <p><span className="font-semibold">Note:</span> Pay to merchant codes to avoid fees</p>
-              <p>This card belongs to the property. Return when moving out.</p>
+            <div style={{ fontSize: '6px', color: '#475569', lineHeight: 1.6 }}>
+              2. Use card no: <span style={{ fontFamily: 'monospace', fontWeight: 700, color: DARK }}>{cardNumber}</span>
+            </div>
+            <div style={{ fontSize: '6px', color: '#475569', lineHeight: 1.6 }}>
+              3. Submit proof in renter portal
+            </div>
+            <div style={{ fontSize: '5.5px', color: '#94a3b8', marginTop: '2px', fontStyle: 'italic' }}>
+              Pay to merchant codes to avoid transaction fees
             </div>
           </div>
 
-          {/* Contact Footer */}
-          <div className="pt-1 border-t border-slate-200 text-center">
-            {businessPhone && <div className="text-[8px]">Tel: {businessPhone}</div>}
-            {businessAddress && <div className="text-[7px] text-slate-500 leading-tight">{businessAddress}</div>}
+          {/* Signature */}
+          <div style={{ marginBottom: '4px' }}>
+            <SignaturePanel name={holderName || businessName} color={DARK} />
+          </div>
+
+          {/* Notice */}
+          <div style={{
+            fontSize: '5px',
+            color: '#64748b',
+            lineHeight: 1.4,
+            padding: '3px 6px',
+            background: `${DARK}04`,
+            borderRadius: '4px',
+            border: `1px solid ${DARK}11`,
+          }}>
+            This card is property of <span style={{ fontWeight: 700, color: DARK }}>{businessName}</span>. Return when vacating the unit or upon request.
+            {businessPhone && <span style={{ display: 'block' }}>Contact: {businessPhone}</span>}
+            {businessAddress && <span style={{ display: 'block' }}>{businessAddress}</span>}
+          </div>
+
+          <div style={{
+            fontSize: '4px',
+            color: '#94a3b8',
+            textAlign: 'center',
+            marginTop: '2px',
+            fontFamily: 'monospace',
+            letterSpacing: '1px',
+          }}>
+            RNT{cardNumber.replace(/[^A-Z0-9]/g, '').slice(0, 8)} • ENC:{btoa(cardNumber.slice(0, 6)).slice(0, 8)}
           </div>
         </div>
+
+        <MicroTextLine text={`${businessName.toUpperCase()} • TENANT ID • ${businessName.toUpperCase()} • `} color={DARK} />
       </div>
     );
 

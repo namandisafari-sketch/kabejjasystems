@@ -1,5 +1,11 @@
 import Barcode from "react-barcode";
 import { QRCodeSVG } from "qrcode.react";
+import {
+  CARD_WIDTH, CARD_HEIGHT, CARD_RADIUS,
+  GuillochePattern, CardHeaderBand, HologramSeal,
+  SecurityBorder, GhostStamp, MicroTextLine,
+  MagneticStripe, SignaturePanel,
+} from "@/components/id-cards/CardPatterns";
 
 interface Student {
   id: string;
@@ -8,7 +14,7 @@ interface Student {
   date_of_birth: string | null;
   gender: string | null;
   photo_url?: string | null;
-  student_index?: number; // Sequential index for formatting
+  student_index?: number;
 }
 
 interface StudentIDCardProps {
@@ -23,14 +29,13 @@ interface StudentIDCardProps {
   idDigits?: number;
 }
 
-// Standard CR80 ID card size: 85.6mm × 53.98mm (3.375" × 2.125")
-// At 100 DPI this equals approximately 340px × 215px
-const CARD_WIDTH = 340;
-const CARD_HEIGHT = 215;
+const NAVY = '#0a1628';
+const GOLD = '#C5A55A';
+const LIGHT_GOLD = '#e8d48b';
 
-export default function StudentIDCard({ 
-  student, 
-  schoolName, 
+export default function StudentIDCard({
+  student,
+  schoolName,
   schoolLogo,
   schoolPhone,
   className,
@@ -40,14 +45,15 @@ export default function StudentIDCard({
   idDigits = 4
 }: StudentIDCardProps) {
   const cardId = student.admission_number || student.id.slice(0, 12).toUpperCase();
-  
-  // Generate formatted student ID using prefix and digits from settings
   const studentIndex = student.student_index || 1;
   const formattedStudentId = `${idPrefix}-${String(studentIndex).padStart(idDigits, '0')}`;
   const barcodeValue = formattedStudentId;
-  
-  // QR code contains the admission number for easy gate scanning
-  const qrValue = cardId;
+  const qrValue = JSON.stringify({
+    type: 'student',
+    id: cardId,
+    sid: student.id,
+    t: Date.now(),
+  });
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "N/A";
@@ -58,195 +64,245 @@ export default function StudentIDCard({
     });
   };
 
-  // Ink-saving white background design for both print and export
-  const cardFrontStyle: React.CSSProperties = {
+  const cardBase: React.CSSProperties = {
     width: `${CARD_WIDTH}px`,
     height: `${CARD_HEIGHT}px`,
     background: '#ffffff',
-    borderRadius: '12px',
-    padding: '14px',
+    borderRadius: `${CARD_RADIUS}px`,
     color: '#1e293b',
     position: 'relative',
     overflow: 'hidden',
     marginBottom: forPrint ? '10px' : undefined,
-    border: '2px solid #1e3a5f',
-  };
-
-  const cardBackStyle: React.CSSProperties = {
-    width: `${CARD_WIDTH}px`,
-    height: `${CARD_HEIGHT}px`,
-    background: '#ffffff',
-    borderRadius: '12px',
-    padding: '14px',
-    color: '#1e293b',
-    position: 'relative',
-    overflow: 'hidden',
-    border: '2px solid #1e3a5f',
+    border: `2px solid ${NAVY}22`,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
   };
 
   const CardFront = () => (
-    <div style={cardFrontStyle} data-card-front>
-      {/* Header stripe for branding */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '6px',
-        background: '#1e3a5f',
-        borderRadius: '10px 10px 0 0',
-      }}></div>
-      
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '2px', marginBottom: '8px' }}>
-        {schoolLogo ? (
-          <img src={schoolLogo} alt="Logo" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #1e3a5f' }} />
-        ) : (
-          <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#1e3a5f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 'bold', color: 'white' }}>
-            {schoolName.charAt(0)}
-          </div>
-        )}
-        <div>
-          <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#1e3a5f' }}>{schoolName}</div>
-          <div style={{ fontSize: '8px', color: '#64748b', letterSpacing: '1.5px', fontWeight: '600' }}>STUDENT ID CARD</div>
-        </div>
-      </div>
-      
-      {/* Content - Photo, Details, and QR */}
-      <div style={{ display: 'flex', gap: '10px' }}>
-        {/* Photo placeholder */}
-        <div style={{
-          width: '60px',
-          height: '75px',
-          background: student.photo_url ? 'transparent' : '#f1f5f9',
-          borderRadius: '6px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          border: '1px solid #cbd5e1',
-          flexShrink: 0,
-          overflow: 'hidden',
-        }}>
-          {student.photo_url ? (
-            <img src={student.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+    <div style={cardBase} data-card-front>
+      <GuillochePattern />
+      <CardHeaderBand color={NAVY} height={5} />
+      <SecurityBorder color={NAVY} />
+      <GhostStamp text="AUTHORIZED" color={NAVY} />
+
+      <div style={{ padding: '12px 14px 10px', position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', marginTop: '4px' }}>
+          {schoolLogo ? (
+            <img src={schoolLogo} alt="Logo" style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'cover', border: `1px solid ${GOLD}44` }} />
           ) : (
-            <span style={{ fontSize: '8px', color: '#94a3b8', textAlign: 'center' }}>PHOTO</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: `linear-gradient(135deg, ${NAVY}, ${NAVY}dd)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 'bold', color: GOLD }}>
+              {schoolName.charAt(0)}
+            </div>
           )}
-        </div>
-        
-        {/* Details */}
-        <div style={{ flex: 1, fontSize: '9px', minWidth: 0 }}>
-          <div style={{ marginBottom: '4px' }}>
-            <div style={{ color: '#64748b', fontSize: '7px', marginBottom: '1px', fontWeight: '600' }}>FULL NAME</div>
-            <div style={{ fontWeight: 'bold', fontSize: '11px', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.full_name}</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '10px', fontWeight: 'bold', color: NAVY, lineHeight: 1.2 }}>{schoolName}</div>
+            <div style={{ fontSize: '7px', color: GOLD, letterSpacing: '2px', fontWeight: 700, textTransform: 'uppercase' }}>Student Identification Card</div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px', rowGap: '4px' }}>
-            <div>
-              <div style={{ color: '#64748b', fontSize: '7px', fontWeight: '600' }}>ADM. NO</div>
-              <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '9px' }}>{cardId}</div>
-            </div>
-            <div>
-              <div style={{ color: '#64748b', fontSize: '7px', fontWeight: '600' }}>CLASS</div>
-              <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '9px' }}>{className}</div>
-            </div>
-            <div>
-              <div style={{ color: '#64748b', fontSize: '7px', fontWeight: '600' }}>DOB</div>
-              <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '9px' }}>{formatDate(student.date_of_birth)}</div>
-            </div>
-            <div>
-              <div style={{ color: '#64748b', fontSize: '7px', fontWeight: '600' }}>GENDER</div>
-              <div style={{ fontWeight: '600', color: '#1e293b', textTransform: 'capitalize', fontSize: '9px' }}>{student.gender || 'N/A'}</div>
-            </div>
-          </div>
+          <HologramSeal size={28} />
         </div>
-        
-        {/* QR Code for gate scanning */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          flexShrink: 0,
-        }}>
+
+        {/* Main content area */}
+        <div style={{ display: 'flex', gap: '10px', flex: 1 }}>
+          {/* Photo */}
           <div style={{
-            background: 'white',
-            padding: '4px',
-            borderRadius: '4px',
-            border: '1px solid #e2e8f0',
+            width: '62px',
+            height: '78px',
+            background: student.photo_url ? 'transparent' : '#f8fafc',
+            borderRadius: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: `1.5px solid ${NAVY}44`,
+            flexShrink: 0,
+            overflow: 'hidden',
+            position: 'relative',
           }}>
-            <QRCodeSVG value={qrValue} size={55} level="M" />
+            {student.photo_url ? (
+              <>
+                <img src={student.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: `linear-gradient(180deg, transparent 50%, ${NAVY}11 100%)`,
+                  pointerEvents: 'none',
+                }} />
+              </>
+            ) : (
+              <div style={{ textAlign: 'center' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" style={{ margin: '0 auto 2px' }}>
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span style={{ fontSize: '5px', color: '#94a3b8', display: 'block' }}>PHOTO</span>
+              </div>
+            )}
           </div>
-          <div style={{ fontSize: '6px', color: '#64748b', marginTop: '2px', textAlign: 'center' }}>SCAN FOR<br/>CHECK-IN</div>
+
+          {/* Details */}
+          <div style={{ flex: 1, fontSize: '8px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ marginBottom: '5px' }}>
+              <div style={{ color: NAVY, fontSize: '6px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '1px', opacity: 0.6 }}>Full Name</div>
+              <div style={{ fontWeight: 700, fontSize: '10px', color: NAVY, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.full_name}</div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 6px' }}>
+              <div>
+                <div style={{ color: NAVY, fontSize: '6px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6 }}>Admission No.</div>
+                <div style={{ fontWeight: 600, fontSize: '8px', color: NAVY, fontFamily: 'monospace' }}>{formattedStudentId}</div>
+              </div>
+              <div>
+                <div style={{ color: NAVY, fontSize: '6px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6 }}>Class</div>
+                <div style={{ fontWeight: 600, fontSize: '8px', color: NAVY }}>{className}</div>
+              </div>
+              <div>
+                <div style={{ color: NAVY, fontSize: '6px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6 }}>Date of Birth</div>
+                <div style={{ fontWeight: 600, fontSize: '8px', color: NAVY }}>{formatDate(student.date_of_birth)}</div>
+              </div>
+              <div>
+                <div style={{ color: NAVY, fontSize: '6px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6 }}>Gender</div>
+                <div style={{ fontWeight: 600, fontSize: '8px', color: NAVY, textTransform: 'capitalize' }}>{student.gender || 'N/A'}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* QR Code */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{
+              background: 'white',
+              padding: '3px',
+              borderRadius: '4px',
+              border: `1px solid ${GOLD}66`,
+              position: 'relative',
+            }}>
+              <div style={{
+                position: 'absolute', inset: 0, borderRadius: '4px',
+                background: `linear-gradient(135deg, ${GOLD}15, transparent 50%, ${GOLD}10)`,
+                pointerEvents: 'none',
+              }} />
+              <QRCodeSVG value={qrValue} size={48} level="M" />
+            </div>
+            <div style={{ fontSize: '5px', color: '#94a3b8', marginTop: '2px', textAlign: 'center', fontWeight: 600, letterSpacing: '0.5px' }}>SECURE QR</div>
+          </div>
+        </div>
+
+        {/* Footer row */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+          <div style={{ fontSize: '5px', color: '#94a3b8', fontFamily: 'monospace', letterSpacing: '0.5px' }}>
+            ID: {cardId.slice(0, 12)}
+          </div>
+          <div style={{
+            background: `linear-gradient(135deg, ${NAVY}, ${NAVY}dd)`,
+            color: GOLD,
+            padding: '1px 10px',
+            borderRadius: '8px',
+            fontSize: '6px',
+            fontWeight: 700,
+            letterSpacing: '0.5px',
+            border: `1px solid ${GOLD}44`,
+          }}>
+            VALID {termYear}
+          </div>
+          <div style={{ fontSize: '5px', color: '#94a3b8', fontStyle: 'italic' }}>
+            Issued: {new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
+          </div>
         </div>
       </div>
-      
-      {/* Valid badge */}
-      <div style={{
-        position: 'absolute',
-        bottom: '6px',
-        right: '8px',
-        background: '#dcfce7',
-        color: '#166534',
-        padding: '2px 8px',
-        borderRadius: '10px',
-        fontSize: '7px',
-        fontWeight: 'bold',
-        letterSpacing: '0.5px',
-        border: '1px solid #bbf7d0',
-      }}>
-        VALID {termYear}
-      </div>
+
+      <MicroTextLine text={`${schoolName.toUpperCase()} • STUDENT ID • ${schoolName.toUpperCase()} • `} color={NAVY} />
     </div>
   );
 
   const CardBack = () => (
-    <div style={cardBackStyle} data-card-back>
-      {/* Header stripe */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '6px',
-        background: '#1e3a5f',
-        borderRadius: '10px 10px 0 0',
-      }}></div>
-      
-      <div style={{ marginTop: '6px', textAlign: 'center' }}>
-        <div style={{ fontSize: '8px', fontWeight: 'bold', color: '#1e3a5f', letterSpacing: '1.5px', marginBottom: '4px' }}>
-          FEE PAYMENT BARCODE
+    <div style={cardBase} data-card-back>
+      <GuillochePattern opacity={0.025} />
+      <CardHeaderBand color={NAVY} height={5} />
+      <SecurityBorder color={NAVY} />
+
+      <div style={{ padding: '12px 14px 10px', position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {/* Magnetic Stripe */}
+        <MagneticStripe />
+
+        {/* Barcode section */}
+        <div style={{ textAlign: 'center', marginBottom: '6px' }}>
+          <div style={{ fontSize: '6px', fontWeight: 700, color: NAVY, letterSpacing: '1.5px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '3px' }}>
+            Fee Payment Barcode
+          </div>
+          <div style={{
+            background: 'white',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            display: 'inline-block',
+            border: `1px solid ${NAVY}22`,
+            maxWidth: '270px',
+            overflow: 'hidden',
+          }}>
+            <Barcode
+              value={barcodeValue}
+              width={1.1}
+              height={30}
+              fontSize={7}
+              margin={1}
+              displayValue={true}
+            />
+          </div>
         </div>
-        <div style={{ fontSize: '7px', color: '#64748b', marginBottom: '8px' }}>
-          Scan this barcode at the bursar's office to process fee payments
+
+        {/* Info row */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '6px', flex: 1 }}>
+          {/* Signature */}
+          <div style={{ flex: 1 }}>
+            <SignaturePanel name={student.full_name} color={NAVY} />
+          </div>
+
+          {/* Security watermark */}
+          <div style={{
+            width: '50px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              background: `conic-gradient(from 0deg, ${NAVY}22, ${NAVY}11, ${NAVY}22, ${NAVY}11)`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <div style={{ fontSize: '7px', fontWeight: 700, color: `${NAVY}44`, letterSpacing: '1px' }}>
+                {schoolName.charAt(0)}{schoolName.includes(' ') ? schoolName.split(' ')[1]?.charAt(0) || '' : ''}
+              </div>
+            </div>
+          </div>
         </div>
-        
-        {/* Barcode with proper sizing to fit card */}
-        <div style={{ 
-          background: 'white', 
-          padding: '6px 10px', 
-          borderRadius: '6px', 
-          display: 'inline-block', 
-          border: '1px solid #e2e8f0',
-          maxWidth: '290px',
-          overflow: 'hidden',
+
+        {/* Notice */}
+        <div style={{
+          fontSize: '5.5px',
+          color: '#64748b',
+          lineHeight: 1.5,
+          padding: '4px 6px',
+          background: `${NAVY}04`,
+          borderRadius: '4px',
+          border: `1px solid ${NAVY}11`,
         }}>
-          <Barcode 
-            value={barcodeValue}
-            width={1.2}
-            height={40}
-            fontSize={8}
-            margin={2}
-            displayValue={true}
-          />
+          <span style={{ fontWeight: 700, color: NAVY }}>NOTICE:</span> This card is the property of {schoolName}. It is non-transferable and must be surrendered upon request or withdrawal. If found, please return to the school administration office.
+          {schoolPhone && <span style={{ display: 'block', marginTop: '1px' }}>Contact: {schoolPhone}</span>}
         </div>
-        
-        {/* Instructions */}
-        <div style={{ marginTop: '8px', fontSize: '7px', color: '#64748b', lineHeight: 1.4 }}>
-          <div style={{ fontWeight: 'bold', marginBottom: '2px', color: '#1e3a5f' }}>IMPORTANT NOTICE:</div>
-          <div>This card is property of {schoolName}.</div>
-          <div>If found, please return to the school office.</div>
-          {schoolPhone && <div style={{ marginTop: '2px' }}>Contact: {schoolPhone}</div>}
+
+        <div style={{
+          fontSize: '4px',
+          color: '#94a3b8',
+          textAlign: 'center',
+          marginTop: '3px',
+          fontFamily: 'monospace',
+          letterSpacing: '1px',
+        }}>
+          SYS{(student.id || '').slice(0, 8).toUpperCase()} • {termYear.replace(/\s/g, '')} • ENC:{btoa(cardId.slice(0, 6)).slice(0, 8)}
         </div>
       </div>
+
+      <MicroTextLine text={`${schoolName.toUpperCase()} • VERIFIED • ${schoolName.toUpperCase()} • `} color={NAVY} />
     </div>
   );
 
@@ -259,7 +315,6 @@ export default function StudentIDCard({
     );
   }
 
-  // Preview version (for display in the UI)
   return (
     <div className="space-y-3">
       <CardFront />
