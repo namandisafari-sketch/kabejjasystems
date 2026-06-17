@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Settings, Building, Users, Building2, Receipt, Mail, GraduationCap, Calendar, Clock, Home, Database } from "lucide-react";
+import { Settings, Building, Users, Building2, Receipt, Mail, GraduationCap, Calendar, Clock, Home, Database, MessageCircle, Shield } from "lucide-react";
 import { ModuleManagement } from "@/components/business/ModuleManagement";
 import { StaffManagement } from "@/components/business/StaffManagement";
 import { BranchManagement } from "@/components/business/BranchManagement";
@@ -14,6 +15,7 @@ import { ReceiptSettings } from "@/components/business/ReceiptSettings";
 import { LetterSettings } from "@/components/business/LetterSettings";
 import { SchoolSettings } from "@/components/business/SchoolSettings";
 import { DataBackupExport } from "@/components/business/DataBackupExport";
+import { WhatsAppSettings } from "@/components/business/WhatsAppSettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTenant } from "@/hooks/use-tenant";
 
@@ -23,6 +25,9 @@ const BusinessSettings = () => {
   const { data: tenantData } = useTenant();
   const isSchool = ['kindergarten', 'primary_school', 'secondary_school'].includes(tenantData?.businessType || '');
   const isRental = tenantData?.businessType === 'rental_management';
+  const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const tabFromUrl = params.get('tab');
+  const [activeTab, setActiveTab] = useState(tabFromUrl || 'profile');
 
   const { data: tenant, isLoading } = useQuery({
     queryKey: ['tenant-settings'],
@@ -63,7 +68,7 @@ const BusinessSettings = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="profile" className="max-w-4xl">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-4xl">
         <TabsList className="mb-6 flex-wrap h-auto gap-1">
           <TabsTrigger value="profile" className="flex items-center gap-1">
             <Building className="h-4 w-4" />
@@ -96,9 +101,14 @@ const BusinessSettings = () => {
               Letters
             </TabsTrigger>
           )}
+
           <TabsTrigger value="backup" className="flex items-center gap-1">
             <Database className="h-4 w-4" />
             Backup
+          </TabsTrigger>
+          <TabsTrigger value="whatsapp" className="flex items-center gap-1">
+            <MessageCircle className="h-4 w-4" />
+            WhatsApp
           </TabsTrigger>
           <TabsTrigger value="subscription">Subscription</TabsTrigger>
         </TabsList>
@@ -208,6 +218,10 @@ const BusinessSettings = () => {
 
         <TabsContent value="backup">
           <DataBackupExport tenantId={tenant?.id || null} businessType={tenant?.business_type || null} />
+        </TabsContent>
+
+        <TabsContent value="whatsapp">
+          <WhatsAppSettings tenantId={tenant?.id || null} />
         </TabsContent>
 
         <TabsContent value="subscription" className="space-y-6">

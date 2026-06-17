@@ -10,7 +10,7 @@ import { CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { usePWAUpdate } from "@/hooks/use-pwa-update";
 import { toast } from "@/hooks/use-toast";
-import kabejjaLogo from "@/assets/kabejja-logo.png";
+import { TennaHubLogo } from "@/components/TennaHubLogo";
 import { SponsorMarquee } from "@/components/SponsorMarquee";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { AnimatedCard } from "@/components/AnimatedCard";
@@ -226,16 +226,10 @@ export default function PWAHome() {
             className="flex items-center gap-3"
             whileHover={{ scale: 1.02 }}
           >
-            <motion.img 
-              src={kabejjaLogo} 
-              alt="TennaHub" 
-              className="h-14 w-auto sm:h-16"
-              animate={{ rotate: [0, -3, 3, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            />
+            <TennaHubLogo width={140} height={46} variant="wordmark" />
             <div>
               <h1 className="text-lg font-bold text-foreground">TennaHub</h1>
-              <p className="text-2xs text-muted-foreground">Powered by Kabejja Systems</p>
+              <p className="text-2xs text-muted-foreground">TennaHub Technologies</p>
             </div>
           </motion.div>
           <div className="flex items-center gap-1">

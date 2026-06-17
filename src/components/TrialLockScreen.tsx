@@ -163,7 +163,7 @@ export function TrialLockScreen() {
 
                 {/* Help Link */}
                 <div className="text-center">
-                    <Button variant="link" onClick={() => window.location.href = 'mailto:support@kabejjasystems.com'}>
+                    <Button variant="link" onClick={() => window.location.href = 'mailto:support@tennahubapps.com'}>
                         Need help? Contact Support
                     </Button>
                 </div>

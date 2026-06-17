@@ -30,7 +30,7 @@ export const TestimonialsSection = () => {
             Real Stories from Real Businesses
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-6">
-            Hear from Ugandan business owners who have transformed their operations with Kabejja Systems
+            Hear from Ugandan business owners who have transformed their operations with TennaHub Technologies
           </p>
           <Link to="/submit-testimonial">
             <Button variant="outline" className="gap-2">
@@ -65,7 +65,7 @@ export const TestimonialsSection = () => {
               Be the First to Share Your Story
             </h3>
             <p className="text-muted-foreground mb-4">
-              Have you used Kabejja Systems? Share your experience and help other businesses discover us.
+              Have you used TennaHub Technologies? Share your experience and help other businesses discover us.
             </p>
             <Link to="/submit-testimonial">
               <Button>Submit Your Testimonial</Button>
@@ -76,7 +76,7 @@ export const TestimonialsSection = () => {
         {testimonials && testimonials.length > 0 && (
           <div className="text-center mt-8">
             <p className="text-sm text-muted-foreground">
-              All testimonials are from verified Kabejja Systems users
+              All testimonials are from verified TennaHub Technologies users
             </p>
           </div>
         )}

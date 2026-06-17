@@ -44,7 +44,7 @@ interface PrintReceiptProps {
 
 export const PrintReceipt = forwardRef<HTMLDivElement, PrintReceiptProps>(
   ({ 
-    businessName = "Kabejja Systems", 
+    businessName = "TennaHub", 
     businessPhone,
     businessEmail,
     businessAddress,
@@ -212,7 +212,7 @@ export const PrintReceipt = forwardRef<HTMLDivElement, PrintReceiptProps>(
             <p className="font-medium text-sm text-neutral-800 mb-1">{footer_message}</p>
           )}
           <p className="text-xs text-neutral-500">We appreciate your business</p>
-          <p className="text-[9px] mt-3 text-neutral-400">Powered by Kabejja Systems</p>
+          <p className="text-[9px] mt-3 text-neutral-400">TennaHub Technologies</p>
         </div>
       </div>
     );

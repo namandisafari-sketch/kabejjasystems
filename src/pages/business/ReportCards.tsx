@@ -13,7 +13,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, FileText, Search, Eye, Edit, Printer, Download, BookOpen } from "lucide-react";
+import { Plus, FileText, Search, Eye, Edit, Printer, Download, BookOpen, LayoutTemplate, Send } from "lucide-react";
+import { ReportCardTemplates } from "@/components/school/ReportCardTemplates";
+import { ReportDelivery } from "@/components/school/ReportDelivery";
 import { ReportCardEditor } from "@/components/report-cards/ReportCardEditor";
 import { ReportCardPreview } from "@/components/report-cards/ReportCardPreview";
 import { ALevelReportCardEditor } from "@/components/report-cards/ALevelReportCardEditor";
@@ -256,6 +258,8 @@ export default function ReportCards() {
             <TabsList>
               <TabsTrigger value="report-cards">Report Cards</TabsTrigger>
               <TabsTrigger value="subjects">Subjects</TabsTrigger>
+              <TabsTrigger value="templates"><LayoutTemplate className="h-4 w-4 mr-1" />Templates</TabsTrigger>
+              <TabsTrigger value="delivery"><Send className="h-4 w-4 mr-1" />Delivery</TabsTrigger>
             </TabsList>
           </div>
         </div>
@@ -442,6 +446,14 @@ export default function ReportCards() {
 
         <TabsContent value="subjects">
           <SubjectsManager />
+        </TabsContent>
+
+        <TabsContent value="templates">
+          <ReportCardTemplates tenantId={tenantData?.tenantId || null} />
+        </TabsContent>
+
+        <TabsContent value="delivery">
+          <ReportDelivery tenantId={tenantData?.tenantId || null} />
         </TabsContent>
       </Tabs>
 

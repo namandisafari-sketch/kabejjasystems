@@ -1,13 +1,13 @@
 {
   "name": "kabejja-biztrack",
-  "productName": "Kabejja Biz Track",
+  "productName": "TennaHub",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "main": "electron.js",
   "build": {
-    "appId": "com.kabejja.biztrack",
-    "productName": "Kabejja Biz Track",
+    "appId": "com.tennahub.app",
+    "productName": "TennaHub",
     "files": [
       "dist/**/*",
       "electron.js",
@@ -113,6 +113,7 @@
     "jszip": "^3.10.1",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
+    "pg": "^8.21.0",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-barcode": "^1.6.1",

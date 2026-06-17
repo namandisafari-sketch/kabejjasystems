@@ -35,7 +35,7 @@ const PendingApproval = () => {
           </div>
           
           <p className="text-sm text-muted-foreground">
-            Need help? Contact us at support@kabejjabiztrack.com
+            Need help? Contact us at support@tennahubapps.com
           </p>
 
           {/* Dev Mode Shortcuts */}

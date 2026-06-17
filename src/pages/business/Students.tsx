@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Pencil, Trash2, Users, Eye, UserPlus, RotateCcw } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Users, Eye, UserPlus, RotateCcw, Printer } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { StudentEnrollmentForm } from "@/components/students/StudentEnrollmentForm";
@@ -288,17 +288,156 @@ export default function Students() {
   const handleReEnrollStudent = (formerStudent: any) => {
     setIsReturningDialogOpen(false);
     setIsReEnrollment(true);
-    // Pre-fill the form with student data, update status to reactivate
     setEditingStudent({
       ...formerStudent,
-      // Clear class_id so they must select new class (e.g., S5 for A-Level)
       class_id: '',
-      // Keep their UCE index number for reference
       previous_index_number: formerStudent.previous_index_number || '',
-      // Mark as returning for special handling
       _isReturning: true,
     });
     setIsDialogOpen(true);
+  };
+
+  const handlePrintDossier = async (student: Student) => {
+    if (!tenantData?.tenantId) return;
+    const [studentRes, tenantRes] = await Promise.all([
+      supabase.from('students').select('*, school_classes!class_id(name, level, grade)').eq('id', student.id).single(),
+      supabase.from('tenants').select('name').eq('id', tenantData.tenantId).single(),
+    ]);
+    const full = studentRes.data;
+    if (!full) return;
+    const schoolName = (tenantRes.data as any)?.name || 'School';
+
+    // Field map: all student columns organized by section
+    // exclude internal/system fields from the dossier
+    const hidden = new Set(['id','tenant_id','class_id','created_by','created_at','updated_at','admitted_by','photo_url']);
+    const sections: { title: string; fields: [string, string][] }[] = [
+      { title: 'Personal Information', fields: [
+        ['Full Name', 'full_name'],
+        ['First Name', 'first_name'],
+        ['Last Name', 'last_name'],
+        ['Admission Number', 'admission_number'],
+        ['Class', '_class'],
+        ['Gender', '_gender'],
+        ['Date of Birth', 'date_of_birth'],
+        ['Religion', 'religion'],
+        ['Nationality', 'nationality'],
+        ['Place of Birth', 'place_of_birth'],
+        ['Home District', 'home_district'],
+        ['Student National ID', 'student_national_id'],
+        ['NIN Number', 'nin_number'],
+        ['Birth Certificate Number', 'birth_certificate_number'],
+        ['Birth Certificate No', 'birth_certificate_no'],
+        ['Address', 'address'],
+      ]},
+      { title: 'Admission Details', fields: [
+        ['Admission Date', 'admission_date'],
+        ['Admission Status', 'admission_status'],
+        ['Status', '_active'],
+        ['Previous School', 'previous_school'],
+        ['Previous School Name', 'previous_school_name'],
+        ['Previous School Address', 'previous_school_address'],
+        ['Previous Class', 'previous_class'],
+        ['Reason for Leaving', 'reason_for_leaving'],
+        ['Previous School Leaving Reason', 'previous_school_leaving_reason'],
+        ['Academic Report Notes', 'academic_report_notes'],
+        ['Admission Notes', 'admission_notes'],
+        ['Suggested Class Level', 'suggested_class_level'],
+        ['Boarding Status', 'boarding_status'],
+        ['Payment Status', 'payment_status'],
+        ['Orientation Completed', '_orientation'],
+        ['Parent Portal Access', '_parent_portal'],
+      ]},
+      { title: 'Guardian Information', fields: [
+        ['Guardian Name', 'guardian_name'],
+        ['Guardian Relationship', 'guardian_relationship'],
+        ['Guardian Phone', 'guardian_phone'],
+        ['Guardian Email', 'guardian_email'],
+        ['Guardian Occupation', 'guardian_occupation'],
+        ['Guardian Address', 'guardian_address'],
+        ['Guardian National ID', 'guardian_national_id'],
+        ['Parent Name', 'parent_name'],
+        ['Parent Phone', 'parent_phone'],
+        ['Parent Email', 'parent_email'],
+      ]},
+      { title: 'Father&rsquo;s Information', fields: [
+        ['Father Name', 'father_name'],
+        ['Father Phone', 'father_phone'],
+        ['Father Occupation', 'father_occupation'],
+        ['Father National ID', 'father_national_id'],
+      ]},
+      { title: 'Mother&rsquo;s Information', fields: [
+        ['Mother Name', 'mother_name'],
+        ['Mother Phone', 'mother_phone'],
+        ['Mother Occupation', 'mother_occupation'],
+        ['Mother National ID', 'mother_national_id'],
+      ]},
+      { title: 'Emergency Contact', fields: [
+        ['Emergency Contact Name', 'emergency_contact_name'],
+        ['Emergency Contact Phone', 'emergency_contact_phone'],
+        ['Emergency Contact Relationship', 'emergency_contact_relationship'],
+      ]},
+      { title: 'Medical Information', fields: [
+        ['Blood Group', 'blood_group'],
+        ['Medical Conditions', 'medical_conditions'],
+        ['Allergies', 'allergies'],
+        ['Disabilities', 'disabilities'],
+        ['Immunization Status', 'immunization_status'],
+      ]},
+      { title: 'Additional Information', fields: [
+        ['Talent', 'talent'],
+        ['Special Talent', 'special_talent'],
+        ['Consecutive Absence Days', 'consecutive_absence_days'],
+        ['Previous Index Number', 'previous_index_number'],
+        ['SchoolPay Code', 'schoolpay_payment_code'],
+      ]},
+    ];
+
+    const val = (key: string): string => {
+      if (key === '_class') return full.school_classes ? full.school_classes.name + (full.school_classes.level ? ' (' + full.school_classes.level + ')' : '') : '-';
+      if (key === '_gender') return full.gender ? full.gender.charAt(0).toUpperCase() + full.gender.slice(1) : '-';
+      if (key === '_active') return full.is_active ? 'Active' : 'Inactive';
+      if (key === '_orientation') return full.orientation_completed ? 'Yes' : 'No';
+      if (key === '_parent_portal') return full.parent_portal_access ? 'Enabled' : 'Disabled';
+      const v = full[key];
+      if (v === null || v === undefined || v === '') return '-';
+      return String(v);
+    };
+
+    let body = '';
+    for (const section of sections) {
+      let rows = '';
+      for (const [label, key] of section.fields) {
+        const v = val(key);
+        if (v !== '-') rows += `    <tr><td class="l">${label}</td><td class="v">${v}</td></tr>\n`;
+      }
+      if (rows) body += `<div class="sec">${section.title}</div>\n<table>\n${rows}</table>\n`;
+    }
+
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>${full.full_name} - Dossier</title>
+<style>
+  @page { margin: 12mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Times New Roman', Times, serif; color: #1a1a1a; padding: 24px; font-size: 14px; line-height: 1.5; }
+  .header { text-align: center; border-bottom: 2px solid #c9a34e; padding-bottom: 12px; margin-bottom: 20px; }
+  .header h1 { font-size: 22px; color: #5c3d0e; letter-spacing: 1px; }
+  .header p { font-size: 13px; color: #666; margin-top: 4px; }
+  .dossier-title { text-align: center; font-size: 17px; font-weight: bold; color: #5c3d0e; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #ddd; padding-bottom: 8px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  td { padding: 5px 10px; border: 1px solid #d4c4a0; vertical-align: top; }
+  td.l { width: 33%; font-weight: 600; background: #faf3e0; color: #5c3d0e; }
+  td.v { width: 67%; }
+  .sec { font-size: 15px; font-weight: bold; color: #5c3d0e; margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 1px solid #c9a34e; }
+  .foot { text-align: center; margin-top: 24px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 11px; color: #999; }
+</style></head><body>
+  <div class="header"><h1>${schoolName}</h1><p>Student Dossier &mdash; Confidential</p></div>
+  <div class="dossier-title">Learner&rsquo;s Record File</div>
+${body}  <div class="foot">Generated on ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} &mdash; ${schoolName}</div>
+  <script>window.onload=function(){setTimeout(function(){window.print()},300)};<\/script>
+</body></html>`;
+
+    const pw = window.open('', '_blank');
+    if (pw) { pw.document.write(html); pw.document.close(); }
   };
 
   return (
@@ -503,34 +642,56 @@ export default function Students() {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredStudents.map(student => (
-                <Card key={student.id} className="p-4 hover:border-primary/50 transition-colors">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium truncate">{student.full_name}</p>
-                      <p className="text-sm text-muted-foreground">{student.admission_number || "No Adm. No."}</p>
-                    </div>
+                <div key={student.id} className="relative group cursor-pointer" onClick={() => handleView(student)}>
+                  <svg viewBox="0 0 680 500" className="w-full h-auto hover:drop-shadow-xl transition-all duration-200 hover:-translate-y-0.5" role="img" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <filter id="folder-shadow" x="-2%" y="-2%" width="106%" height="110%">
+                        <feDropShadow dx="2" dy="3" stdDeviation="4" flood-color="#b8a87a" flood-opacity="0.35"/>
+                      </filter>
+                    </defs>
+                    <g filter="url(#folder-shadow)">
+                      <rect x="60" y="118" width="560" height="342" rx="3" fill="#e8d9a8" stroke="#c9b87a" strokeWidth="0.8"/>
+                      <path d="M160,118 L160,98 Q160,92 166,92 L266,92 Q272,92 272,98 L272,118 Z" fill="#e8d9a8" stroke="#c9b87a" strokeWidth="0.8"/>
+                      <rect x="60" y="128" width="560" height="332" rx="3" fill="#f0e0b0" stroke="#c9b87a" strokeWidth="0.8"/>
+                      <line x1="60" y1="135" x2="620" y2="135" stroke="#c9b87a" strokeWidth="0.4" opacity="0.5"/>
+                      <line x1="67" y1="128" x2="67" y2="460" stroke="#c9b87a" strokeWidth="0.4" opacity="0.4"/>
+                      <line x1="613" y1="128" x2="613" y2="460" stroke="#c9b87a" strokeWidth="0.4" opacity="0.4"/>
+                      <line x1="60" y1="453" x2="620" y2="453" stroke="#c9b87a" strokeWidth="0.4" opacity="0.4"/>
+                      <text x="216" y="112" textAnchor="middle" fill="#7a5c22" fontSize="13" fontWeight="700">
+                        {student.admission_number || "NEW"}
+                      </text>
+                    </g>
+                  </svg>
+                  {/* Content overlaid on folder */}
+                  <div className="absolute inset-0 pt-[19%] pb-[7%] px-[11%] flex flex-col text-[11px] leading-tight">
+                    <p className="font-bold text-[13px] text-amber-950 truncate">{student.full_name}</p>
                     {student.school_classes && (
-                      <Badge variant="secondary" className="ml-2 shrink-0">{student.school_classes.name}</Badge>
+                      <span className="text-amber-800/70 font-medium text-[10px]">{student.school_classes.name}</span>
                     )}
+                    <div className="flex-1 min-h-[4px]" />
+                    <div className="space-y-0.5 text-amber-900/80 text-[10px]">
+                      <p className="truncate"><span className="font-medium">Guardian:</span> {student.guardian_name || student.parent_name || "-"}</p>
+                      <p className="truncate"><span className="font-medium">Phone:</span> {student.guardian_phone || student.parent_phone || "-"}</p>
+                      {student.gender && <p><span className="font-medium">Gender:</span> <span className="capitalize">{student.gender}</span></p>}
+                    </div>
+                    <div className="flex justify-end gap-0.5 mt-1 pt-1 border-t border-amber-300/40">
+                      <span className="inline-flex items-center justify-center h-5 w-5 rounded hover:bg-amber-200/50 text-amber-700" title="View" onClick={(e) => { e.stopPropagation(); handleView(student); }}>
+                        <Eye className="h-3 w-3" />
+                      </span>
+                      <span className="inline-flex items-center justify-center h-5 w-5 rounded hover:bg-amber-200/50 text-amber-700" title="Edit" onClick={(e) => { e.stopPropagation(); handleEdit(student); }}>
+                        <Pencil className="h-3 w-3" />
+                      </span>
+                      <span className="inline-flex items-center justify-center h-5 w-5 rounded hover:bg-amber-200/50 text-amber-700" title="Print Dossier" onClick={(e) => { e.stopPropagation(); handlePrintDossier(student); }}>
+                        <Printer className="h-3 w-3" />
+                      </span>
+                      <span className="inline-flex items-center justify-center h-5 w-5 rounded hover:bg-red-200/50 text-red-600" title="Delete" onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(student.id); }}>
+                        <Trash2 className="h-3 w-3" />
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-sm text-muted-foreground space-y-1">
-                    <p>Guardian: {student.guardian_name || student.parent_name || "-"}</p>
-                    <p>Phone: {student.guardian_phone || student.parent_phone || "-"}</p>
-                  </div>
-                  <div className="flex justify-end gap-1 mt-3">
-                    <Button size="sm" variant="ghost" onClick={() => handleView(student)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => handleEdit(student)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(student.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </Card>
+                </div>
               ))}
             </div>
           )}

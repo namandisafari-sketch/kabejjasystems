@@ -13,7 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Pencil, Trash2, BookOpen, GraduationCap } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, BookOpen, GraduationCap, GripVertical } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SubjectElements } from "@/components/school/SubjectElements";
 
 interface Subject {
   id: string;
@@ -186,7 +188,13 @@ export default function Subjects() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-4 md:py-8 space-y-4 md:space-y-6 pb-24 md:pb-8">
+    <Tabs defaultValue="subjects" className="container mx-auto px-4 py-4 md:py-8 space-y-4 md:space-y-6 pb-24 md:pb-8">
+      <TabsList>
+        <TabsTrigger value="subjects"><BookOpen className="h-4 w-4 mr-1" />Subjects</TabsTrigger>
+        <TabsTrigger value="elements"><GripVertical className="h-4 w-4 mr-1" />Elements</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="subjects">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -390,6 +398,11 @@ export default function Subjects() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </TabsContent>
+
+      <TabsContent value="elements">
+        <SubjectElements tenantId={tenant?.tenantId || null} />
+      </TabsContent>
+    </Tabs>
   );
 }

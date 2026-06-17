@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-    appId: 'com.kabejja.biztrack',
-    appName: 'Kabejja Biz Track',
+    appId: 'com.tennahub.app',
+    appName: 'TennaHub',
     webDir: 'dist',
     server: {
         allowMixedContent: true,
@@ -10,7 +10,7 @@ const config: CapacitorConfig = {
     plugins: {
         SplashScreen: {
             launchShowDuration: 2000,
-            backgroundColor: '#1e3a5f',
+            backgroundColor: '#005bc4',
             androidSplashResourceName: 'splash',
             iosSplashResourceName: 'Splash',
             showSpinner: false,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { GraduationCap, Eye, EyeOff, School, AlertCircle } from "lucide-react";
+import { GraduationCap, Eye, EyeOff, School, AlertCircle, Smartphone, Mail } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { auth } from "@/config/firebase";
+import { RecaptchaVerifier, signInWithPhoneNumber, PhoneAuthProvider, signInWithCredential } from "firebase/auth";
 
 interface VerifiedSchool {
   id: string;
@@ -36,6 +38,16 @@ export default function ParentPortal() {
   const [signupPassword, setSignupPassword] = useState("");
   const [signupName, setSignupName] = useState("");
   const [signupPhone, setSignupPhone] = useState("");
+
+  // Phone auth state
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [verificationId, setVerificationId] = useState("");
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const recaptchaContainerRef = useRef<HTMLDivElement>(null);
+  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
 
   // Check if already logged in
   useEffect(() => {
@@ -179,6 +191,78 @@ export default function ParentPortal() {
     }
   };
 
+  // Setup reCAPTCHA
+  useEffect(() => {
+    if (verifiedSchool && recaptchaContainerRef.current && !recaptchaVerifierRef.current) {
+      try {
+        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
+          size: "invisible",
+          callback: () => {},
+        });
+      } catch {}
+    }
+    return () => {
+      if (recaptchaVerifierRef.current) {
+        try { recaptchaVerifierRef.current.clear(); } catch {}
+        recaptchaVerifierRef.current = null;
+      }
+    };
+  }, [verifiedSchool]);
+
+  const handleSendOtp = async () => {
+    if (!phoneNumber.trim()) {
+      toast.error("Please enter your phone number");
+      return;
+    }
+    setIsSendingOtp(true);
+    try {
+      if (!recaptchaVerifierRef.current) throw new Error("reCAPTCHA not ready");
+      const confirmation = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifierRef.current);
+      setVerificationId(confirmation.verificationId);
+      setOtpSent(true);
+      toast.success("OTP sent to your phone");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send OTP");
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpCode.trim()) {
+      toast.error("Please enter the OTP code");
+      return;
+    }
+    setIsVerifyingOtp(true);
+    try {
+      const credential = PhoneAuthProvider.credential(verificationId, otpCode);
+      const userCredential = await signInWithCredential(auth, credential);
+      const phone = userCredential.user.phoneNumber;
+
+      // Call Edge Function to get or create parent auth credentials
+      const { data: tokenData, error: fnError } = await supabase.functions.invoke("generate-parent-token", {
+        body: { phone, tenant_id: verifiedSchool!.id },
+      });
+
+      if (fnError) throw fnError;
+      if (tokenData.error) throw new Error(tokenData.error);
+
+      // Sign in with the returned email/password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: tokenData.email,
+        password: tokenData.password,
+      });
+      if (signInError) throw signInError;
+
+      toast.success("Welcome!");
+      navigate("/parent/dashboard");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to verify OTP");
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
   const resetSchoolCode = () => {
     setVerifiedSchool(null);
     setSchoolCode("");
@@ -288,48 +372,107 @@ export default function ParentPortal() {
 
                 <CardContent className="px-4 sm:px-6">
                   <TabsContent value="login" className="mt-0">
-                    <form onSubmit={handleLogin} className="space-y-3 sm:space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="login-email" className="text-sm">Email</Label>
-                        <Input
-                          id="login-email"
-                          type="email"
-                          placeholder="parent@example.com"
-                          value={loginEmail}
-                          onChange={(e) => setLoginEmail(e.target.value)}
-                          required
-                          className="h-11 sm:h-12"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="login-password" className="text-sm">Password</Label>
-                        <div className="relative">
-                          <Input
-                            id="login-password"
-                            type={showPassword ? "text" : "password"}
-                            placeholder="••••••••"
-                            value={loginPassword}
-                            onChange={(e) => setLoginPassword(e.target.value)}
-                            required
-                            className="h-11 sm:h-12"
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-0 top-0 h-full"
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </Button>
-                        </div>
-                      </div>
+                    <Tabs defaultValue="email">
+                      <TabsList className="grid w-full grid-cols-2 h-10 mb-4">
+                        <TabsTrigger value="email" className="text-xs sm:text-sm"><Mail className="h-3.5 w-3.5 mr-1.5" />Email</TabsTrigger>
+                        <TabsTrigger value="phone" className="text-xs sm:text-sm"><Smartphone className="h-3.5 w-3.5 mr-1.5" />Phone</TabsTrigger>
+                      </TabsList>
 
-                      <Button type="submit" className="w-full h-11 sm:h-12" disabled={isLoading}>
-                        {isLoading ? "Signing in..." : "Sign In"}
-                      </Button>
-                    </form>
+                      {/* Email Login */}
+                      <TabsContent value="email" className="mt-0">
+                        <form onSubmit={handleLogin} className="space-y-3 sm:space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="login-email" className="text-sm">Email</Label>
+                            <Input
+                              id="login-email"
+                              type="email"
+                              placeholder="parent@example.com"
+                              value={loginEmail}
+                              onChange={(e) => setLoginEmail(e.target.value)}
+                              required
+                              className="h-11 sm:h-12"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="login-password" className="text-sm">Password</Label>
+                            <div className="relative">
+                              <Input
+                                id="login-password"
+                                type={showPassword ? "text" : "password"}
+                                placeholder="••••••••"
+                                value={loginPassword}
+                                onChange={(e) => setLoginPassword(e.target.value)}
+                                required
+                                className="h-11 sm:h-12"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-0 top-0 h-full"
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </Button>
+                            </div>
+                          </div>
+
+                          <Button type="submit" className="w-full h-11 sm:h-12" disabled={isLoading}>
+                            {isLoading ? "Signing in..." : "Sign In"}
+                          </Button>
+                        </form>
+                      </TabsContent>
+
+                      {/* Phone Login */}
+                      <TabsContent value="phone" className="mt-0">
+                        <div className="space-y-3 sm:space-y-4">
+                          {!otpSent ? (
+                            <>
+                              <div className="space-y-2">
+                                <Label htmlFor="phone-number" className="text-sm">Phone Number</Label>
+                                <Input
+                                  id="phone-number"
+                                  type="tel"
+                                  placeholder="+2567XXXXXXXX"
+                                  value={phoneNumber}
+                                  onChange={(e) => setPhoneNumber(e.target.value)}
+                                  className="h-11 sm:h-12"
+                                />
+                                <p className="text-xs text-muted-foreground">Enter with country code (e.g., +2567XXXXXXXX)</p>
+                              </div>
+                              <Button onClick={handleSendOtp} className="w-full h-11 sm:h-12" disabled={isSendingOtp || !phoneNumber.trim()}>
+                                {isSendingOtp ? "Sending OTP..." : "Send OTP via SMS"}
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <div className="space-y-2">
+                                <Label htmlFor="otp-code" className="text-sm">Enter OTP Code</Label>
+                                <Input
+                                  id="otp-code"
+                                  type="text"
+                                  placeholder="000000"
+                                  value={otpCode}
+                                  onChange={(e) => setOtpCode(e.target.value)}
+                                  maxLength={6}
+                                  className="h-11 sm:h-12 text-center text-lg tracking-widest font-mono"
+                                />
+                              </div>
+                              <div className="flex gap-2">
+                                <Button onClick={handleVerifyOtp} className="flex-1 h-11 sm:h-12" disabled={isVerifyingOtp || otpCode.length < 4}>
+                                  {isVerifyingOtp ? "Verifying..." : "Verify & Login"}
+                                </Button>
+                                <Button variant="outline" onClick={() => { setOtpSent(false); setOtpCode(""); }} className="h-11 sm:h-12">
+                                  Change
+                                </Button>
+                              </div>
+                            </>
+                          )}
+                          <div ref={recaptchaContainerRef} />
+                        </div>
+                      </TabsContent>
+                    </Tabs>
                   </TabsContent>
 
                   <TabsContent value="signup" className="mt-0">

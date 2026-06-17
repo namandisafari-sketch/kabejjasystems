@@ -270,6 +270,10 @@ export const moduleRoutes: Record<string, { url: string; icon: string }> = {
   rental_maintenance: { url: '/business/rental-maintenance', icon: 'Wrench' },
   rental_id_cards: { url: '/business/rental-id-cards', icon: 'CreditCard' },
   rental_payment_proofs: { url: '/business/rental-payment-proofs', icon: 'Receipt' },
+  // School admin modules (integrated into SchoolSettings & StaffManagement sub-tabs)
+  // governing_bodies, departments, staff_roles, school_inspections - integrated into pages
+  // NCDC New Curriculum modules (integrated into Subjects, MarksEntry, ReportCards sub-tabs)
+  // subject_elements, aoi_scores, report_templates, report_delivery - integrated into pages
 };
 
 // ECD route overrides - when business is kindergarten, use these routes instead

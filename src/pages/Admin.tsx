@@ -184,7 +184,7 @@ const Admin = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Kabejja Biz Track</p>
+            <p className="text-sm text-muted-foreground">TennaHub Technologies</p>
           </div>
           <Button variant="outline" onClick={handleLogout}>
             Logout

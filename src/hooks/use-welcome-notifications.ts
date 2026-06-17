@@ -57,7 +57,7 @@ export function useWelcomeNotifications() {
             await LocalNotifications.schedule({
                 notifications: [
                     {
-                        title: "Welcome to Kabejja Systems! 🚀",
+                        title: "Welcome to TennaHub! 🚀",
                         body: "Earn Frank Says hi to you 👋",
                         id: 1,
                         schedule: { at: new Date(Date.now() + 1000) }, // Send 1 second later

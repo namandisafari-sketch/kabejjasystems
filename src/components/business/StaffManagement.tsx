@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, UserCircle, Edit, Trash2, Shield, Key, MessageCircle, RefreshCw, GraduationCap, Eye, EyeOff } from "lucide-react";
+import { Plus, UserCircle, Edit, Trash2, Shield, Key, MessageCircle, RefreshCw, GraduationCap, Eye, EyeOff, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ import { AlertCircle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TeacherAssignments } from "./TeacherAssignments";
+import { SchoolStaffRoles } from "@/components/school/SchoolStaffRoles";
 import { z } from "zod";
 
 interface StaffManagementProps {
@@ -607,7 +608,13 @@ Please login with your email, password, and school code.`
   const canAddUser = totalUsers < userLimit;
 
   return (
-    <>
+    <Tabs defaultValue="staff">
+      <TabsList className="mb-6">
+        <TabsTrigger value="staff"><Users className="h-4 w-4 mr-1" />Staff</TabsTrigger>
+        {isSchool && <TabsTrigger value="staff_roles"><GraduationCap className="h-4 w-4 mr-1" />Staff Roles</TabsTrigger>}
+      </TabsList>
+
+      <TabsContent value="staff">
       {/* WhatsApp Share Dialog */}
       <Dialog open={!!createdStaffCredentials} onOpenChange={(open) => !open && setCreatedStaffCredentials(null)}>
         <DialogContent className="max-w-md">
@@ -1148,6 +1155,11 @@ Please login with your email, password, and school code.`
           )}
         </CardContent>
       </Card>
-    </>
+      </TabsContent>
+
+      <TabsContent value="staff_roles">
+        <SchoolStaffRoles tenantId={tenantId} />
+      </TabsContent>
+    </Tabs>
   );
 }

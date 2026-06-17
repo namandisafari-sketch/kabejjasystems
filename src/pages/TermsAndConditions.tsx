@@ -23,7 +23,7 @@ export default function TermsAndConditions() {
             <ScrollArea className="h-[70vh] pr-4">
               <div className="prose prose-sm dark:prose-invert max-w-none space-y-6">
                 <p className="text-muted-foreground">
-                  Thank you for selecting the services offered by Kabejja BizTrack ("KABEJJA"). Review the terms of service thoroughly. This agreement is a legal agreement between your institution and Kabejja. By using our services you accept these terms. If you do not agree to these terms then you may not use the Services. This agreement works together with our Privacy Policy.
+                  Thank you for selecting the services offered by TennaHub Technologies Limited ("TENNAHUB"). Review the terms of service thoroughly. This agreement is a legal agreement between your institution and TennaHub. By using our services you accept these terms. If you do not agree to these terms then you may not use the Services. This agreement works together with our Privacy Policy.
                 </p>
 
                 <section>
@@ -53,7 +53,7 @@ export default function TermsAndConditions() {
                   <h2 className="text-xl font-semibold mt-6 mb-3">3. Stakeholders</h2>
                   <p>The following Service Provider, Customer, and Regulator will be used as the basis of the Agreement:</p>
                   <ul className="list-disc pl-6 mt-2 space-y-1">
-                    <li>Kabejja BizTrack ("Service Provider")</li>
+                    <li>TennaHub Technologies Limited ("Service Provider")</li>
                     <li>The Institution ("Client")</li>
                     <li>Ministry of Education & Sports ("Regulator") - for educational institutions</li>
                   </ul>
@@ -94,7 +94,7 @@ export default function TermsAndConditions() {
                   <h3 className="text-lg font-medium mt-4 mb-2">The Institution shall:</h3>
                   <ul className="list-disc pl-6 space-y-1">
                     <li>Ensure correct digitization and accurate storage of records</li>
-                    <li>Ensure the information is kept private by managing user accounts subjected to rules and regulations of the institution and Kabejja's privacy policy</li>
+                    <li>Ensure the information is kept private by managing user accounts subjected to rules and regulations of the institution and TennaHub's privacy policy</li>
                     <li>Ensure continuous internet access and uninterrupted usage of the system</li>
                     <li>Ensure that the ICT infrastructure needed to use the system is acquired and adequately maintained</li>
                   </ul>
@@ -167,7 +167,7 @@ export default function TermsAndConditions() {
                   <h2 className="text-xl font-semibold mt-6 mb-3">11. Contact Information</h2>
                   <p>For any questions regarding these terms, please contact us:</p>
                   <ul className="list-none mt-2 space-y-1">
-                    <li><strong>Email:</strong> support@kabejja.com</li>
+                    <li><strong>Email:</strong> support@tennahubapps.com</li>
                     <li><strong>Phone:</strong> +256 700 000 000</li>
                   </ul>
                 </section>

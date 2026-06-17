@@ -162,7 +162,7 @@ export const RenterAccessReceipt = forwardRef<HTMLDivElement, RenterAccessReceip
           <div>Keep this receipt safe</div>
           <div>Do not share your PIN</div>
           <div style={{ marginTop: "5px" }}>{format(new Date(), "PPpp")}</div>
-          <div style={{ marginTop: "10px" }}>Powered by Kabejja Systems</div>
+          <div style={{ marginTop: "10px" }}>TennaHub Technologies</div>
         </div>
       </div>
     );

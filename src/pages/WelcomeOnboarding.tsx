@@ -7,7 +7,7 @@ import {
   Sparkles, ArrowRight, ChevronLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import kabejjaLogo from "@/assets/kabejja-logo.png";
+import { TennaHubLogo } from "@/components/TennaHubLogo";
 import { FloatingParticles } from "@/components/FloatingParticles";
 
 interface BusinessOption {
@@ -141,13 +141,13 @@ export default function WelcomeOnboarding() {
             exit={{ opacity: 0, y: -40 }}
             transition={{ duration: 0.5 }}
           >
-            <motion.img
-              src={kabejjaLogo}
-              alt="TennaHub"
-              className="h-24 w-auto mb-6"
-              animate={{ rotate: [0, -4, 4, 0], scale: [1, 1.03, 1] }}
+            <motion.div
+              animate={{ rotate: [0, -2, 2, 0], scale: [1, 1.02, 1] }}
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-            />
+              className="mb-6"
+            >
+              <TennaHubLogo width={220} height={72} variant="full" />
+            </motion.div>
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -204,7 +204,7 @@ export default function WelcomeOnboarding() {
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
             >
-              Powered by Kabejja Systems
+              TennaHub Technologies
             </motion.p>
           </motion.div>
         )}

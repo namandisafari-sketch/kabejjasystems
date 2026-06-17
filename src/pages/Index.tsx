@@ -47,10 +47,10 @@ const Index = () => {
           Wishing all Muslims a blessed and peaceful holy month 🤲
         </p>
 
-        {/* Tennahub branding */}
+        {/* TennaHub branding */}
         <div className="mt-10 border-t border-emerald-700/40 pt-6">
           <p className="text-emerald-300/50 text-sm tracking-widest uppercase">
-            tennahub
+            TennaHub Technologies
           </p>
         </div>
       </div>

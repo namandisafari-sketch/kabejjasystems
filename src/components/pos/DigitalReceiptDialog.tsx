@@ -60,7 +60,7 @@ export function DigitalReceiptDialog({
   items,
   total,
   paymentMethod,
-  businessName = "Kabejja Systems",
+  businessName = "TennaHub",
   businessPhone,
   businessEmail,
   businessAddress,

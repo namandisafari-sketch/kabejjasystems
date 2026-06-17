@@ -309,7 +309,7 @@ const ExamResultsLookup = () => {
         <div className="mt-8 text-center text-sm text-gray-600">
           <p>
             <strong>Note:</strong> This is <em>not</em> an official UNEB portal. It is a school 
-            management service by TennaHub that displays results uploaded by your school.
+            management service by TennaHub Technologies that displays results uploaded by your school.
           </p>
         </div>
       </div>

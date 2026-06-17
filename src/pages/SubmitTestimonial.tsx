@@ -19,7 +19,7 @@ const testimonialSchema = z.object({
   role: z.string().optional(),
   content: z.string().min(20, "Please share at least 20 characters about your experience"),
   rating: z.number().min(1).max(5),
-  proofDescription: z.string().min(10, "Please describe how you use Kabejja Systems"),
+  proofDescription: z.string().min(10, "Please describe how you use TennaHub Technologies"),
 });
 
 type TestimonialForm = z.infer<typeof testimonialSchema>;
@@ -100,7 +100,7 @@ const SubmitTestimonial = () => {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-6">
-              Once approved, your story will be featured on our website to help other businesses discover Kabejja Systems.
+              Once approved, your story will be featured on our website to help other businesses discover TennaHub Technologies.
             </p>
             <Link to="/">
               <Button className="w-full">Return to Home</Button>
@@ -123,7 +123,7 @@ const SubmitTestimonial = () => {
           <CardHeader>
             <CardTitle className="text-2xl">Share Your Experience</CardTitle>
             <CardDescription>
-              Tell us how Kabejja Systems has helped your business. Your testimonial will be reviewed before being published.
+              Tell us how TennaHub Technologies has helped your business. Your testimonial will be reviewed before being published.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -224,7 +224,7 @@ const SubmitTestimonial = () => {
                         <FormLabel>Your Testimonial *</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Share your experience with Kabejja Systems. How has it helped your business?"
+                            placeholder="Share your experience with TennaHub Technologies. How has it helped your business?"
                             className="min-h-[120px]"
                             {...field}
                           />
@@ -242,7 +242,7 @@ const SubmitTestimonial = () => {
                     name="proofDescription"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>How do you use Kabejja Systems? *</FormLabel>
+                        <FormLabel>How do you use TennaHub Technologies? *</FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder="Describe which features you use (e.g., POS system, inventory management, staff tracking) and for how long you've been using the system."

@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Eye, EyeOff, Building2, AlertCircle } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import kabejjaLogo from "@/assets/kabejja-logo.png";
+import { TennaHubLogo } from "@/components/TennaHubLogo";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -145,7 +145,7 @@ const Login = () => {
           <Card className="card-elevated border-0 shadow-elevated">
             <CardHeader className="text-center pb-4 pt-6">
               <div className="flex justify-center mb-4">
-                <img src={kabejjaLogo} alt="Kabejja Systems" className="h-16 w-auto" />
+                <TennaHubLogo width={160} height={52} variant="full" />
               </div>
               <CardTitle className="text-2xl">Welcome Back</CardTitle>
               <CardDescription>Sign in to your account</CardDescription>

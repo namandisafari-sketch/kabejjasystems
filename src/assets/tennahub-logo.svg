@@ -1,0 +1,9 @@
+<svg viewBox="0 0 680 220" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(340,110)">
+    <rect x="-178" y="-52" width="7" height="80" rx="3.5" fill="#005bc4"/>
+    <text x="-158" y="8" font-family="'Montserrat','Inter','Helvetica Neue',Arial,sans-serif" font-weight="800" font-size="58" fill="#1a2a3a" text-anchor="start" letter-spacing="-1">TENNA</text>
+    <text x="10" y="8" font-family="'Montserrat','Inter','Helvetica Neue',Arial,sans-serif" font-weight="800" font-size="58" fill="#005bc4" text-anchor="start" letter-spacing="-1">HUB</text>
+    <rect x="-158" y="20" width="338" height="2" rx="1" fill="#c8d4e0"/>
+    <text x="-158" y="50" font-family="'Montserrat','Inter','Helvetica Neue',Arial,sans-serif" font-weight="300" font-size="13" fill="#6a80a0" text-anchor="start" letter-spacing="9">TECHNOLOGIES</text>
+  </g>
+</svg>

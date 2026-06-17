@@ -63,7 +63,21 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        /* Kabejja brand colors for direct use */
+        /* TennaHub brand colors for direct use */
+        "brand-dark": {
+          DEFAULT: "hsl(213 70% 16%)",
+          light: "hsl(213 70% 25%)",
+          darker: "hsl(213 70% 10%)",
+        },
+        "brand-blue": {
+          DEFAULT: "hsl(213 100% 38%)",
+          light: "hsl(213 100% 48%)",
+          dark: "hsl(213 100% 30%)",
+        },
+        "brand-muted": {
+          DEFAULT: "hsl(213 20% 83%)",
+          text: "hsl(213 22% 51%)",
+        },
         navy: {
           DEFAULT: "hsl(213 70% 16%)",
           light: "hsl(213 70% 25%)",

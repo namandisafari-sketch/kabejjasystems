@@ -78,7 +78,7 @@ export function PWAInstallPrompt() {
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <h3 className="font-semibold text-foreground text-sm">
-                    Install Kabejja App
+                    Install TennaHub
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Quick access, works offline, no app store needed

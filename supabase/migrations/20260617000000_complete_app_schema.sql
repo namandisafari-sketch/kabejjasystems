@@ -6369,6 +6369,17 @@ CREATE INDEX idx_admission_links_payment ON public.admission_links(tenant_id, pa
 CREATE INDEX idx_admission_confirmations_code ON public.admission_confirmations(confirmation_code);
 CREATE INDEX idx_admission_confirmations_tenant ON public.admission_confirmations(tenant_id);
 
+-- Helper function to get current user's tenant_id
+CREATE OR REPLACE FUNCTION public.get_user_tenant_id()
+RETURNS uuid
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT tenant_id FROM public.profiles WHERE id = auth.uid()
+$$;
+
 -- Enable RLS
 ALTER TABLE public.admission_links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admission_confirmations ENABLE ROW LEVEL SECURITY;

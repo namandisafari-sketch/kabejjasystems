@@ -9,7 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Save, BookOpen, Users, GraduationCap, Loader2, Wand2, Eye } from "lucide-react";
+import { Save, BookOpen, Users, GraduationCap, Loader2, Wand2, Eye, ClipboardCheck, Filter } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ActivitiesOfIntegration } from "@/components/school/ActivitiesOfIntegration";
 import {
   Dialog,
   DialogContent,
@@ -301,7 +303,13 @@ export default function MarksEntry() {
   }
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
+    <Tabs defaultValue="marks" className="space-y-6 p-4 md:p-6">
+      <TabsList>
+        <TabsTrigger value="marks"><BookOpen className="h-4 w-4 mr-1" />Marks Entry</TabsTrigger>
+        <TabsTrigger value="aoi"><ClipboardCheck className="h-4 w-4 mr-1" />AOI Scores</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="marks">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2">
@@ -532,9 +540,11 @@ export default function MarksEntry() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </TabsContent>
+
+      <TabsContent value="aoi">
+        <ActivitiesOfIntegration tenantId={tenantId} />
+      </TabsContent>
+    </Tabs>
   );
 }
-
-// Icon for filter
-import { Filter } from "lucide-react";
