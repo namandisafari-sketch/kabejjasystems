@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,8 +8,19 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Save, FileText, AlertTriangle, Clock, DollarSign } from "lucide-react";
+import {
+  Loader2, Save, FileText, AlertTriangle, Clock, DollarSign,
+  Plus, Trash2, GripVertical, ChevronUp, ChevronDown
+} from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { CustomFieldDefinition, CustomFieldType } from "@/types/admission-custom-fields";
 
 interface AdmissionSettingsProps {
   tenantId: string;
@@ -42,6 +53,8 @@ const defaultSettings: AdmissionSettingsData = {
 export function AdmissionSettings({ tenantId }: AdmissionSettingsProps) {
   const queryClient = useQueryClient();
   const [settings, setSettings] = useState<AdmissionSettingsData>(defaultSettings);
+  const [customFields, setCustomFields] = useState<CustomFieldDefinition[]>([]);
+  const [editingField, setEditingField] = useState<CustomFieldDefinition | null>(null);
 
   const { data: existingSettings, isLoading } = useQuery({
     queryKey: ["admission-settings", tenantId],
@@ -70,16 +83,20 @@ export function AdmissionSettings({ tenantId }: AdmissionSettingsProps) {
         admission_fee_amount: existingSettings.admission_fee_amount ?? 0,
         link_validity_hours: existingSettings.link_validity_hours ?? 24,
       });
+      if (existingSettings.custom_fields) {
+        setCustomFields(existingSettings.custom_fields as CustomFieldDefinition[]);
+      }
     }
   }, [existingSettings]);
 
   const saveMutation = useMutation({
-    mutationFn: async (data: AdmissionSettingsData) => {
+    mutationFn: async () => {
       const { error } = await supabase
         .from("admission_settings")
         .upsert({
           tenant_id: tenantId,
-          ...data,
+          ...settings,
+          custom_fields: customFields,
           updated_at: new Date().toISOString(),
         }, { onConflict: "tenant_id" });
 
@@ -93,6 +110,51 @@ export function AdmissionSettings({ tenantId }: AdmissionSettingsProps) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
+
+  const generateFieldId = useCallback(() => {
+    return `cf_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  }, []);
+
+  const addField = () => {
+    const newField: CustomFieldDefinition = {
+      id: generateFieldId(),
+      label: "",
+      type: "text",
+      required: false,
+      section: "Student Information",
+      order: customFields.length,
+    };
+    setEditingField(newField);
+  };
+
+  const saveField = (field: CustomFieldDefinition) => {
+    setCustomFields((prev) => {
+      const idx = prev.findIndex((f) => f.id === field.id);
+      if (idx >= 0) {
+        const updated = [...prev];
+        updated[idx] = field;
+        return updated.map((f, i) => ({ ...f, order: i }));
+      }
+      return [...prev, { ...field, order: prev.length }].map((f, i) => ({ ...f, order: i }));
+    });
+    setEditingField(null);
+  };
+
+  const deleteField = (id: string) => {
+    setCustomFields((prev) => prev.filter((f) => f.id !== id).map((f, i) => ({ ...f, order: i })));
+  };
+
+  const moveField = (id: string, direction: "up" | "down") => {
+    setCustomFields((prev) => {
+      const idx = prev.findIndex((f) => f.id === id);
+      if (idx < 0) return prev;
+      const newIdx = direction === "up" ? idx - 1 : idx + 1;
+      if (newIdx < 0 || newIdx >= prev.length) return prev;
+      const updated = [...prev];
+      [updated[idx], updated[newIdx]] = [updated[newIdx], updated[idx]];
+      return updated.map((f, i) => ({ ...f, order: i }));
+    });
+  };
 
   if (isLoading) {
     return (
@@ -247,10 +309,158 @@ Example:
           />
         </div>
 
+        <Separator />
+
+        {/* Custom Form Fields Builder */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-base">Custom Form Fields</Label>
+              <p className="text-sm text-muted-foreground">
+                Add custom fields that parents must fill during self-registration
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={addField}>
+              <Plus className="h-4 w-4 mr-1" /> Add Field
+            </Button>
+          </div>
+
+          {customFields.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6 border rounded-lg">
+              No custom fields yet. Click "Add Field" to create one.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {customFields.map((field) => (
+                <div
+                  key={field.id}
+                  className="flex items-center gap-2 rounded-lg border p-3"
+                >
+                  <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">
+                      {field.label || <span className="text-muted-foreground italic">Untitled field</span>}
+                    </p>
+                    <div className="flex gap-2 mt-1">
+                      <span className="text-xs bg-muted px-1.5 py-0.5 rounded capitalize">{field.type}</span>
+                      <span className="text-xs text-muted-foreground">{field.section}</span>
+                      {field.required && <span className="text-xs text-amber-600 font-medium">Required</span>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveField(field.id, "up")} disabled={field.order === 0}>
+                      <ChevronUp className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveField(field.id, "down")} disabled={field.order === customFields.length - 1}>
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingField({ ...field })}>
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteField(field.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Field Editor Dialog */}
+        {editingField && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setEditingField(null)}>
+            <div className="bg-background rounded-lg shadow-lg max-w-md w-full p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+              <h3 className="font-semibold text-lg">{customFields.find((f) => f.id === editingField.id) ? "Edit Field" : "Add New Field"}</h3>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label>Field Label</Label>
+                  <Input
+                    value={editingField.label}
+                    onChange={(e) => setEditingField({ ...editingField, label: e.target.value })}
+                    placeholder="e.g. Mother's Name"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Field Type</Label>
+                  <Select
+                    value={editingField.type}
+                    onValueChange={(v) => setEditingField({ ...editingField, type: v as CustomFieldType })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="text">Text</SelectItem>
+                      <SelectItem value="textarea">Textarea</SelectItem>
+                      <SelectItem value="select">Select (Dropdown)</SelectItem>
+                      <SelectItem value="date">Date</SelectItem>
+                      <SelectItem value="tel">Phone</SelectItem>
+                      <SelectItem value="email">Email</SelectItem>
+                      <SelectItem value="number">Number</SelectItem>
+                      <SelectItem value="checkbox">Checkbox</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Section</Label>
+                  <Select
+                    value={editingField.section}
+                    onValueChange={(v) => setEditingField({ ...editingField, section: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select section" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Student Information">Student Information</SelectItem>
+                      <SelectItem value="Parent/Guardian Information">Parent/Guardian Information</SelectItem>
+                      <SelectItem value="Emergency Contact">Emergency Contact</SelectItem>
+                      <SelectItem value="Medical Information">Medical Information</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {editingField.type === 'select' && (
+                  <div className="space-y-1.5">
+                    <Label>Options (one per line)</Label>
+                    <Textarea
+                      value={editingField.options?.join('\n') || ''}
+                      onChange={(e) => setEditingField({ ...editingField, options: e.target.value.split('\n').filter(Boolean) })}
+                      placeholder={`Option 1\nOption 2\nOption 3`}
+                      rows={4}
+                    />
+                  </div>
+                )}
+                <div className="space-y-1.5">
+                  <Label>Placeholder (optional)</Label>
+                  <Input
+                    value={editingField.placeholder || ''}
+                    onChange={(e) => setEditingField({ ...editingField, placeholder: e.target.value })}
+                    placeholder="e.g. Enter mother's full name"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="field-required"
+                    checked={editingField.required}
+                    onCheckedChange={(v) => setEditingField({ ...editingField, required: v })}
+                  />
+                  <Label htmlFor="field-required">Required field</Label>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setEditingField(null)}>Cancel</Button>
+                <Button onClick={() => saveField(editingField)} disabled={!editingField.label.trim()}>
+                  Save
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Save Button */}
         <div className="flex justify-end">
           <Button
-            onClick={() => saveMutation.mutate(settings)}
+            onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending}
           >
             {saveMutation.isPending ? (

@@ -13,6 +13,7 @@ import { Loader2, Search, CheckCircle, Clock, Eye, UserPlus } from "lucide-react
 import { format } from "date-fns";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import type { CustomFieldValue } from "@/types/admission-custom-fields";
 
 interface StudentData {
   full_name: string;
@@ -32,6 +33,7 @@ interface StudentData {
   emergency_contact_phone: string;
   medical_conditions: string;
   allergies: string;
+  custom_fields?: CustomFieldValue[];
 }
 
 interface AdmissionConfirmation {
@@ -359,6 +361,28 @@ export default function AdmissionConfirmations() {
                   </div>
                 </div>
               </div>
+
+              {/* Custom Fields */}
+              {(() => {
+                const customFields = (selectedConfirmation.student_data as StudentData).custom_fields;
+                if (!customFields || customFields.length === 0) return null;
+                return (
+                  <>
+                    <Separator />
+                    <div>
+                      <h3 className="font-semibold mb-3">Additional Information</h3>
+                      <div className="grid gap-2 text-sm">
+                        {customFields.map((cf) => (
+                          <div key={cf.definition_id} className="flex justify-between">
+                            <span className="text-muted-foreground">{cf.label}:</span>
+                            <span className="font-medium">{cf.type === "checkbox" ? (cf.value ? "Yes" : "No") : String(cf.value || "N/A")}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
 
               {/* Actions */}
               {!selectedConfirmation.verified_at && (

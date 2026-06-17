@@ -13,6 +13,8 @@ import { Loader2, AlertTriangle, CheckCircle, School, User, Calendar, Phone, Mai
 import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Textarea } from "@/components/ui/textarea";
+import type { CustomFieldDefinition, CustomFieldValue } from "@/types/admission-custom-fields";
 
 interface StudentFormData {
   full_name: string;
@@ -65,6 +67,7 @@ export default function SelfAdmission() {
   const [confirmationCode, setConfirmationCode] = useState("");
   const [linkId, setLinkId] = useState<string | null>(null);
   const [tenantId, setTenantId] = useState<string | null>(null);
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, string | boolean>>({});
 
   // Fetch link details
   const { data: linkData, isLoading: linkLoading, error: linkError } = useQuery({
@@ -158,6 +161,15 @@ export default function SelfAdmission() {
       
       const code = codeData as string;
       
+      // Build custom field values with labels for display
+      const customFieldsConfig = (settings?.custom_fields || []) as CustomFieldDefinition[];
+      const customValues: CustomFieldValue[] = customFieldsConfig.map((f) => ({
+        definition_id: f.id,
+        label: f.label,
+        value: customFieldValues[f.id] ?? "",
+        type: f.type,
+      }));
+
       // Create confirmation record
       const { error: insertError } = await supabase
         .from("admission_confirmations")
@@ -165,7 +177,10 @@ export default function SelfAdmission() {
           tenant_id: tenantId,
           admission_link_id: linkId,
           confirmation_code: code,
-          student_data: JSON.parse(JSON.stringify(formData)),
+          student_data: {
+            ...JSON.parse(JSON.stringify(formData)),
+            custom_fields: customValues,
+          },
           agreed_to_terms: agreedToTerms,
           user_agent: navigator.userAgent,
         });
@@ -185,6 +200,109 @@ export default function SelfAdmission() {
 
   const updateField = (field: keyof StudentFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updateCustomField = (fieldId: string, value: string | boolean) => {
+    setCustomFieldValues((prev) => ({ ...prev, [fieldId]: value }));
+  };
+
+  const getCustomFieldsForSection = (section: string): CustomFieldDefinition[] => {
+    if (!settings?.custom_fields) return [];
+    return (settings.custom_fields as CustomFieldDefinition[])
+      .filter((f) => f.section === section)
+      .sort((a, b) => a.order - b.order);
+  };
+
+  const renderCustomField = (field: CustomFieldDefinition) => {
+    const value = customFieldValues[field.id] ?? "";
+    switch (field.type) {
+      case "textarea":
+        return (
+          <Textarea
+            id={field.id}
+            value={value as string}
+            onChange={(e) => updateCustomField(field.id, e.target.value)}
+            placeholder={field.placeholder}
+          />
+        );
+      case "select":
+        return (
+          <Select
+            value={value as string}
+            onValueChange={(v) => updateCustomField(field.id, v)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={field.placeholder || `Select ${field.label}`} />
+            </SelectTrigger>
+            <SelectContent>
+              {field.options?.map((opt) => (
+                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      case "checkbox":
+        return (
+          <div className="flex items-start gap-2 pt-2">
+            <Checkbox
+              id={field.id}
+              checked={!!value}
+              onCheckedChange={(checked) => updateCustomField(field.id, checked === true)}
+            />
+            <Label htmlFor={field.id} className="text-sm cursor-pointer font-normal">
+              {field.label}
+            </Label>
+          </div>
+        );
+      case "date":
+        return (
+          <Input
+            id={field.id}
+            type="date"
+            value={value as string}
+            onChange={(e) => updateCustomField(field.id, e.target.value)}
+          />
+        );
+      case "tel":
+        return (
+          <Input
+            id={field.id}
+            type="tel"
+            value={value as string}
+            onChange={(e) => updateCustomField(field.id, e.target.value)}
+            placeholder={field.placeholder || "e.g., 0770123456"}
+          />
+        );
+      case "email":
+        return (
+          <Input
+            id={field.id}
+            type="email"
+            value={value as string}
+            onChange={(e) => updateCustomField(field.id, e.target.value)}
+            placeholder={field.placeholder || "email@example.com"}
+          />
+        );
+      case "number":
+        return (
+          <Input
+            id={field.id}
+            type="number"
+            value={value as string}
+            onChange={(e) => updateCustomField(field.id, e.target.value)}
+            placeholder={field.placeholder}
+          />
+        );
+      default:
+        return (
+          <Input
+            id={field.id}
+            value={value as string}
+            onChange={(e) => updateCustomField(field.id, e.target.value)}
+            placeholder={field.placeholder}
+          />
+        );
+    }
   };
 
   if (linkLoading) {
@@ -293,6 +411,18 @@ export default function SelfAdmission() {
               <p><strong>Student:</strong> {formData.full_name}</p>
               <p><strong>School:</strong> {school?.name}</p>
               <p><strong>Applied for:</strong> {formData.applying_for_class}</p>
+              {customFieldsConfig.filter((f) => customFieldValues[f.id]).length > 0 && (
+                <Separator className="my-2" />
+              )}
+              {customFieldsConfig.map((f) => {
+                const val = customFieldValues[f.id];
+                if (!val) return null;
+                return (
+                  <p key={f.id}>
+                    <strong>{f.label}:</strong> {String(val)}
+                  </p>
+                );
+              })}
             </div>
           </CardContent>
           <CardFooter>
@@ -306,9 +436,17 @@ export default function SelfAdmission() {
   }
 
   // Form Step
+  const customFieldsConfig = (settings?.custom_fields || []) as CustomFieldDefinition[];
+  const requiredCustomFieldsFilled = customFieldsConfig
+    .filter((f) => f.required)
+    .every((f) => {
+      const v = customFieldValues[f.id];
+      return v !== undefined && v !== "" && v !== false;
+    });
+
   const isFormValid = formData.full_name && formData.date_of_birth && formData.gender && 
     formData.parent_name && formData.parent_phone && formData.applying_for_class &&
-    agreedToTerms && agreedToDisclaimer;
+    agreedToTerms && agreedToDisclaimer && requiredCustomFieldsFilled;
 
   return (
     <div className="min-h-screen bg-muted/30 py-8 px-4">
@@ -412,6 +550,16 @@ export default function SelfAdmission() {
                 </SelectContent>
               </Select>
             </div>
+            {getCustomFieldsForSection("Student Information").map((field) => (
+              <div key={field.id} className={field.type === "textarea" || field.type === "checkbox" ? "md:col-span-2 space-y-2" : "space-y-2"}>
+                {field.type !== "checkbox" && (
+                  <Label htmlFor={field.id}>
+                    {field.label}{field.required ? " *" : ""}
+                  </Label>
+                )}
+                {renderCustomField(field)}
+              </div>
+            ))}
           </CardContent>
         </Card>
 
@@ -473,6 +621,16 @@ export default function SelfAdmission() {
                 onChange={(e) => updateField("parent_occupation", e.target.value)}
               />
             </div>
+            {getCustomFieldsForSection("Parent/Guardian Information").map((field) => (
+              <div key={field.id} className={field.type === "textarea" || field.type === "checkbox" ? "md:col-span-2 space-y-2" : "space-y-2"}>
+                {field.type !== "checkbox" && (
+                  <Label htmlFor={field.id}>
+                    {field.label}{field.required ? " *" : ""}
+                  </Label>
+                )}
+                {renderCustomField(field)}
+              </div>
+            ))}
           </CardContent>
         </Card>
 
@@ -502,6 +660,16 @@ export default function SelfAdmission() {
                 onChange={(e) => updateField("emergency_contact_phone", e.target.value)}
               />
             </div>
+            {getCustomFieldsForSection("Emergency Contact").map((field) => (
+              <div key={field.id} className={field.type === "textarea" || field.type === "checkbox" ? "md:col-span-2 space-y-2" : "space-y-2"}>
+                {field.type !== "checkbox" && (
+                  <Label htmlFor={field.id}>
+                    {field.label}{field.required ? " *" : ""}
+                  </Label>
+                )}
+                {renderCustomField(field)}
+              </div>
+            ))}
           </CardContent>
         </Card>
 
@@ -529,6 +697,16 @@ export default function SelfAdmission() {
                 placeholder="Any known allergies"
               />
             </div>
+            {getCustomFieldsForSection("Medical Information").map((field) => (
+              <div key={field.id} className={field.type === "textarea" || field.type === "checkbox" ? "md:col-span-2 space-y-2" : "space-y-2"}>
+                {field.type !== "checkbox" && (
+                  <Label htmlFor={field.id}>
+                    {field.label}{field.required ? " *" : ""}
+                  </Label>
+                )}
+                {renderCustomField(field)}
+              </div>
+            ))}
           </CardContent>
         </Card>
 
