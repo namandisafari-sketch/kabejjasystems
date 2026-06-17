@@ -278,6 +278,19 @@ export const ar: TranslationKeys = {
     pending: "قيد الانتظار",
   },
 
+  // Counseling
+  counseling: {
+    title: "الإرشاد والتوجيه",
+    newSession: "جلسة جديدة",
+    sessionNumber: "رقم الجلسة",
+    counselor: "المرشد",
+    issueCategory: "فئة المشكلة",
+    sessionType: "نوع الجلسة",
+    activeCases: "حالات نشطة",
+    resolved: "تم الحل",
+    referred: "تم الإحالة",
+  },
+
   // Timetable
   timetable: {
     title: "الجدول الزمني",

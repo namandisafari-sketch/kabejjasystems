@@ -1245,6 +1245,93 @@ export type Database = {
           },
         ]
       }
+      counseling_sessions: {
+        Row: {
+          action_plan: string | null
+          confidentiality: string
+          counselor_name: string
+          created_at: string
+          created_by: string | null
+          follow_up_date: string | null
+          follow_up_notes: string | null
+          id: string
+          issue_category: string
+          issue_description: string
+          notes: string | null
+          outcome: string | null
+          parent_involvement: string
+          referred_to: string | null
+          session_date: string
+          session_number: string
+          session_type: string
+          status: string
+          student_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          action_plan?: string | null
+          confidentiality?: string
+          counselor_name: string
+          created_at?: string
+          created_by?: string | null
+          follow_up_date?: string | null
+          follow_up_notes?: string | null
+          id?: string
+          issue_category: string
+          issue_description: string
+          notes?: string | null
+          outcome?: string | null
+          parent_involvement?: string
+          referred_to?: string | null
+          session_date?: string
+          session_number?: string
+          session_type?: string
+          status?: string
+          student_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          action_plan?: string | null
+          confidentiality?: string
+          counselor_name?: string
+          created_at?: string
+          created_by?: string | null
+          follow_up_date?: string | null
+          follow_up_notes?: string | null
+          id?: string
+          issue_category?: string
+          issue_description?: string
+          notes?: string | null
+          outcome?: string | null
+          parent_involvement?: string
+          referred_to?: string | null
+          session_date?: string
+          session_number?: string
+          session_type?: string
+          status?: string
+          student_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "counseling_sessions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "counseling_sessions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       early_departure_requests: {
         Row: {
           approved_at: string | null

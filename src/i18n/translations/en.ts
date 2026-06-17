@@ -276,6 +276,19 @@ export const en = {
     pending: "Pending",
   },
 
+  // Counseling
+  counseling: {
+    title: "Guidance & Counseling",
+    newSession: "New Session",
+    sessionNumber: "Session #",
+    counselor: "Counselor",
+    issueCategory: "Issue Category",
+    sessionType: "Session Type",
+    activeCases: "Active Cases",
+    resolved: "Resolved",
+    referred: "Referred",
+  },
+
   // Timetable
   timetable: {
     title: "Timetable",
