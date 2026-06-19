@@ -28,9 +28,20 @@ import DOSDashboard from "./pages/portal/dos/Dashboard";
 import SubjectAllocation from "./pages/portal/dos/SubjectAllocation";
 import ExamManagement from "./pages/portal/dos/ExamManagement";
 import TopStudents from "./pages/portal/dos/TopStudents";
+import CreateExam from "./pages/portal/dos/CreateExam";
+import ResultApproval from "./pages/portal/dos/ResultApproval";
+import PromotionLists from "./pages/portal/dos/PromotionLists";
+import ExamAnalysis from "./pages/portal/dos/ExamAnalysis";
+import MeanScores from "./pages/portal/dos/MeanScores";
+import SlowLearners from "./pages/portal/dos/SlowLearners";
 import HeadTeacherDashboard from "./pages/portal/headteacher/Dashboard";
 import StaffManagement from "./pages/portal/headteacher/StaffManagement";
 import FeesManagement from "./pages/portal/headteacher/FeesManagement";
+import SchoolProfile from "./pages/portal/headteacher/SchoolProfile";
+import AdmissionsManagement from "./pages/portal/headteacher/AdmissionsManagement";
+import LeaveManagement from "./pages/portal/headteacher/LeaveManagement";
+import Budget from "./pages/portal/headteacher/Budget";
+import AcademicPerformance from "./pages/portal/headteacher/AcademicPerformance";
 import { SmartDataView } from "./pages/portal/shared/SmartDataView";
 import PWAHome from "./pages/PWAHome";
 import OnboardingGate from "./components/OnboardingGate";
@@ -368,7 +379,13 @@ const App = () => {
                 <Route index element={<DOSDashboard />} />
                 <Route path="academics/subject-allocation" element={<SubjectAllocation />} />
                 <Route path="exams/*" element={<ExamManagement />} />
+                <Route path="exams/create" element={<CreateExam />} />
+                <Route path="exams/result-approval" element={<ResultApproval />} />
+                <Route path="exams/promotion" element={<PromotionLists />} />
                 <Route path="students/top" element={<TopStudents />} />
+                <Route path="students/slow-learners" element={<SlowLearners />} />
+                <Route path="reports/exam-analysis" element={<ExamAnalysis />} />
+                <Route path="reports/mean-scores" element={<MeanScores />} />
                 <Route path="*" element={<SmartDataView />} />
               </Route>
               <Route path="/headteacher" element={
@@ -377,9 +394,14 @@ const App = () => {
                 </ProtectedStaffRoute>
               }>
                 <Route index element={<HeadTeacherDashboard />} />
+                <Route path="admin/profile" element={<SchoolProfile />} />
                 <Route path="admin/staff" element={<StaffManagement />} />
                 <Route path="staff/*" element={<StaffManagement />} />
+                <Route path="students/admissions" element={<AdmissionsManagement />} />
+                <Route path="staff/leave" element={<LeaveManagement />} />
                 <Route path="finance/fees" element={<FeesManagement />} />
+                <Route path="finance/budget" element={<Budget />} />
+                <Route path="academics/performance" element={<AcademicPerformance />} />
                 <Route path="*" element={<SmartDataView />} />
               </Route>
 
