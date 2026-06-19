@@ -10,7 +10,6 @@ import { toast } from "sonner";
 import { GraduationCap, Eye, EyeOff, School, AlertCircle, Smartphone, Mail } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { auth } from "@/config/firebase";
-import { RecaptchaVerifier, signInWithPhoneNumber, PhoneAuthProvider, signInWithCredential } from "firebase/auth";
 
 interface VerifiedSchool {
   id: string;
@@ -191,15 +190,18 @@ export default function ParentPortal() {
     }
   };
 
-  // Setup reCAPTCHA
+  // Setup reCAPTCHA (only if Firebase is configured)
   useEffect(() => {
-    if (verifiedSchool && recaptchaContainerRef.current && !recaptchaVerifierRef.current) {
-      try {
-        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
-          size: "invisible",
-          callback: () => {},
-        });
-      } catch {}
+    if (verifiedSchool && auth && recaptchaContainerRef.current && !recaptchaVerifierRef.current) {
+      (async () => {
+        try {
+          const { RecaptchaVerifier } = await import("firebase/auth");
+          recaptchaVerifierRef.current = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
+            size: "invisible",
+            callback: () => {},
+          });
+        } catch {}
+      })();
     }
     return () => {
       if (recaptchaVerifierRef.current) {
@@ -210,6 +212,10 @@ export default function ParentPortal() {
   }, [verifiedSchool]);
 
   const handleSendOtp = async () => {
+    if (!auth) {
+      toast.error("Phone login is not configured. Please use email login.");
+      return;
+    }
     if (!phoneNumber.trim()) {
       toast.error("Please enter your phone number");
       return;
@@ -217,6 +223,7 @@ export default function ParentPortal() {
     setIsSendingOtp(true);
     try {
       if (!recaptchaVerifierRef.current) throw new Error("reCAPTCHA not ready");
+      const { signInWithPhoneNumber } = await import("firebase/auth");
       const confirmation = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifierRef.current);
       setVerificationId(confirmation.verificationId);
       setOtpSent(true);
@@ -229,12 +236,17 @@ export default function ParentPortal() {
   };
 
   const handleVerifyOtp = async () => {
+    if (!auth) {
+      toast.error("Phone login is not configured. Please use email login.");
+      return;
+    }
     if (!otpCode.trim()) {
       toast.error("Please enter the OTP code");
       return;
     }
     setIsVerifyingOtp(true);
     try {
+      const { PhoneAuthProvider, signInWithCredential } = await import("firebase/auth");
       const credential = PhoneAuthProvider.credential(verificationId, otpCode);
       const userCredential = await signInWithCredential(auth, credential);
       const phone = userCredential.user.phoneNumber;
@@ -373,9 +385,11 @@ export default function ParentPortal() {
                 <CardContent className="px-4 sm:px-6">
                   <TabsContent value="login" className="mt-0">
                     <Tabs defaultValue="email">
-                      <TabsList className="grid w-full grid-cols-2 h-10 mb-4">
+                      <TabsList className={`grid w-full ${auth ? "grid-cols-2" : "grid-cols-1"} h-10 mb-4`}>
                         <TabsTrigger value="email" className="text-xs sm:text-sm"><Mail className="h-3.5 w-3.5 mr-1.5" />Email</TabsTrigger>
-                        <TabsTrigger value="phone" className="text-xs sm:text-sm"><Smartphone className="h-3.5 w-3.5 mr-1.5" />Phone</TabsTrigger>
+                        {auth && (
+                          <TabsTrigger value="phone" className="text-xs sm:text-sm"><Smartphone className="h-3.5 w-3.5 mr-1.5" />Phone</TabsTrigger>
+                        )}
                       </TabsList>
 
                       {/* Email Login */}
@@ -426,51 +440,59 @@ export default function ParentPortal() {
 
                       {/* Phone Login */}
                       <TabsContent value="phone" className="mt-0">
-                        <div className="space-y-3 sm:space-y-4">
-                          {!otpSent ? (
-                            <>
-                              <div className="space-y-2">
-                                <Label htmlFor="phone-number" className="text-sm">Phone Number</Label>
-                                <Input
-                                  id="phone-number"
-                                  type="tel"
-                                  placeholder="+2567XXXXXXXX"
-                                  value={phoneNumber}
-                                  onChange={(e) => setPhoneNumber(e.target.value)}
-                                  className="h-11 sm:h-12"
-                                />
-                                <p className="text-xs text-muted-foreground">Enter with country code (e.g., +2567XXXXXXXX)</p>
-                              </div>
-                              <Button onClick={handleSendOtp} className="w-full h-11 sm:h-12" disabled={isSendingOtp || !phoneNumber.trim()}>
-                                {isSendingOtp ? "Sending OTP..." : "Send OTP via SMS"}
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <div className="space-y-2">
-                                <Label htmlFor="otp-code" className="text-sm">Enter OTP Code</Label>
-                                <Input
-                                  id="otp-code"
-                                  type="text"
-                                  placeholder="000000"
-                                  value={otpCode}
-                                  onChange={(e) => setOtpCode(e.target.value)}
-                                  maxLength={6}
-                                  className="h-11 sm:h-12 text-center text-lg tracking-widest font-mono"
-                                />
-                              </div>
-                              <div className="flex gap-2">
-                                <Button onClick={handleVerifyOtp} className="flex-1 h-11 sm:h-12" disabled={isVerifyingOtp || otpCode.length < 4}>
-                                  {isVerifyingOtp ? "Verifying..." : "Verify & Login"}
+                        {!auth ? (
+                          <div className="text-center py-8">
+                            <Smartphone className="h-8 w-8 mx-auto text-muted-foreground/50 mb-3" />
+                            <p className="text-sm text-muted-foreground">Phone login is not available yet.</p>
+                            <p className="text-xs text-muted-foreground/70 mt-1">Please use email login or check back later.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3 sm:space-y-4">
+                            {!otpSent ? (
+                              <>
+                                <div className="space-y-2">
+                                  <Label htmlFor="phone-number" className="text-sm">Phone Number</Label>
+                                  <Input
+                                    id="phone-number"
+                                    type="tel"
+                                    placeholder="+2567XXXXXXXX"
+                                    value={phoneNumber}
+                                    onChange={(e) => setPhoneNumber(e.target.value)}
+                                    className="h-11 sm:h-12"
+                                  />
+                                  <p className="text-xs text-muted-foreground">Enter with country code (e.g., +2567XXXXXXXX)</p>
+                                </div>
+                                <Button onClick={handleSendOtp} className="w-full h-11 sm:h-12" disabled={isSendingOtp || !phoneNumber.trim()}>
+                                  {isSendingOtp ? "Sending OTP..." : "Send OTP via SMS"}
                                 </Button>
-                                <Button variant="outline" onClick={() => { setOtpSent(false); setOtpCode(""); }} className="h-11 sm:h-12">
-                                  Change
-                                </Button>
-                              </div>
-                            </>
-                          )}
-                          <div ref={recaptchaContainerRef} />
-                        </div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="space-y-2">
+                                  <Label htmlFor="otp-code" className="text-sm">Enter OTP Code</Label>
+                                  <Input
+                                    id="otp-code"
+                                    type="text"
+                                    placeholder="000000"
+                                    value={otpCode}
+                                    onChange={(e) => setOtpCode(e.target.value)}
+                                    maxLength={6}
+                                    className="h-11 sm:h-12 text-center text-lg tracking-widest font-mono"
+                                  />
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button onClick={handleVerifyOtp} className="flex-1 h-11 sm:h-12" disabled={isVerifyingOtp || otpCode.length < 4}>
+                                    {isVerifyingOtp ? "Verifying..." : "Verify & Login"}
+                                  </Button>
+                                  <Button variant="outline" onClick={() => { setOtpSent(false); setOtpCode(""); }} className="h-11 sm:h-12">
+                                    Change
+                                  </Button>
+                                </div>
+                              </>
+                            )}
+                            <div ref={recaptchaContainerRef} />
+                          </div>
+                        )}
                       </TabsContent>
                     </Tabs>
                   </TabsContent>

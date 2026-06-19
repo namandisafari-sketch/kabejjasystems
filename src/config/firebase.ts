@@ -1,23 +1,43 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { initializeApp, getApps } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
-const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID,
-};
+const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN;
+const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+const storageBucket = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET;
+const messagingSenderId = import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID;
+const appId = import.meta.env.VITE_FIREBASE_APP_ID;
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+const hasFirebaseConfig = Boolean(
+  apiKey && apiKey !== "your-firebase-api-key" &&
+  projectId && projectId !== "your-firebase-project-id"
+);
 
-// Initialize services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+let auth: any = null;
+let db: any = null;
+let storage: any = null;
 
-export default app;
+if (hasFirebaseConfig) {
+  try {
+    const existingApp = getApps().length > 0 ? getApps()[0] : undefined;
+    const app = existingApp || initializeApp({
+      apiKey,
+      authDomain,
+      projectId,
+      storageBucket,
+      messagingSenderId,
+      appId,
+    });
+
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
+  } catch {
+    // Firebase initialization failed
+  }
+}
+
+export { auth, db, storage };
+export default auth ? { auth, db, storage } : null;
