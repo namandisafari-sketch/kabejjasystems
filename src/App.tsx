@@ -28,6 +28,8 @@ import SubjectAverages from "./pages/portal/teacher/SubjectAverages";
 import ClassRanking from "./pages/portal/teacher/ClassRanking";
 import TeacherProfile from "./pages/portal/teacher/TeacherProfile";
 import TeacherPassword from "./pages/portal/teacher/TeacherPassword";
+import PersonalFinance from "./pages/portal/teacher/PersonalFinance";
+import TeacherOnboarding from "./pages/TeacherOnboarding";
 import DOSDashboard from "./pages/portal/dos/Dashboard";
 import SubjectAllocation from "./pages/portal/dos/SubjectAllocation";
 import ExamManagement from "./pages/portal/dos/ExamManagement";
@@ -349,6 +351,7 @@ const App = () => {
                 </ProtectedStaffRoute>
               }>
                 <Route index element={<TeacherDashboard />} />
+                <Route path="onboarding" element={<TeacherOnboarding />} />
                 <Route path="classes" element={<MyClasses />} />
                 <Route path="lesson-plans" element={<LessonPlan />} />
                 <Route path="scheme-of-work" element={<SchemeOfWork />} />
@@ -361,6 +364,7 @@ const App = () => {
                 <Route path="assignments/create" element={<CreateAssignment />} />
                 <Route path="assignments/submissions" element={<SmartDataView />} />
                 <Route path="assignments/marking" element={<OnlineMarking />} />
+                <Route path="finance" element={<PersonalFinance />} />
                 <Route path="communication/parents" element={<SmartDataView />} />
                 <Route path="communication/students" element={<SmartDataView />} />
                 <Route path="communication/announcements" element={<SmartDataView />} />

@@ -1,0 +1,123 @@
+export interface SubjectDefinition {
+  name: string;
+  code: string;
+  level: string;
+  is_core: boolean;
+}
+
+export const UGANDA_SUBJECTS: Record<string, SubjectDefinition[]> = {
+  ecd: [
+    { name: "Health & Physical Development", code: "ECD-HPD", level: "ECD", is_core: true },
+    { name: "Communication & Language", code: "ECD-CL", level: "ECD", is_core: true },
+    { name: "Cognitive Development", code: "ECD-CD", level: "ECD", is_core: true },
+    { name: "Social & Emotional Development", code: "ECD-SED", level: "ECD", is_core: true },
+    { name: "Values & Attitudes", code: "ECD-VA", level: "ECD", is_core: true },
+    { name: "Creative Arts", code: "ECD-CA", level: "ECD", is_core: false },
+    { name: "Outdoor Play & Physical Activity", code: "ECD-OP", level: "ECD", is_core: false },
+  ],
+  primary: [
+    { name: "English", code: "P-ENG", level: "Primary", is_core: true },
+    { name: "Mathematics", code: "P-MTC", level: "Primary", is_core: true },
+    { name: "Science", code: "P-SCI", level: "Primary", is_core: true },
+    { name: "Social Studies", code: "P-SST", level: "Primary", is_core: true },
+    { name: "Literacy I (Local Language)", code: "P-LIT1", level: "Primary", is_core: false },
+    { name: "Literacy II (English)", code: "P-LIT2", level: "Primary", is_core: false },
+    { name: "Religious Education (CRE/IRE)", code: "P-RE", level: "Primary", is_core: false },
+    { name: "Reading", code: "P-RDG", level: "Primary", is_core: false },
+    { name: "Writing", code: "P-WRT", level: "Primary", is_core: false },
+    { name: "Physical Education", code: "P-PE", level: "Primary", is_core: false },
+    { name: "Art & Craft", code: "P-ART", level: "Primary", is_core: false },
+    { name: "Music", code: "P-MUS", level: "Primary", is_core: false },
+    { name: "Kiswahili", code: "P-KSW", level: "Primary", is_core: false },
+    { name: "Agriculture", code: "P-AGR", level: "Primary", is_core: false },
+  ],
+  lower_secondary: [
+    { name: "English", code: "S-ENG", level: "O-Level", is_core: true },
+    { name: "Mathematics", code: "S-MTC", level: "O-Level", is_core: true },
+    { name: "Biology", code: "S-BIO", level: "O-Level", is_core: false },
+    { name: "Chemistry", code: "S-CHEM", level: "O-Level", is_core: false },
+    { name: "Physics", code: "S-PHY", level: "O-Level", is_core: false },
+    { name: "Geography", code: "S-GEO", level: "O-Level", is_core: false },
+    { name: "History", code: "S-HIS", level: "O-Level", is_core: false },
+    { name: "Christian Religious Education", code: "S-CRE", level: "O-Level", is_core: false },
+    { name: "Islamic Religious Education", code: "S-IRE", level: "O-Level", is_core: false },
+    { name: "Commerce", code: "S-COM", level: "O-Level", is_core: false },
+    { name: "Entrepreneurship", code: "S-ENT", level: "O-Level", is_core: false },
+    { name: "Computer Science", code: "S-CS", level: "O-Level", is_core: false },
+    { name: "Art & Design", code: "S-ART", level: "O-Level", is_core: false },
+    { name: "Music", code: "S-MUS", level: "O-Level", is_core: false },
+    { name: "Physical Education", code: "S-PE", level: "O-Level", is_core: false },
+    { name: "Kiswahili", code: "S-KSW", level: "O-Level", is_core: false },
+    { name: "French", code: "S-FRN", level: "O-Level", is_core: false },
+    { name: "German", code: "S-GER", level: "O-Level", is_core: false },
+    { name: "Arabic", code: "S-ARB", level: "O-Level", is_core: false },
+    { name: "Literature in English", code: "S-LIT", level: "O-Level", is_core: false },
+    { name: "Agriculture", code: "S-AGR", level: "O-Level", is_core: false },
+    { name: "Additional Mathematics", code: "S-ADM", level: "O-Level", is_core: false },
+  ],
+  a_level: [
+    { name: "Mathematics", code: "A-MTC", level: "A-Level", is_core: false },
+    { name: "Physics", code: "A-PHY", level: "A-Level", is_core: false },
+    { name: "Chemistry", code: "A-CHEM", level: "A-Level", is_core: false },
+    { name: "Biology", code: "A-BIO", level: "A-Level", is_core: false },
+    { name: "Geography", code: "A-GEO", level: "A-Level", is_core: false },
+    { name: "History", code: "A-HIS", level: "A-Level", is_core: false },
+    { name: "Economics", code: "A-ECO", level: "A-Level", is_core: false },
+    { name: "Divinity", code: "A-DIV", level: "A-Level", is_core: false },
+    { name: "Islamic Religious Education", code: "A-IRE", level: "A-Level", is_core: false },
+    { name: "Literature in English", code: "A-LIT", level: "A-Level", is_core: false },
+    { name: "Computer Science / ICT", code: "A-ICT", level: "A-Level", is_core: false },
+    { name: "Entrepreneurship", code: "A-ENT", level: "A-Level", is_core: false },
+    { name: "Art & Design", code: "A-ART", level: "A-Level", is_core: false },
+    { name: "Music", code: "A-MUS", level: "A-Level", is_core: false },
+    { name: "Physical Education", code: "A-PE", level: "A-Level", is_core: false },
+    { name: "French", code: "A-FRN", level: "A-Level", is_core: false },
+    { name: "German", code: "A-GER", level: "A-Level", is_core: false },
+    { name: "Arabic", code: "A-ARB", level: "A-Level", is_core: false },
+    { name: "Kiswahili", code: "A-KSW", level: "A-Level", is_core: false },
+    { name: "Agriculture", code: "A-AGR", level: "A-Level", is_core: false },
+    { name: "General Paper", code: "A-GP", level: "A-Level", is_core: true },
+    { name: "Subsidiary ICT", code: "A-SICT", level: "A-Level", is_core: false },
+    { name: "Subsidiary Mathematics", code: "A-SMTC", level: "A-Level", is_core: false },
+  ],
+};
+
+export function getSubjectsForLevel(level: string): SubjectDefinition[] {
+  const normalized = level.toLowerCase();
+  if (normalized.includes("ecd")) return UGANDA_SUBJECTS.ecd;
+  if (normalized.includes("primary") || normalized.match(/^p\d+$/)) return UGANDA_SUBJECTS.primary;
+  if (normalized.includes("o-level") || normalized.includes("secondary") && !normalized.includes("a-level")) return UGANDA_SUBJECTS.lower_secondary;
+  if (normalized.includes("a-level") || normalized.includes("s5") || normalized.includes("s6")) return UGANDA_SUBJECTS.a_level;
+  return UGANDA_SUBJECTS.primary;
+}
+
+export function detectSchoolLevels(classes: any[]): string[] {
+  const levels = new Set<string>();
+  classes.forEach(c => {
+    const lv = c.level?.toLowerCase() || "";
+    if (lv.includes("ecd")) levels.add("ecd");
+    else if (lv.includes("primary") || lv.match(/^p\d+$/)) levels.add("primary");
+    else if (lv === "s1" || lv === "s2" || lv === "s3" || lv === "s4") levels.add("lower_secondary");
+    else if (lv === "s5" || lv === "s6") levels.add("a_level");
+    else levels.add("primary");
+  });
+  return Array.from(levels);
+}
+
+export async function seedDefaultSubjects(supabase: any, tenantId: string): Promise<void> {
+  const { data: existing } = await supabase.from("subjects").select("code").eq("tenant_id", tenantId);
+  const existingCodes = new Set((existing || []).map((s: any) => s.code));
+
+  const allSubjects = [
+    ...UGANDA_SUBJECTS.ecd, ...UGANDA_SUBJECTS.primary,
+    ...UGANDA_SUBJECTS.lower_secondary, ...UGANDA_SUBJECTS.a_level,
+  ];
+
+  const toInsert = allSubjects.filter(s => !existingCodes.has(s.code)).map(s => ({
+    ...s, tenant_id: tenantId, is_active: true,
+  }));
+
+  if (toInsert.length > 0) {
+    await supabase.from("subjects").insert(toInsert);
+  }
+}

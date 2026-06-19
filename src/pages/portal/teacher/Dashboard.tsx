@@ -22,10 +22,22 @@ const TeacherDashboard = () => {
     if (!session) { navigate("/login"); return; }
     const { data: p } = await supabase
       .from("profiles")
-      .select("full_name")
+      .select("full_name, id, tenant_id")
       .eq("id", session.user.id)
       .single();
     setProfile(p);
+
+    if (p?.id && p?.tenant_id) {
+      const { data: assignments } = await supabase
+        .from("teacher_subject_assignments")
+        .select("id")
+        .eq("teacher_id", p.id)
+        .eq("tenant_id", p.tenant_id)
+        .limit(1);
+      if (!assignments || assignments.length === 0) {
+        navigate("/teacher/onboarding");
+      }
+    }
   };
 
   const today = new Date().toLocaleDateString("en-US", {

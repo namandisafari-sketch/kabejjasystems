@@ -77,6 +77,7 @@ const teacherMenuItems: PortalMenuItem[] = [
       { title: "Profile", url: "/teacher/settings/profile" },
       { title: "Password", url: "/teacher/settings/password" },
       { title: "Notifications", url: "/teacher/settings/notifications" },
+      { title: "Personal Finance", url: "/teacher/finance" },
     ],
   },
 ];
