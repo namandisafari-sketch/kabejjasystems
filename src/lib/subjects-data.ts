@@ -126,26 +126,37 @@ export async function seedDefaultClasses(supabase: any, tenantId: string): Promi
   const { data: existing } = await supabase.from("school_classes").select("name").eq("tenant_id", tenantId);
   if (existing && existing.length > 0) return;
 
-  const { data: t } = await supabase.from("tenants").select("school_level").eq("id", tenantId).single();
-  const level = t?.school_level || "all";
+  const { data: t } = await supabase.from("tenants").select("business_type").eq("id", tenantId).single();
+  const type = t?.business_type || "";
 
   const allClasses: { name: string; level: string; grade: string }[] = [];
 
-  if (level === "kindergarten" || level === "all") {
+  if (type === "kindergarten") {
     allClasses.push(
       { name: "Baby Class", level: "kindergarten", grade: "Early Childhood" },
       { name: "Middle Class", level: "kindergarten", grade: "Early Childhood" },
       { name: "Top Class", level: "kindergarten", grade: "Early Childhood" },
     );
-  }
-
-  if (level === "primary" || level === "all") {
+  } else if (type === "primary_school") {
     for (let i = 1; i <= 7; i++) {
       allClasses.push({ name: `P${i}`, level: "primary", grade: "Primary" });
     }
-  }
-
-  if (level === "secondary" || level === "all") {
+  } else if (type === "secondary_school") {
+    for (let i = 1; i <= 4; i++) {
+      allClasses.push({ name: `S${i}`, level: "o-level", grade: "O-Level" });
+    }
+    for (let i = 5; i <= 6; i++) {
+      allClasses.push({ name: `S${i}`, level: "a-level", grade: "A-Level" });
+    }
+  } else {
+    allClasses.push(
+      { name: "Baby Class", level: "kindergarten", grade: "Early Childhood" },
+      { name: "Middle Class", level: "kindergarten", grade: "Early Childhood" },
+      { name: "Top Class", level: "kindergarten", grade: "Early Childhood" },
+    );
+    for (let i = 1; i <= 7; i++) {
+      allClasses.push({ name: `P${i}`, level: "primary", grade: "Primary" });
+    }
     for (let i = 1; i <= 4; i++) {
       allClasses.push({ name: `S${i}`, level: "o-level", grade: "O-Level" });
     }
