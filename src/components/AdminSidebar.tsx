@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CreditCard, Package, Settings, LogOut, GraduationCap, Building2, Shield, Activity, Flag, PlusCircle, HardDrive, Sparkles } from "lucide-react";
+import { LayoutDashboard, Users, CreditCard, Package, Settings, LogOut, GraduationCap, Building2, Shield, Activity, Flag, PlusCircle, HardDrive, Sparkles, ChevronRight } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,24 +15,68 @@ import {
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TennaHubLogo } from "@/components/TennaHubLogo";
 
-const menuItems = [
-  { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
-  { title: "Create Business", url: "/admin/create-business", icon: PlusCircle },
-  { title: "Tenants", url: "/admin/tenants", icon: Users },
-  { title: "Subscriptions", url: "/admin/subscriptions", icon: CreditCard },
-  { title: "Payments", url: "/admin/payments", icon: CreditCard },
-  { title: "Packages", url: "/admin/packages", icon: Package },
-  { title: "School Packages", url: "/admin/school-packages", icon: GraduationCap },
-  { title: "Rental Packages", url: "/admin/rental-packages", icon: Building2 },
-  { title: "Sponsors", url: "/admin/sponsors", icon: Sparkles },
-  { title: "System Health", url: "/admin/system-health", icon: Activity },
-  { title: "Backups", url: "/admin/backups", icon: HardDrive },
-  { title: "Feature Flags", url: "/admin/feature-flags", icon: Flag },
-  { title: "Audit Logs", url: "/admin/audit-logs", icon: Shield },
+interface NavItem {
+  title: string;
+  url: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+interface NavCategory {
+  label: string;
+  items: NavItem[];
+}
+
+const navCategories: NavCategory[] = [
+  {
+    label: "Overview",
+    items: [
+      { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: "Management",
+    items: [
+      { title: "Create Business", url: "/admin/create-business", icon: PlusCircle },
+      { title: "Tenants", url: "/admin/tenants", icon: Users },
+      { title: "Sponsors", url: "/admin/sponsors", icon: Sparkles },
+    ],
+  },
+  {
+    label: "Billing",
+    items: [
+      { title: "Subscriptions", url: "/admin/subscriptions", icon: CreditCard },
+      { title: "Payments", url: "/admin/payments", icon: CreditCard },
+      { title: "Packages", url: "/admin/packages", icon: Package },
+      { title: "School Packages", url: "/admin/school-packages", icon: GraduationCap },
+      { title: "Rental Packages", url: "/admin/rental-packages", icon: Building2 },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { title: "System Health", url: "/admin/system-health", icon: Activity },
+      { title: "Backups", url: "/admin/backups", icon: HardDrive },
+      { title: "Feature Flags", url: "/admin/feature-flags", icon: Flag },
+    ],
+  },
+  {
+    label: "Security",
+    items: [
+      { title: "Audit Logs", url: "/admin/audit-logs", icon: Shield },
+    ],
+  },
+];
+
+const standaloneItems: NavItem[] = [
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 
@@ -48,7 +92,7 @@ export function AdminSidebar() {
   };
 
   return (
-    <Sidebar className={isCollapsed ? "w-14" : "w-60"}>
+    <Sidebar>
       <SidebarHeader className="border-b border-border p-4">
         {!isCollapsed && (
           <div className="flex items-center gap-3">
@@ -67,16 +111,53 @@ export function AdminSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className={isCollapsed ? "sr-only" : ""}>
-            Navigation
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => {
-                const isActive = location.pathname === item.url;
-                return (
-                  <SidebarMenuItem key={item.title}>
+        {navCategories.map((category) => (
+          <Collapsible key={category.label} defaultOpen className="group/collapsible">
+            <SidebarGroup>
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger className="flex w-full items-center gap-2 cursor-pointer select-none">
+                  <span className={isCollapsed ? "sr-only" : ""}>{category.label}</span>
+                  {!isCollapsed && (
+                    <ChevronRight className="ml-auto h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                  )}
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {category.items.map((item) => {
+                      const isActive = location.pathname === item.url;
+                      return (
+                        <SidebarMenuItem key={item.title}>
+                          <SidebarMenuButton asChild>
+                            <NavLink
+                              to={item.url}
+                              end
+                              className="hover:bg-muted/50 flex items-center gap-2"
+                              activeClassName="bg-muted text-primary font-medium"
+                            >
+                              <item.icon className="h-4 w-4" />
+                              {!isCollapsed && <span>{item.title}</span>}
+                            </NavLink>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
+        ))}
+
+        {/* Standalone items (Settings) */}
+        {standaloneItems.map((item) => {
+          const isActive = location.pathname === item.url;
+          return (
+            <SidebarGroup key={item.title}>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
                     <SidebarMenuButton asChild>
                       <NavLink
                         to={item.url}
@@ -89,11 +170,11 @@ export function AdminSidebar() {
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-border p-2 space-y-1">

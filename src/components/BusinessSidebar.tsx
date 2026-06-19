@@ -3,7 +3,8 @@ import {
   QrCode, Wallet, Bed, CalendarDays, Package, UtensilsCrossed, Receipt, ChefHat,
   Scissors, Calendar, Pill, HeartPulse, Wrench, Cog, PackageMinus, Truck, Tags, AlertTriangle, 
   ClipboardList, CreditCard, Wallet2, Sparkles, GraduationCap, ClipboardCheck, Award, BookOpen, FileText, ScanLine,
-  ShieldAlert, Building2, DoorOpen, Calculator, Home, Upload, Shield, Link, UserPlus
+  ShieldAlert, Building2, DoorOpen, Calculator, Home, Upload, Shield, Link, UserPlus,
+  ChevronRight
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +22,11 @@ import {
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TennaHubLogo } from "@/components/TennaHubLogo";
@@ -30,7 +36,6 @@ import { useStaffPermissions } from "@/hooks/use-staff-permissions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/i18n";
 
-// Icon mapping - keep in sync with MobileBottomNav
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard,
   ShoppingCart,
@@ -78,14 +83,46 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   UserPlus,
 };
 
+const categoryLabels: Record<string, string> = {
+  core: "General",
+  school: "School",
+  academics: "Academics",
+  restaurant: "Restaurant",
+  hotel: "Hotel",
+  repair: "Repair",
+  salon: "Salon",
+  pharmacy: "Pharmacy",
+  property: "Properties",
+  rental: "Rental",
+  finance: "Finance",
+  people: "People",
+  operations: "Operations",
+  communication: "Communication",
+  analytics: "Analytics",
+  admin: "Admin",
+  legal: "Legal",
+};
+
+const categoryOrder = [
+  'core', 'school', 'academics', 'restaurant', 'hotel', 'repair',
+  'salon', 'pharmacy', 'property', 'rental', 'finance', 'people',
+  'operations', 'communication', 'analytics', 'admin', 'legal',
+];
+
+interface MenuItem {
+  title: string;
+  url: string;
+  icon: React.ComponentType<{ className?: string }>;
+  code: string;
+  category: string;
+}
+
 export function BusinessSidebar({ businessName, businessType, devMode }: { businessName?: string; businessType?: string; devMode?: boolean }) {
   const { state } = useSidebar();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const isCollapsed = state === "collapsed";
   const { data: tenantData } = useTenant();
-  // In dev mode, pass business type to get modules from config instead of DB
-  // Also pass the tenant's business type to filter modules by applicability
   const { enabledModules, isLoading } = useTenantModules(
     tenantData?.tenantId, 
     devMode ? businessType : null,
@@ -98,46 +135,48 @@ export function BusinessSidebar({ businessName, businessType, devMode }: { busin
     navigate('/login');
   };
 
-  // Check if this is an ECD/Kindergarten business
   const isEcdBusiness = tenantData?.businessType === 'kindergarten' || businessType === 'kindergarten';
 
-  // Build menu items from enabled modules, filtered by staff permissions (skip permission check in dev mode)
-  const menuItems = enabledModules
+  const menuItems: MenuItem[] = enabledModules
     .filter(module => moduleRoutes[module.code])
     .filter(module => devMode || hasFullAccess || isModuleAllowed(module.code))
     .map(module => {
-      // Apply ECD overrides if this is a kindergarten business
       const url = isEcdBusiness && ecdRouteOverrides[module.code] 
         ? ecdRouteOverrides[module.code] 
         : moduleRoutes[module.code].url;
       const name = isEcdBusiness && ecdNameOverrides[module.code]
         ? ecdNameOverrides[module.code]
         : module.name;
-      
-      // Use icon from moduleRoutes config for consistency with MobileBottomNav
       const iconName = moduleRoutes[module.code]?.icon || module.icon || 'Package';
-      
       return {
         title: name,
         url,
         icon: iconMap[iconName] || Package,
         code: module.code,
+        category: module.category,
       };
-    })
-    .sort((a, b) => {
-      // Settings always last
-      if (a.code === 'settings') return 1;
-      if (b.code === 'settings') return -1;
-      // Dashboard always first (handle both regular and rental dashboard)
-      const isDashboardA = a.code === 'dashboard' || a.code === 'rental_dashboard';
-      const isDashboardB = b.code === 'dashboard' || b.code === 'rental_dashboard';
-      if (isDashboardA) return -1;
-      if (isDashboardB) return 1;
-      return 0;
     });
 
+  const isDashboardItem = (item: MenuItem) =>
+    item.code === 'dashboard' || item.code === 'rental_dashboard';
+
+  const dashboardItem = menuItems.find(isDashboardItem);
+  const settingsItem = menuItems.find(item => item.code === 'settings');
+  const otherItems = menuItems.filter(item => !isDashboardItem(item) && item.code !== 'settings');
+
+  const groupedItems = otherItems.reduce<Record<string, MenuItem[]>>((acc, item) => {
+    const cat = item.category || 'core';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(item);
+    return acc;
+  }, {});
+
+  const sortedCategories = Object.keys(groupedItems).sort(
+    (a, b) => categoryOrder.indexOf(a) - categoryOrder.indexOf(b)
+  );
+
   return (
-    <Sidebar className={isCollapsed ? "w-14" : "w-60"}>
+    <Sidebar>
       <SidebarHeader className="border-b border-border p-4">
         {!isCollapsed && (
           <div className="flex items-center gap-3">
@@ -156,42 +195,109 @@ export function BusinessSidebar({ businessName, businessType, devMode }: { busin
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className={isCollapsed ? "sr-only" : ""}>
-            {t.nav.navigation}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {(isLoading || (!devMode && isLoadingPermissions)) ? (
-                // Loading skeleton
-                Array.from({ length: 6 }).map((_, i) => (
+        {(isLoading || (!devMode && isLoadingPermissions)) ? (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {Array.from({ length: 6 }).map((_, i) => (
                   <SidebarMenuItem key={i}>
                     <div className="flex items-center gap-2 px-2 py-2">
                       <Skeleton className="h-4 w-4" />
                       {!isCollapsed && <Skeleton className="h-4 w-24" />}
                     </div>
                   </SidebarMenuItem>
-                ))
-              ) : (
-                menuItems.map((item) => (
-                  <SidebarMenuItem key={item.code}>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to={item.url}
-                        end={item.url === "/business"}
-                        className="hover:bg-muted/50 flex items-center gap-2"
-                        activeClassName="bg-muted text-primary font-medium"
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {!isCollapsed && <span>{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))
-              )}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ) : (
+          <>
+            {/* Dashboard (always top) */}
+            {dashboardItem && (
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem key={dashboardItem.code}>
+                      <SidebarMenuButton asChild>
+                        <NavLink
+                          to={dashboardItem.url}
+                          end
+                          className="hover:bg-muted/50 flex items-center gap-2"
+                          activeClassName="bg-muted text-primary font-medium"
+                        >
+                          <dashboardItem.icon className="h-4 w-4" />
+                          {!isCollapsed && <span>{dashboardItem.title}</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
+
+            {/* Categorized collapsible groups */}
+            {sortedCategories.map((category) => (
+              <Collapsible key={category} defaultOpen className="group/collapsible">
+                <SidebarGroup>
+                  <SidebarGroupLabel asChild>
+                    <CollapsibleTrigger className="flex w-full items-center gap-2 cursor-pointer select-none">
+                      <span className={isCollapsed ? "sr-only" : ""}>
+                        {categoryLabels[category] || category}
+                      </span>
+                      {!isCollapsed && (
+                        <ChevronRight className="ml-auto h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                      )}
+                    </CollapsibleTrigger>
+                  </SidebarGroupLabel>
+                  <CollapsibleContent>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        {groupedItems[category].map((item) => (
+                          <SidebarMenuItem key={item.code}>
+                            <SidebarMenuButton asChild>
+                              <NavLink
+                                to={item.url}
+                                end={item.url === "/business"}
+                                className="hover:bg-muted/50 flex items-center gap-2"
+                                activeClassName="bg-muted text-primary font-medium"
+                              >
+                                <item.icon className="h-4 w-4" />
+                                {!isCollapsed && <span>{item.title}</span>}
+                              </NavLink>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        ))}
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </CollapsibleContent>
+                </SidebarGroup>
+              </Collapsible>
+            ))}
+
+            {/* Settings (always bottom) */}
+            {settingsItem && (
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem key={settingsItem.code}>
+                      <SidebarMenuButton asChild>
+                        <NavLink
+                          to={settingsItem.url}
+                          end
+                          className="hover:bg-muted/50 flex items-center gap-2"
+                          activeClassName="bg-muted text-primary font-medium"
+                        >
+                          <settingsItem.icon className="h-4 w-4" />
+                          {!isCollapsed && <span>{settingsItem.title}</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
+          </>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-border p-2 space-y-1">
