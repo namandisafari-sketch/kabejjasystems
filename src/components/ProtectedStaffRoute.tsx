@@ -6,6 +6,7 @@ import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { seedDefaultSubjects } from "@/lib/subjects-data";
 
 interface ProtectedStaffRouteProps {
   children: ReactNode;
@@ -56,6 +57,8 @@ export const ProtectedStaffRoute = ({
           setIsAuthorized(false);
           return;
         }
+
+        await seedDefaultSubjects(supabase, profile.tenant_id);
 
         setIsAuthorized(true);
       } catch (error) {

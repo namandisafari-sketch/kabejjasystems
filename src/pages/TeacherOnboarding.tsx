@@ -2,10 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Check, ChevronRight, BookOpen, Users, GraduationCap, Building2 } from "lucide-react";
-import { getSubjectsForLevel, detectSchoolLevels, seedDefaultSubjects } from "@/lib/subjects-data";
+import { Loader2, Check, ChevronRight, BookOpen, Users, GraduationCap } from "lucide-react";
+import { detectSchoolLevels } from "@/lib/subjects-data";
 
 const STEPS = ["Welcome", "Your Role", "Your Subjects", "Your Classes", "Done"];
 
@@ -16,7 +15,6 @@ const TeacherOnboarding = () => {
   const [saving, setSaving] = useState(false);
   const [tenantId, setTenantId] = useState("");
   const [profileId, setProfileId] = useState("");
-  const [tenantName, setTenantName] = useState("");
   const [classes, setClasses] = useState<any[]>([]);
   const [allSubjects, setAllSubjects] = useState<any[]>([]);
   const [schoolLevels, setSchoolLevels] = useState<string[]>([]);
@@ -30,15 +28,10 @@ const TeacherOnboarding = () => {
   const init = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { navigate("/login"); return; }
-    const { data: p } = await supabase.from("profiles").select("tenant_id, id, full_name, role").eq("id", session.user.id).single();
+    const { data: p } = await supabase.from("profiles").select("tenant_id, id").eq("id", session.user.id).single();
     if (!p?.tenant_id) { navigate("/login"); return; }
     setTenantId(p.tenant_id);
     setProfileId(p.id);
-
-    const { data: t } = await supabase.from("tenants").select("name").eq("id", p.tenant_id).single();
-    setTenantName(t?.name || "your school");
-
-    await seedDefaultSubjects(supabase, p.tenant_id);
 
     const [cls, subs] = await Promise.all([
       supabase.from("school_classes").select("*").eq("tenant_id", p.tenant_id).eq("is_active", true).order("name"),
@@ -114,7 +107,7 @@ const TeacherOnboarding = () => {
     navigate("/teacher");
   };
 
-  if (loading) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (loading) return <div className="flex justify-center items-center py-16"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   const levelLabels: Record<string, string> = {
     ecd: "ECD (Early Childhood)",
@@ -124,142 +117,135 @@ const TeacherOnboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-3xl">
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <Building2 className="h-6 w-6 text-primary" />
-          <span className="text-lg font-semibold text-primary">{tenantName}</span>
-        </div>
-
-        <div className="flex items-center justify-center gap-1 mb-8">
-          {STEPS.map((s, i) => (
-            <div key={s} className="flex items-center gap-1">
-              <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${i <= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                {i < step ? <Check className="h-3.5 w-3.5" /> : i + 1}
-              </div>
-              <span className={`text-xs hidden sm:inline ${i <= step ? "text-foreground font-medium" : "text-muted-foreground"}`}>{s}</span>
-              {i < STEPS.length - 1 && <div className={`h-px w-6 sm:w-12 ${i < step ? "bg-primary" : "bg-muted"}`} />}
+    <div className="p-4 md:p-6 max-w-3xl mx-auto">
+      <div className="flex items-center justify-center gap-1 mb-8">
+        {STEPS.map((s, i) => (
+          <div key={s} className="flex items-center gap-1">
+            <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${i <= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+              {i < step ? <Check className="h-3.5 w-3.5" /> : i + 1}
             </div>
-          ))}
-        </div>
-
-        <Card className="shadow-xl border-0">
-          <CardHeader className="text-center pb-2">
-            <CardTitle className="text-2xl">
-              {step === 0 && "Welcome to Your Teacher Portal"}
-              {step === 1 && "What Type of Teacher Are You?"}
-              {step === 2 && "Select Your Subjects"}
-              {step === 3 && "Select Your Classes"}
-              {step === 4 && "You're All Set!"}
-            </CardTitle>
-            <CardDescription>
-              {step === 0 && `Let's set up your profile at ${tenantName}. This takes just a minute.`}
-              {step === 1 && "Choose how you'll be assigned to classes and subjects."}
-              {step === 2 && schoolLevels.length > 0 && `Subjects for: ${schoolLevels.map(sl => levelLabels[sl] || sl).join(", ")}`}
-              {step === 3 && "Which classes will you be teaching?"}
-              {step === 4 && "Your profile is configured. You can always change these later."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4">
-            {step === 0 && (
-              <div className="py-6 space-y-4 text-center">
-                <GraduationCap className="h-20 w-20 mx-auto text-primary/30" />
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  We detected your school has classes at <strong>{schoolLevels.map(sl => levelLabels[sl]).join(", ")}</strong> levels.
-                  Let's configure your teaching profile so you only see what's relevant to you.
-                </p>
-              </div>
-            )}
-
-            {step === 1 && (
-              <div className="grid grid-cols-2 gap-4 py-4">
-                <button onClick={() => { setTeacherType("class"); setIsClassTeacher(true); }}
-                  className={`p-6 rounded-xl border-2 text-left transition-all hover:shadow-md ${teacherType === "class" ? "border-primary bg-primary/5" : "border-border"}`}>
-                  <Users className="h-8 w-8 mb-3 text-primary" />
-                  <h3 className="font-semibold">Class Teacher</h3>
-                  <p className="text-sm text-muted-foreground mt-1">I am responsible for a specific class — manage attendance, reports, and communication.</p>
-                </button>
-                <button onClick={() => { setTeacherType("subject"); setIsClassTeacher(false); }}
-                  className={`p-6 rounded-xl border-2 text-left transition-all hover:shadow-md ${teacherType === "subject" ? "border-primary bg-primary/5" : "border-border"}`}>
-                  <BookOpen className="h-8 w-8 mb-3 text-primary" />
-                  <h3 className="font-semibold">Subject Teacher</h3>
-                  <p className="text-sm text-muted-foreground mt-1">I teach specific subjects across multiple classes — focused on curriculum delivery.</p>
-                </button>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="py-4">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[400px] overflow-y-auto">
-                  {filteredSubjects().map((s: any) => (
-                    <button key={s.id} onClick={() => toggleSubject(s.id)}
-                      className={`p-3 rounded-lg border text-left text-sm transition-all ${selectedSubjects.includes(s.id) ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/50"}`}>
-                      <div className="font-medium">{s.name}</div>
-                      <div className="text-xs text-muted-foreground mt-0.5">{s.code} · {s.is_core ? <span className="text-blue-600">Core</span> : "Elective"}</div>
-                    </button>
-                  ))}
-                </div>
-                {filteredSubjects().length === 0 && (
-                  <p className="text-center text-muted-foreground py-8">No subjects found. Please contact your administrator.</p>
-                )}
-                <p className="text-xs text-muted-foreground mt-3 text-center">{selectedSubjects.length} subject{selectedSubjects.length !== 1 ? "s" : ""} selected</p>
-              </div>
-            )}
-
-            {step === 3 && (
-              <div className="py-4">
-                {isClassTeacher && (
-                  <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
-                    As a class teacher, your first selected class will be set as your home class.
-                  </div>
-                )}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[400px] overflow-y-auto">
-                  {classes.map((c: any) => (
-                    <button key={c.id} onClick={() => toggleClass(c.id)}
-                      className={`p-3 rounded-lg border text-left text-sm transition-all ${selectedClasses.includes(c.id) ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/50"}`}>
-                      <div className="font-medium">{c.name}</div>
-                      <div className="text-xs text-muted-foreground mt-0.5">{c.level} · {c.section || "No section"}</div>
-                    </button>
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground mt-3 text-center">{selectedClasses.length} class{selectedClasses.length !== 1 ? "es" : ""} selected</p>
-              </div>
-            )}
-
-            {step === 4 && (
-              <div className="py-6 space-y-4 text-center">
-                <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
-                  <Check className="h-8 w-8 text-green-600" />
-                </div>
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  Your profile is configured. You'll only see <strong>{selectedSubjects.length} subject{selectedSubjects.length !== 1 ? "s" : ""}</strong>
-                  {selectedClasses.length > 0 && <> across <strong>{selectedClasses.length} class{selectedClasses.length !== 1 ? "es" : ""}</strong></>}.
-                </p>
-              </div>
-            )}
-
-            <div className="flex justify-between mt-6 pt-4 border-t">
-              <Button variant="ghost" onClick={() => step > 0 ? setStep(step - 1) : navigate("/teacher")} disabled={saving}>
-                {step === 0 ? "Skip Setup" : "Back"}
-              </Button>
-              {step < 4 ? (
-                <Button onClick={() => {
-                  if (step === 1 && !teacherType) return;
-                  if (step === 2 && selectedSubjects.length === 0) return;
-                  setStep(step + 1);
-                }} disabled={(step === 1 && !teacherType) || (step === 2 && selectedSubjects.length === 0)}>
-                  Continue <ChevronRight className="h-4 w-4 ml-2" />
-                </Button>
-              ) : (
-                <Button onClick={handleFinish} disabled={saving}>
-                  {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-                  Go to Dashboard
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+            <span className={`text-xs hidden sm:inline ${i <= step ? "text-foreground font-medium" : "text-muted-foreground"}`}>{s}</span>
+            {i < STEPS.length - 1 && <div className={`h-px w-6 sm:w-12 ${i < step ? "bg-primary" : "bg-muted"}`} />}
+          </div>
+        ))}
       </div>
+
+      <Card>
+        <CardHeader className="text-center pb-2">
+          <CardTitle className="text-2xl">
+            {step === 0 && "Welcome to Your Teacher Portal"}
+            {step === 1 && "What Type of Teacher Are You?"}
+            {step === 2 && "Select Your Subjects"}
+            {step === 3 && "Select Your Classes"}
+            {step === 4 && "You're All Set!"}
+          </CardTitle>
+          <CardDescription>
+            {step === 0 && "Let's set up your profile. This takes just a minute."}
+            {step === 1 && "Choose how you'll be assigned to classes and subjects."}
+            {step === 2 && schoolLevels.length > 0 && `Subjects for: ${schoolLevels.map(sl => levelLabels[sl] || sl).join(", ")}`}
+            {step === 3 && "Which classes will you be teaching?"}
+            {step === 4 && "Your profile is configured. You can always change these later."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4">
+          {step === 0 && (
+            <div className="py-6 space-y-4 text-center">
+              <GraduationCap className="h-20 w-20 mx-auto text-primary/30" />
+              <p className="text-muted-foreground max-w-md mx-auto">
+                We detected your school has classes at <strong>{schoolLevels.map(sl => levelLabels[sl]).join(", ")}</strong> levels.
+                Let's configure your teaching profile so you only see what's relevant to you.
+              </p>
+            </div>
+          )}
+
+          {step === 1 && (
+            <div className="grid grid-cols-2 gap-4 py-4">
+              <button onClick={() => { setTeacherType("class"); setIsClassTeacher(true); }}
+                className={`p-6 rounded-xl border-2 text-left transition-all hover:shadow-md ${teacherType === "class" ? "border-primary bg-primary/5" : "border-border"}`}>
+                <Users className="h-8 w-8 mb-3 text-primary" />
+                <h3 className="font-semibold">Class Teacher</h3>
+                <p className="text-sm text-muted-foreground mt-1">I am responsible for a specific class — manage attendance, reports, and communication.</p>
+              </button>
+              <button onClick={() => { setTeacherType("subject"); setIsClassTeacher(false); }}
+                className={`p-6 rounded-xl border-2 text-left transition-all hover:shadow-md ${teacherType === "subject" ? "border-primary bg-primary/5" : "border-border"}`}>
+                <BookOpen className="h-8 w-8 mb-3 text-primary" />
+                <h3 className="font-semibold">Subject Teacher</h3>
+                <p className="text-sm text-muted-foreground mt-1">I teach specific subjects across multiple classes — focused on curriculum delivery.</p>
+              </button>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="py-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[400px] overflow-y-auto">
+                {filteredSubjects().map((s: any) => (
+                  <button key={s.id} onClick={() => toggleSubject(s.id)}
+                    className={`p-3 rounded-lg border text-left text-sm transition-all ${selectedSubjects.includes(s.id) ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/50"}`}>
+                    <div className="font-medium">{s.name}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{s.code} · {s.is_core ? <span className="text-blue-600">Core</span> : "Elective"}</div>
+                  </button>
+                ))}
+              </div>
+              {filteredSubjects().length === 0 && (
+                <p className="text-center text-muted-foreground py-8">No subjects found. Please contact your administrator.</p>
+              )}
+              <p className="text-xs text-muted-foreground mt-3 text-center">{selectedSubjects.length} subject{selectedSubjects.length !== 1 ? "s" : ""} selected</p>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="py-4">
+              {isClassTeacher && (
+                <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+                  As a class teacher, your first selected class will be set as your home class.
+                </div>
+              )}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[400px] overflow-y-auto">
+                {classes.map((c: any) => (
+                  <button key={c.id} onClick={() => toggleClass(c.id)}
+                    className={`p-3 rounded-lg border text-left text-sm transition-all ${selectedClasses.includes(c.id) ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/50"}`}>
+                    <div className="font-medium">{c.name}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{c.level} · {c.section || "No section"}</div>
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-3 text-center">{selectedClasses.length} class{selectedClasses.length !== 1 ? "es" : ""} selected</p>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="py-6 space-y-4 text-center">
+              <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+                <Check className="h-8 w-8 text-green-600" />
+              </div>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Your profile is configured. You'll only see <strong>{selectedSubjects.length} subject{selectedSubjects.length !== 1 ? "s" : ""}</strong>
+                {selectedClasses.length > 0 && <> across <strong>{selectedClasses.length} class{selectedClasses.length !== 1 ? "es" : ""}</strong></>}.
+              </p>
+            </div>
+          )}
+
+          <div className="flex justify-between mt-6 pt-4 border-t">
+            <Button variant="ghost" onClick={() => step > 0 ? setStep(step - 1) : navigate("/teacher")} disabled={saving}>
+              {step === 0 ? "Skip Setup" : "Back"}
+            </Button>
+            {step < 4 ? (
+              <Button onClick={() => {
+                if (step === 1 && !teacherType) return;
+                if (step === 2 && selectedSubjects.length === 0) return;
+                setStep(step + 1);
+              }} disabled={(step === 1 && !teacherType) || (step === 2 && selectedSubjects.length === 0)}>
+                Continue <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            ) : (
+              <Button onClick={handleFinish} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                Go to Dashboard
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
