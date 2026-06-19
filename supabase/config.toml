@@ -11,3 +11,9 @@ verify_jwt = false
 
 [functions.seed-sample-accounts]
 verify_jwt = false
+
+[functions.send-signup-otp]
+verify_jwt = false
+
+[functions.verify-signup-otp]
+verify_jwt = false
