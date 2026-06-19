@@ -22,6 +22,22 @@ const Login = () => {
   const [showBusinessCode, setShowBusinessCode] = useState(false);
   const [businessCodeError, setBusinessCodeError] = useState("");
 
+  function isTenantExpired(t: {
+    subscription_status: string | null;
+    subscription_end_date: string | null;
+    is_trial: boolean | null;
+    trial_end_date: string | null;
+    status: string | null;
+  }): boolean {
+    if (t.status === 'suspended' || t.status === 'rejected') return true;
+    if (t.is_trial && t.trial_end_date) {
+      return new Date(t.trial_end_date) < new Date();
+    }
+    if (t.subscription_status === 'expired') return true;
+    if (t.subscription_end_date && new Date(t.subscription_end_date) < new Date()) return true;
+    return false;
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -46,7 +62,7 @@ const Login = () => {
         console.error('Profile fetch error:', profileError);
       }
 
-      // Check if user is admin/superadmin - they don't need business code
+      // Check if user is admin/superadmin - they don't need business code or subscription check
       if (profile?.role === 'superadmin' || profile?.role === 'admin') {
         toast({
           title: "Welcome back!",
@@ -54,6 +70,25 @@ const Login = () => {
         });
         navigate('/admin');
         return;
+      }
+
+      // For tenant users, check subscription before granting access
+      if (profile?.tenant_id) {
+        const { data: tenantSub, error: tenantSubError } = await supabase
+          .from('tenants')
+          .select('subscription_status, subscription_end_date, is_trial, trial_end_date, status')
+          .eq('id', profile.tenant_id)
+          .single();
+
+        if (!tenantSubError && tenantSub && isTenantExpired(tenantSub)) {
+          toast({
+            title: "Access Denied",
+            description: "Your school subscription has expired. Please renew to continue.",
+            variant: "destructive",
+          });
+          navigate('/subscription-expired');
+          return;
+        }
       }
 
       // Check if user is tenant owner - they don't need business code

@@ -62,10 +62,10 @@ const Dashboard = () => {
         return;
       }
 
-      // Check tenant status for business owners
+      // Check tenant subscription status for business owners
       const { data: tenant, error: tenantError } = await supabase
         .from('tenants')
-        .select('status, is_trial, trial_end_date')
+        .select('status, is_trial, trial_end_date, subscription_status, subscription_end_date')
         .eq('id', profileData.tenant_id)
         .maybeSingle();
 
@@ -75,10 +75,34 @@ const Dashboard = () => {
         return;
       }
 
-      // Check if trial user with expired trial
-      if (tenant?.is_trial && tenant?.trial_end_date) {
-        const trialEnd = new Date(tenant.trial_end_date);
-        if (new Date() > trialEnd) {
+      if (tenant) {
+        let isExpired = false;
+
+        // Suspended or rejected tenants are blocked
+        if (tenant.status === 'suspended' || tenant.status === 'rejected') {
+          isExpired = true;
+        }
+
+        // Trial expired
+        if (tenant.is_trial && tenant.trial_end_date) {
+          if (new Date() > new Date(tenant.trial_end_date)) {
+            isExpired = true;
+          }
+        }
+
+        // Subscription explicitly marked expired
+        if (tenant.subscription_status === 'expired') {
+          isExpired = true;
+        }
+
+        // Subscription end date passed
+        if (tenant.subscription_end_date) {
+          if (new Date() > new Date(tenant.subscription_end_date)) {
+            isExpired = true;
+          }
+        }
+
+        if (isExpired) {
           navigate('/subscription-expired');
           return;
         }

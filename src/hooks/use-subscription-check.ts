@@ -25,40 +25,42 @@ export function useSubscriptionCheck() {
       // Get tenant subscription status including trial info
       const { data: tenant } = await supabase
         .from('tenants')
-        .select('subscription_status, subscription_end_date, name, is_trial, trial_end_date')
+        .select('subscription_status, subscription_end_date, name, is_trial, trial_end_date, status')
         .eq('id', profile.tenant_id)
         .single();
 
       if (!tenant) return null;
 
       const now = new Date();
-      
-      // Check trial status
-      if (tenant.is_trial) {
-        const trialEndDate = tenant.trial_end_date ? new Date(tenant.trial_end_date) : null;
-        const isTrialExpired = trialEndDate ? now > trialEndDate : false;
-        
+
+      // Check tenant status (suspended/rejected = blocked)
+      if (tenant.status === 'suspended' || tenant.status === 'rejected') {
         return {
-          isActive: !isTrialExpired,
-          isExpired: isTrialExpired,
-          isTrial: true,
-          trialEndDate: tenant.trial_end_date,
-          subscriptionStatus: tenant.subscription_status,
-          endDate: tenant.subscription_end_date,
+          isActive: false,
+          isExpired: true,
           tenantName: tenant.name,
           tenantId: profile.tenant_id,
         };
       }
 
-      // Regular subscription check
-      const endDate = tenant.subscription_end_date ? new Date(tenant.subscription_end_date) : null;
-      const isExpired = endDate ? now > endDate : false;
-      const isActive = tenant.subscription_status === 'active' && !isExpired;
+      let isExpired = false;
+
+      // Trial expiry check
+      if (tenant.is_trial && tenant.trial_end_date) {
+        isExpired = now > new Date(tenant.trial_end_date);
+      } else if (tenant.subscription_status === 'expired') {
+        // Admin explicitly marked as expired
+        isExpired = true;
+      } else if (tenant.subscription_end_date) {
+        // End date is past
+        isExpired = now > new Date(tenant.subscription_end_date);
+      }
 
       return {
-        isActive,
+        isActive: !isExpired,
         isExpired,
-        isTrial: false,
+        isTrial: tenant.is_trial || false,
+        trialEndDate: tenant.trial_end_date,
         subscriptionStatus: tenant.subscription_status,
         endDate: tenant.subscription_end_date,
         tenantName: tenant.name,
