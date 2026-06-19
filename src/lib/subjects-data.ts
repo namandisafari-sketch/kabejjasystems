@@ -123,25 +123,26 @@ export async function seedDefaultSubjects(supabase: any, tenantId: string): Prom
 }
 
 export async function seedDefaultClasses(supabase: any, tenantId: string): Promise<void> {
-  const { data: existing } = await supabase.from("school_classes").select("name").eq("tenant_id", tenantId);
-  if (existing && existing.length > 0) return;
-
   const { data: t } = await supabase.from("tenants").select("business_type").eq("id", tenantId).single();
   const type = t?.business_type || "";
 
-  const allClasses: { name: string; level: string; grade: string }[] = [];
+  let expectedNames: string[] = [];
+  let allClasses: { name: string; level: string; grade: string }[] = [];
 
   if (type === "kindergarten") {
-    allClasses.push(
+    expectedNames = ["Baby Class", "Middle Class", "Top Class"];
+    allClasses = [
       { name: "Baby Class", level: "kindergarten", grade: "Early Childhood" },
       { name: "Middle Class", level: "kindergarten", grade: "Early Childhood" },
       { name: "Top Class", level: "kindergarten", grade: "Early Childhood" },
-    );
+    ];
   } else if (type === "primary_school") {
+    expectedNames = Array.from({ length: 7 }, (_, i) => `P${i + 1}`);
     for (let i = 1; i <= 7; i++) {
       allClasses.push({ name: `P${i}`, level: "primary", grade: "Primary" });
     }
   } else if (type === "secondary_school") {
+    expectedNames = Array.from({ length: 6 }, (_, i) => `S${i + 1}`);
     for (let i = 1; i <= 4; i++) {
       allClasses.push({ name: `S${i}`, level: "o-level", grade: "O-Level" });
     }
@@ -149,6 +150,10 @@ export async function seedDefaultClasses(supabase: any, tenantId: string): Promi
       allClasses.push({ name: `S${i}`, level: "a-level", grade: "A-Level" });
     }
   } else {
+    expectedNames = ["Baby Class", "Middle Class", "Top Class",
+      ...Array.from({ length: 7 }, (_, i) => `P${i + 1}`),
+      ...Array.from({ length: 6 }, (_, i) => `S${i + 1}`),
+    ];
     allClasses.push(
       { name: "Baby Class", level: "kindergarten", grade: "Early Childhood" },
       { name: "Middle Class", level: "kindergarten", grade: "Early Childhood" },
@@ -165,8 +170,17 @@ export async function seedDefaultClasses(supabase: any, tenantId: string): Promi
     }
   }
 
-  if (allClasses.length > 0) {
-    const rows = allClasses.map(c => ({ ...c, tenant_id: tenantId, capacity: 40, is_active: true }));
+  const { data: existing } = await supabase
+    .from("school_classes")
+    .select("name")
+    .eq("tenant_id", tenantId)
+    .in("name", expectedNames);
+
+  const existingNames = new Set((existing || []).map((r: any) => r.name));
+  const toInsert = allClasses.filter(c => !existingNames.has(c.name));
+
+  if (toInsert.length > 0) {
+    const rows = toInsert.map(c => ({ ...c, tenant_id: tenantId, capacity: 40, is_active: true }));
     await supabase.from("school_classes").insert(rows);
   }
 }
