@@ -55,6 +55,12 @@ const Dashboard = () => {
         return;
       }
 
+      // Staff members go to teacher portal
+      if (profileData.role === 'staff') {
+        navigate('/teacher');
+        return;
+      }
+
       // Users without tenant assignment go to business anyway (TEMP)
       if (!profileData.tenant_id) {
         console.log('No tenant_id - navigating to business anyway');

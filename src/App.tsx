@@ -9,6 +9,23 @@ import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { useWelcomeNotifications } from "@/hooks/use-welcome-notifications";
 import { ProtectedAdminRoute } from "@/components/ProtectedAdminRoute";
+import { ProtectedStaffRoute } from "@/components/ProtectedStaffRoute";
+import { TeacherLayout } from "@/components/portal/TeacherLayout";
+import { DOSLayout } from "@/components/portal/DOSLayout";
+import { HeadTeacherLayout } from "@/components/portal/HeadTeacherLayout";
+import TeacherDashboard from "./pages/portal/teacher/Dashboard";
+import MyClasses from "./pages/portal/teacher/MyClasses";
+import TeacherAttendance from "./pages/portal/teacher/Attendance";
+import Marks from "./pages/portal/teacher/Marks";
+import Students from "./pages/portal/teacher/Students";
+import DOSDashboard from "./pages/portal/dos/Dashboard";
+import SubjectAllocation from "./pages/portal/dos/SubjectAllocation";
+import ExamManagement from "./pages/portal/dos/ExamManagement";
+import TopStudents from "./pages/portal/dos/TopStudents";
+import HeadTeacherDashboard from "./pages/portal/headteacher/Dashboard";
+import StaffManagement from "./pages/portal/headteacher/StaffManagement";
+import FeesManagement from "./pages/portal/headteacher/FeesManagement";
+import { SmartDataView } from "./pages/portal/shared/SmartDataView";
 import PWAHome from "./pages/PWAHome";
 import OnboardingGate from "./components/OnboardingGate";
 import Signup from "./pages/Signup";
@@ -303,6 +320,42 @@ const App = () => {
               {/* Renter Portal Routes */}
               <Route path="/renter" element={<RenterPortal />} />
               <Route path="/renter/dashboard" element={<RenterDashboard />} />
+
+              {/* Staff & Teacher Portals */}
+              <Route path="/teacher" element={
+                <ProtectedStaffRoute allowedRoles={['staff']}>
+                  <TeacherLayout />
+                </ProtectedStaffRoute>
+              }>
+                <Route index element={<TeacherDashboard />} />
+                <Route path="classes" element={<MyClasses />} />
+                <Route path="attendance" element={<TeacherAttendance />} />
+                <Route path="marks" element={<Marks />} />
+                <Route path="students" element={<Students />} />
+                <Route path="*" element={<SmartDataView />} />
+              </Route>
+              <Route path="/dos" element={
+                <ProtectedStaffRoute allowedRoles={['staff']}>
+                  <DOSLayout />
+                </ProtectedStaffRoute>
+              }>
+                <Route index element={<DOSDashboard />} />
+                <Route path="academics/subject-allocation" element={<SubjectAllocation />} />
+                <Route path="exams/*" element={<ExamManagement />} />
+                <Route path="students/top" element={<TopStudents />} />
+                <Route path="*" element={<SmartDataView />} />
+              </Route>
+              <Route path="/headteacher" element={
+                <ProtectedStaffRoute allowedRoles={['staff']}>
+                  <HeadTeacherLayout />
+                </ProtectedStaffRoute>
+              }>
+                <Route index element={<HeadTeacherDashboard />} />
+                <Route path="admin/staff" element={<StaffManagement />} />
+                <Route path="staff/*" element={<StaffManagement />} />
+                <Route path="finance/fees" element={<FeesManagement />} />
+                <Route path="*" element={<SmartDataView />} />
+              </Route>
 
               {/* Subscription Expired */}
               <Route path="/subscription-expired" element={<SubscriptionExpired />} />
