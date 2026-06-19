@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard, BookOpen, Users, ClipboardList, MessageSquare,
   BarChart3, FolderOpen, Settings, Calendar, FileText, GraduationCap,
-  ClipboardCheck,
+  ClipboardCheck, Target, GitBranch,
 } from "lucide-react";
 import type { PortalMenuItem } from "@/components/portal/PortalSidebar";
 
@@ -16,9 +16,17 @@ const teacherMenuItems: PortalMenuItem[] = [
     title: "Academic", icon: BookOpen,
     items: [
       { title: "My Classes", url: "/teacher/classes" },
-      { title: "Lesson Planning", url: "/teacher/lesson-plans" },
+      { title: "Scheme of Work", url: "/teacher/scheme-of-work" },
+      { title: "Lesson Plans", url: "/teacher/lesson-plans" },
       { title: "Attendance", url: "/teacher/attendance" },
       { title: "Marks Management", url: "/teacher/marks" },
+    ],
+  },
+  {
+    title: "Curriculum Tracking", icon: Target,
+    items: [
+      { title: "Lesson Tracker", url: "/teacher/lesson-tracker" },
+      { title: "Syllabus Coverage", url: "/teacher/resources/curriculum" },
     ],
   },
   {

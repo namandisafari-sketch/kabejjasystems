@@ -19,6 +19,10 @@ import TeacherAttendance from "./pages/portal/teacher/Attendance";
 import Marks from "./pages/portal/teacher/Marks";
 import Students from "./pages/portal/teacher/Students";
 import CreateAssignment from "./pages/portal/teacher/CreateAssignment";
+import OnlineMarking from "./pages/portal/teacher/OnlineMarking";
+import SchemeOfWork from "./pages/portal/teacher/SchemeOfWork";
+import LessonPlan from "./pages/portal/teacher/LessonPlan";
+import LessonTracker from "./pages/portal/teacher/LessonTracker";
 import PerformanceAnalysis from "./pages/portal/teacher/PerformanceAnalysis";
 import SubjectAverages from "./pages/portal/teacher/SubjectAverages";
 import ClassRanking from "./pages/portal/teacher/ClassRanking";
@@ -346,7 +350,9 @@ const App = () => {
               }>
                 <Route index element={<TeacherDashboard />} />
                 <Route path="classes" element={<MyClasses />} />
-                <Route path="lesson-plans" element={<SmartDataView />} />
+                <Route path="lesson-plans" element={<LessonPlan />} />
+                <Route path="scheme-of-work" element={<SchemeOfWork />} />
+                <Route path="lesson-tracker" element={<LessonTracker />} />
                 <Route path="attendance" element={<TeacherAttendance />} />
                 <Route path="marks" element={<Marks />} />
                 <Route path="students" element={<Students />} />
@@ -354,7 +360,7 @@ const App = () => {
                 <Route path="progress" element={<SmartDataView />} />
                 <Route path="assignments/create" element={<CreateAssignment />} />
                 <Route path="assignments/submissions" element={<SmartDataView />} />
-                <Route path="assignments/marking" element={<SmartDataView />} />
+                <Route path="assignments/marking" element={<OnlineMarking />} />
                 <Route path="communication/parents" element={<SmartDataView />} />
                 <Route path="communication/students" element={<SmartDataView />} />
                 <Route path="communication/announcements" element={<SmartDataView />} />

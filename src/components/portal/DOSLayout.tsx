@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard, BookOpen, FileSpreadsheet, Users, BarChart3,
   MessageSquare, FolderOpen, ClipboardCheck, GraduationCap, Calendar,
+  Target, GitBranch,
 } from "lucide-react";
 import type { PortalMenuItem } from "@/components/portal/PortalSidebar";
 
