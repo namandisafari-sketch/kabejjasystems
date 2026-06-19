@@ -7,12 +7,11 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  ArrowLeft, ArrowRight, Eye, EyeOff, School, Building2, Mail, CheckCircle2,
+  ArrowRight, Eye, EyeOff, School, Building2, Mail, CheckCircle2,
   Loader2, AlertCircle, Phone, User, KeyRound, MapPin, Gift,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { TennaHubLogo } from "@/components/TennaHubLogo";
+import { AuthLayout } from "@/components/auth/AuthLayout";
 import {
   InputOTP,
   InputOTPGroup,
@@ -457,82 +456,57 @@ const Signup = () => {
     </div>
   );
 
-  const steps: Step[] = ["account", "school", "verify", "success"];
-  const currentIndex = steps.indexOf(step);
-  const progress = ((currentIndex + 1) / steps.length) * 100;
+  const wizardSteps = [
+    { id: "account", label: "Account Details", icon: <User className="h-5 w-5" /> },
+    { id: "school", label: "School Information", icon: <School className="h-5 w-5" /> },
+    { id: "verify", label: "Email Verification", icon: <Mail className="h-5 w-5" /> },
+    { id: "success", label: "Complete", icon: <CheckCircle2 className="h-5 w-5" /> },
+  ];
+
+  const stepTitles: Record<Step, string> = {
+    account: "Create Your School",
+    school: "School Details",
+    verify: "Verify Email",
+    success: "All Set!",
+  };
+  const stepSubtitles: Record<Step, string> = {
+    account: "Register your school on TennaHub",
+    school: "Tell us about your school",
+    verify: "Enter the 6-digit code sent to your email",
+    success: "Your school is ready to go",
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex flex-col safe-top safe-bottom">
-      <header className="flex items-center justify-between p-4">
-        <Link
-          to="/"
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors touch-target"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span className="hidden sm:inline">Back to home</span>
-        </Link>
-        <ThemeToggle />
-      </header>
+    <AuthLayout
+      title="Get Started"
+      subtitle="Create your school account in just a few steps."
+      steps={wizardSteps}
+      currentStep={step}
+      backTo={{ label: "Back to home", to: "/" }}
+    >
+      <Card className="border-0 shadow-none bg-transparent">
+        <CardHeader className="text-center pb-4 pt-0 px-0">
+          <CardTitle className="text-2xl">{stepTitles[step]}</CardTitle>
+          <CardDescription>{stepSubtitles[step]}</CardDescription>
+        </CardHeader>
 
-      <main className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm animate-fade-up">
-          <Card className="card-elevated border-0 shadow-elevated">
-            <CardHeader className="text-center pb-4 pt-6">
-              <div className="flex justify-center mb-4">
-                <TennaHubLogo width={160} height={52} variant="full" />
-              </div>
-              <CardTitle className="text-2xl">
-                {step === "account" && "Create Your School"}
-                {step === "school" && "School Details"}
-                {step === "verify" && "Verify Email"}
-                {step === "success" && "All Set!"}
-              </CardTitle>
-              <CardDescription>
-                {step === "account" && "Register your school on TennaHub"}
-                {step === "school" && "Tell us about your school"}
-                {step === "verify" && "Enter the 6-digit code sent to your email"}
-                {step === "success" && "Your school is ready to go"}
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="pb-6">
-              {step !== "success" && (
-                <div className="mb-6">
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary transition-all duration-500 rounded-full"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between mt-1">
-                    <span className="text-xs text-muted-foreground">Step {currentIndex + 1} of {steps.length}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {currentIndex === 0 && "Account"}
-                      {currentIndex === 1 && "School"}
-                      {currentIndex === 2 && "Verify"}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {step === "account" && renderAccountStep()}
-              {step === "school" && renderSchoolStep()}
-              {step === "verify" && renderVerifyStep()}
-              {step === "success" && renderSuccessStep()}
-            </CardContent>
-          </Card>
+        <CardContent className="px-0 pb-0">
+          {step === "account" && renderAccountStep()}
+          {step === "school" && renderSchoolStep()}
+          {step === "verify" && renderVerifyStep()}
+          {step === "success" && renderSuccessStep()}
 
           {step !== "success" && (
-            <p className="text-center text-sm text-muted-foreground mt-4">
+            <p className="text-center text-sm text-muted-foreground mt-6">
               Already have an account?{" "}
               <Link to="/login" className="text-primary font-medium hover:underline">
                 Sign in
               </Link>
             </p>
           )}
-        </div>
-      </main>
-    </div>
+        </CardContent>
+      </Card>
+    </AuthLayout>
   );
 };
 
