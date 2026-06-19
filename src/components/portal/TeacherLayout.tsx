@@ -12,11 +12,11 @@ import type { PortalMenuItem } from "@/components/portal/PortalSidebar";
 
 const teacherMenuItems: PortalMenuItem[] = [
   { title: "Dashboard", url: "/teacher", icon: LayoutDashboard },
-  {
+    {
     title: "Academic", icon: BookOpen,
     items: [
       { title: "My Classes", url: "/teacher/classes" },
-      { title: "Lesson Planning", url: "/teacher/lesson-planning" },
+      { title: "Lesson Planning", url: "/teacher/lesson-plans" },
       { title: "Attendance", url: "/teacher/attendance" },
       { title: "Marks Management", url: "/teacher/marks" },
     ],

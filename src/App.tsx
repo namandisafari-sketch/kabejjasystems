@@ -18,6 +18,12 @@ import MyClasses from "./pages/portal/teacher/MyClasses";
 import TeacherAttendance from "./pages/portal/teacher/Attendance";
 import Marks from "./pages/portal/teacher/Marks";
 import Students from "./pages/portal/teacher/Students";
+import CreateAssignment from "./pages/portal/teacher/CreateAssignment";
+import PerformanceAnalysis from "./pages/portal/teacher/PerformanceAnalysis";
+import SubjectAverages from "./pages/portal/teacher/SubjectAverages";
+import ClassRanking from "./pages/portal/teacher/ClassRanking";
+import TeacherProfile from "./pages/portal/teacher/TeacherProfile";
+import TeacherPassword from "./pages/portal/teacher/TeacherPassword";
 import DOSDashboard from "./pages/portal/dos/Dashboard";
 import SubjectAllocation from "./pages/portal/dos/SubjectAllocation";
 import ExamManagement from "./pages/portal/dos/ExamManagement";
@@ -329,9 +335,29 @@ const App = () => {
               }>
                 <Route index element={<TeacherDashboard />} />
                 <Route path="classes" element={<MyClasses />} />
+                <Route path="lesson-plans" element={<SmartDataView />} />
                 <Route path="attendance" element={<TeacherAttendance />} />
                 <Route path="marks" element={<Marks />} />
                 <Route path="students" element={<Students />} />
+                <Route path="student-profiles" element={<SmartDataView />} />
+                <Route path="progress" element={<SmartDataView />} />
+                <Route path="assignments/create" element={<CreateAssignment />} />
+                <Route path="assignments/submissions" element={<SmartDataView />} />
+                <Route path="assignments/marking" element={<SmartDataView />} />
+                <Route path="communication/parents" element={<SmartDataView />} />
+                <Route path="communication/students" element={<SmartDataView />} />
+                <Route path="communication/announcements" element={<SmartDataView />} />
+                <Route path="reports/performance" element={<PerformanceAnalysis />} />
+                <Route path="reports/averages" element={<SubjectAverages />} />
+                <Route path="reports/ranking" element={<ClassRanking />} />
+                <Route path="reports/attendance" element={<SmartDataView />} />
+                <Route path="resources/materials" element={<SmartDataView />} />
+                <Route path="resources/past-papers" element={<SmartDataView />} />
+                <Route path="resources/curriculum" element={<SmartDataView />} />
+                <Route path="resources/calendar" element={<SmartDataView />} />
+                <Route path="settings/profile" element={<TeacherProfile />} />
+                <Route path="settings/password" element={<TeacherPassword />} />
+                <Route path="settings/notifications" element={<SmartDataView />} />
                 <Route path="*" element={<SmartDataView />} />
               </Route>
               <Route path="/dos" element={
