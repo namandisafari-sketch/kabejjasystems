@@ -6,334 +6,204 @@ export interface TourConfig {
   description: string;
 }
 
+const S = {
+  welcome(title: string, desc: string): Step {
+    return {
+      target: "body",
+      placement: "center",
+      title: `\u2728 ${title}`,
+      content: desc,
+      disableBeacon: true,
+    };
+  },
+  step(title: string, desc: string): Step {
+    return {
+      target: "body",
+      placement: "center",
+      title: `\u25CF ${title}`,
+      content: desc,
+      disableBeacon: true,
+    };
+  },
+};
+
 const educationTours: Record<string, TourConfig> = {
   "/business/students": {
-    title: "Students Management",
+    title: "Students",
     description: "Manage all student records",
     steps: [
-      {
-        target: "body",
-        placement: "center",
-        title: "👋 Welcome to Students",
-        content: "This is your central hub for managing all student records. You can register new students, view profiles, track enrollment, and manage student information all in one place.",
-        disableBeacon: true,
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "📝 Adding Students",
-        content: "Click the 'Add Student' button to register a new student. Fill in their personal details, contact information, parent/guardian details, and enrollment information. Required fields are marked with an asterisk.",
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "🔍 Finding Students",
-        content: "Use the search bar to quickly find students by name, admission number, or class. You can also filter by class, stream, or academic year using the dropdown filters above the table.",
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "📋 Student Records",
-        content: "The data table shows all registered students. Click on any row to view the full student profile. Use the action buttons to edit details, manage fees, view attendance, print ID cards, or deactivate records.",
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "📤 Import Students",
-        content: "Need to add many students at once? Use the Import feature to upload a spreadsheet with student data. The system will validate and import records in bulk, saving you time.",
-      },
+      S.welcome("Students", "The central hub for all student data. Register new students, manage profiles, track enrollment history, and oversee the full student lifecycle from admission to graduation."),
+      S.step("Registering a Student", "Click the Add Student button to open the registration form. Fill in personal details, contact info, parent data, and enrollment settings. Required fields are clearly marked."),
+      S.step("Finding Records", "Use the search bar to find students by name, admission number, or class. Filter by class, stream, or academic year to narrow results."),
+      S.step("Managing Profiles", "Each row has action buttons to view the full profile, edit details, manage fees, track attendance, print ID cards, or deactivate records."),
+      S.step("Bulk Import", "Onboard many students at once using the Import feature. Upload a spreadsheet and the system validates and imports all records in one go."),
     ],
   },
-
   "/business/classes": {
     title: "Classes & Streams",
-    description: "Organize classes and academic groups",
+    description: "Organize academic groups",
     steps: [
-      {
-        target: "body",
-        placement: "center",
-        title: "👋 Welcome to Classes",
-        content: "Manage your school's classes, streams, and academic groups. Create classes, assign teachers, set capacities, and organize students into the right groups.",
-        disableBeacon: true,
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "➕ Creating Classes",
-        content: "Click 'Add Class' to create a new class or stream. Set the class name, select the teacher in charge, choose the academic term, and define the maximum student capacity.",
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "📊 Class Overview",
-        content: "The class list shows all classes with key information: class name, assigned teacher, current number of students vs capacity, and the active academic term.",
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "🔄 Promotions",
-        content: "At the end of each academic year, use the promotion tools to move students to the next class. The system can auto-promote based on configured rules.",
-      },
+      S.welcome("Classes & Streams", "Organize your school into classes and streams. Create academic groups, assign teachers, set capacities, and manage student placements."),
+      S.step("Creating a Class", "Click Add Class. Enter the class name, select the teacher in charge, choose the academic term, and set the maximum student capacity."),
+      S.step("Viewing Overview", "The class list displays key info at a glance: class name, assigned teacher, current enrollment vs capacity, and the active academic term."),
+      S.step("Promoting Students", "At year-end, use Promotions to advance students to the next class. Auto-promote based on configured rules or manually select students."),
     ],
   },
-
   "/business/attendance": {
-    title: "Attendance Tracking",
-    description: "Record daily student attendance",
+    title: "Attendance",
+    description: "Track daily attendance",
     steps: [
-      {
-        target: "body",
-        placement: "center",
-        title: "👋 Welcome to Attendance",
-        content: "Record and monitor student attendance with ease. Mark daily attendance, view reports, track patterns, and identify students who need attention.",
-        disableBeacon: true,
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "✅ Marking Attendance",
-        content: "Select a class and date to begin. Mark each student as Present (P), Absent (A), Late (L), or Excused (E). Use the 'Mark All' option to speed up the process.",
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "📈 Attendance Reports",
-        content: "View attendance reports by class, student, or date range. Track attendance percentages, identify patterns of absenteeism, and generate reports for parents.",
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "📤 Bulk Import",
-        content: "Need to record attendance for multiple days? Use the import feature to upload attendance data from a spreadsheet, saving time on manual data entry.",
-      },
+      S.welcome("Attendance", "Record and monitor daily student attendance efficiently. Mark presence, track patterns, and generate reports."),
+      S.step("Marking Attendance", "Pick a class and date. Mark each student as Present, Absent, Late, or Excused. Use Mark All to speed up routine days."),
+      S.step("Reports & Insights", "View attendance reports by class, student, or date range. Spot absenteeism patterns early and generate summary reports for parent communication."),
+      S.step("Bulk Upload", "For past dates or multiple days, use the Import feature to upload attendance data from a spreadsheet."),
     ],
   },
-
   "/business/fees": {
     title: "Fee Management",
-    description: "Manage tuition and payments",
+    description: "Tuition and payment tracking",
     steps: [
-      {
-        target: "body",
-        placement: "center",
-        title: "👋 Welcome to Fees",
-        content: "Manage all fee-related activities. Create fee structures, track payments, send reminders, and monitor outstanding balances for every student.",
-        disableBeacon: true,
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "💰 Setting Up Fees",
-        content: "Create fee structures for each class and term. Set tuition amounts, registration fees, activity fees, and other charges. Define payment deadlines and late fee policies.",
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "💳 Recording Payments",
-        content: "Record payments received from parents. The system tracks payment dates, amounts, payment methods, and generates receipts automatically.",
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "📊 Balance Tracking",
-        content: "View the fee status for each student - paid, partially paid, or outstanding. Send automated reminders to parents with overdue balances.",
-      },
+      S.welcome("Fee Management", "Complete fee management system. Create fee structures, record payments, track balances, and generate receipts."),
+      S.step("Setting Up Fees", "Create fee structures per class and term. Configure tuition, registration, activity fees, and other charges. Set due dates and late payment policies."),
+      S.step("Recording Payments", "Log payments as they come in. The system records the date, amount, and method, and generates a receipt automatically."),
+      S.step("Monitoring Balances", "See each student's fee status at a glance: paid, partial, or overdue. Send automated reminders to parents with outstanding balances."),
     ],
   },
-
   "/business/subjects": {
     title: "Subjects",
-    description: "Manage curriculum subjects",
+    description: "Curriculum management",
     steps: [
-      {
-        target: "body",
-        placement: "center",
-        title: "👋 Welcome to Subjects",
-        content: "Define and organize the subjects offered at your school. Create subjects, assign them to classes, and set up grading parameters.",
-        disableBeacon: true,
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "➕ Adding Subjects",
-        content: "Click 'Add Subject' to create a new subject. Enter the subject name, code (e.g., MATH, ENG, SCI), and select which classes will study this subject.",
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "📚 Subject Allocation",
-        content: "Assign subjects to specific classes and teachers. Each subject can have different teachers for different streams, making scheduling flexible.",
-      },
+      S.welcome("Subjects", "Define and manage your school's curriculum. Create subjects, assign them to classes, and set up grading parameters."),
+      S.step("Adding Subjects", "Click Add Subject. Enter the subject name, a short code (e.g. MATH, ENG, SCI), and select which classes will study it."),
+      S.step("Assigning Teachers", "Each subject can have different teachers per stream. Assign subject teachers directly from the subject list for flexible scheduling."),
     ],
   },
-
   "/business/exams": {
     title: "Exams",
-    description: "Create and manage examinations",
+    description: "Examination management",
     steps: [
-      {
-        target: "body",
-        placement: "center",
-        title: "👋 Welcome to Exams",
-        content: "Create and manage school examinations. Set up exam schedules, manage sessions, and prepare for grading all from one place.",
-        disableBeacon: true,
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "📝 Creating Exams",
-        content: "Click 'Create Exam' to set up a new examination. Choose the exam type (Midterm, Final, Quiz, Test), select classes, and set the date.",
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "📅 Exam Sessions",
-        content: "Organize exams into sessions with specific dates and times. Each session can include multiple subjects and classes.",
-      },
+      S.welcome("Exams", "Create and manage all school examinations. Schedule exams, manage sessions, and prepare for grading."),
+      S.step("Creating an Exam", "Click Create Exam to set up a new examination. Choose the type (Midterm, Final, Quiz, Test), select target classes, and set the date."),
+      S.step("Exam Sessions", "Break exams into sessions with specific dates and times. Each session can include multiple subjects and classes for complex exam schedules."),
     ],
   },
-
   "/business/marks-entry": {
     title: "Marks Entry",
     description: "Record student scores",
     steps: [
-      {
-        target: "body",
-        placement: "center",
-        title: "👋 Welcome to Marks Entry",
-        content: "Record student scores for exams, assignments, and continuous assessment. Enter marks subject by subject and class by class.",
-        disableBeacon: true,
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "📊 Entering Marks",
-        content: "Select the exam session, class, and subject. The system shows a grid of students where you can enter scores. Tab between cells for fast data entry.",
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "✅ Auto-Calculation",
-        content: "The system automatically calculates totals, percentages, and grades based on your configured grading scale. Scores are saved as you go.",
-      },
+      S.welcome("Marks Entry", "Record student scores for exams, assignments, and continuous assessment. Fast, spreadsheet-like data entry."),
+      S.step("Entering Marks", "Select the exam session, class, and subject. A student grid appears where you type scores. Use Tab to move between cells for rapid entry."),
+      S.step("Auto-Calculation", "Totals, percentages, and grades are calculated automatically based on your configured grading scale. Scores save as you go."),
     ],
   },
-
   "/business/report-cards": {
     title: "Report Cards",
-    description: "Generate student report cards",
+    description: "Generate student reports",
     steps: [
-      {
-        target: "body",
-        placement: "center",
-        title: "👋 Welcome to Report Cards",
-        content: "Generate professional report cards for students. Include grades, subject performance, teacher comments, and class rankings.",
-        disableBeacon: true,
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "📄 Generating Reports",
-        content: "Select the class, term, and exam session, then click 'Generate Reports'. The system creates report cards for all students in that class at once.",
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "🖨️ Printing & Sharing",
-        content: "Preview report cards before printing. You can print individual or batch reports, export as PDF, and share digitally with parents through the parent portal.",
-      },
+      S.welcome("Report Cards", "Generate professional, printable report cards with grades, teacher comments, and class rankings."),
+      S.step("Generating Reports", "Select the class, term, and exam session, then click Generate Reports. Report cards are created for all students at once."),
+      S.step("Printing & Sharing", "Preview before printing. Print individual or batch reports, export as PDF, or share digitally with parents through the parent portal."),
     ],
   },
-
-  "/business/timetable": {
-    title: "Timetable",
-    description: "Class scheduling",
-    steps: [
-      {
-        target: "body",
-        placement: "center",
-        title: "👋 Welcome to Timetable",
-        content: "Create and manage class timetables. Design weekly schedules for each class or stream with subject assignments and teacher allocations.",
-        disableBeacon: true,
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "📅 Building Your Timetable",
-        content: "Select a class and academic term. Drag and drop subjects into time slots to build the weekly schedule. The system prevents double-booking of teachers.",
-      },
-    ],
-  },
-
   "/business/parents": {
     title: "Parents",
-    description: "Manage parent/guardian records",
+    description: "Parent and guardian records",
     steps: [
-      {
-        target: "body",
-        placement: "center",
-        title: "👋 Welcome to Parents",
-        content: "Manage parent and guardian information. Keep contact details, link parents to students, and communicate through the platform.",
-        disableBeacon: true,
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "👤 Adding Parents",
-        content: "Register a new parent by clicking 'Add Parent'. Enter their name, phone number, email, and link them to their children in the school.",
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "🔗 Parent-Student Links",
-        content: "Each parent can be linked to multiple students. This enables parents to access their children's attendance, fees, grades, and report cards through the parent portal.",
-      },
+      S.welcome("Parents", "Manage all parent and guardian information. Keep contact details up to date and link parents to their children."),
+      S.step("Adding a Parent", "Click Add Parent and enter their name, phone number, and email. Link them to their enrolled children."),
+      S.step("Parent Portal Access", "Linked parents can access the parent portal to view their children's attendance, fee status, grades, and report cards in real time."),
     ],
   },
-
   "/business/academic-terms": {
     title: "Academic Terms",
-    description: "Define academic periods",
+    description: "Academic calendar",
     steps: [
-      {
-        target: "body",
-        placement: "center",
-        title: "👋 Welcome to Academic Terms",
-        content: "Define the academic calendar for your school. Create terms with start and end dates, and manage term-based activities like fees and exams.",
-        disableBeacon: true,
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "📅 Setting Terms",
-        content: "Click 'Add Term' to create a new academic term. Set the term name (Term 1, Term 2, Term 3), start date, and end date. Mark one term as the active term.",
-      },
+      S.welcome("Academic Terms", "Define your school's academic calendar. Create terms with precise start and end dates."),
+      S.step("Setting a Term", "Click Add Term. Set the term name (Term 1, 2, 3), start date, and end date. Mark one term as the active term to drive all other modules."),
     ],
   },
-
+  "/business/grades": {
+    title: "Grades",
+    description: "Grade management",
+    steps: [
+      S.welcome("Grades", "View and manage student grades across all subjects, exams, and academic terms."),
+      S.step("Grade Overview", "See a comprehensive view of student performance. Filter by class, subject, or term to analyze results."),
+      S.step("Grade Analytics", "Spot top performers, at-risk students, and class-wide trends to inform teaching decisions."),
+    ],
+  },
+  "/business/discipline-cases": {
+    title: "Discipline",
+    description: "Behavior tracking",
+    steps: [
+      S.welcome("Discipline", "Record and track student behavior incidents and disciplinary actions in a structured manner."),
+      S.step("Recording Incidents", "Click Record Incident to log a new case. Include incident details, involved students, severity, and action taken."),
+      S.step("Case History", "Browse all discipline cases with filters by student, class, date range, or status. Track repeat patterns."),
+    ],
+  },
+  "/business/counseling": {
+    title: "Counseling",
+    description: "Student counseling records",
+    steps: [
+      S.welcome("Counseling", "Maintain confidential records of student counseling sessions, assessments, and referrals."),
+      S.step("Session Records", "Click New Session to document a counseling session. Record notes, observations, recommendations, and follow-up actions."),
+    ],
+  },
+  "/business/student-lifecycle": {
+    title: "Student Lifecycle",
+    description: "Transitions & progress",
+    steps: [
+      S.welcome("Student Lifecycle", "Manage key student transitions: admissions, class promotions, transfers between schools, and graduations."),
+      S.step("Recording a Transition", "Click New Transition. Select the student, transition type (promotion, transfer, graduation), and effective date."),
+    ],
+  },
+  "/business/promotion-rules": {
+    title: "Promotion Rules",
+    description: "Promotion criteria",
+    steps: [
+      S.welcome("Promotion Rules", "Configure the criteria that determine whether students advance to the next class."),
+      S.step("Defining Rules", "Set minimum grade thresholds, attendance percentage requirements, and fee clearance as conditions for promotion."),
+    ],
+  },
+  "/business/uneb-candidates": {
+    title: "UNEB Candidates",
+    description: "National exam registration",
+    steps: [
+      S.welcome("UNEB Candidates", "Register and manage students for national examinations (UNEB)."),
+      S.step("Registering Candidates", "Select students and register them as exam candidates. Assign examination numbers and subjects."),
+      S.step("Candidate Overview", "View all registered candidates with their examination numbers, subjects, and registration status."),
+    ],
+  },
+  "/business/admission-links": {
+    title: "Admission Links",
+    description: "Online admissions",
+    steps: [
+      S.welcome("Admission Links", "Generate shareable admission links for prospective parents to apply online."),
+      S.step("Creating a Link", "Click Create Link. Choose the intake class and set an expiry date. Share the link with parents via SMS, email, or WhatsApp."),
+    ],
+  },
+  "/business/academic-analytics": {
+    title: "Analytics",
+    description: "Performance insights",
+    steps: [
+      S.welcome("Academic Analytics", "Data-driven insights into student performance across subjects, classes, and terms."),
+      S.step("Exploring Data", "View charts and tables showing grade distributions, subject performance trends, and class-wide comparisons. Identify strengths and areas for improvement."),
+    ],
+  },
   "/business/ecd-pupils": {
     title: "ECD Pupils",
     description: "Early Childhood Development",
     steps: [
-      {
-        target: "body",
-        placement: "center",
-        title: "👋 Welcome to ECD Pupils",
-        content: "Manage pupils in your Early Childhood Development program. Track developmental progress, attendance, and learning activities for young learners.",
-        disableBeacon: true,
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "👶 Adding Pupils",
-        content: "Register new ECD pupils by clicking 'Add Pupil'. Enter their personal details, parent information, and assign them to an ECD class and age group.",
-      },
-      {
-        target: "body",
-        placement: "center",
-        title: "📈 Tracking Progress",
-        content: "Monitor each pupil's developmental progress across learning areas including motor skills, language, cognitive development, and social-emotional growth.",
-      },
+      S.welcome("ECD Pupils", "Manage pupils in your Early Childhood Development program with age-appropriate tracking."),
+      S.step("Adding Pupils", "Click Add Pupil. Enter personal details, parent information, and assign to an ECD class and age group."),
+      S.step("Developmental Tracking", "Monitor progress across motor skills, language, cognitive development, and social-emotional growth."),
+    ],
+  },
+  "/business/ecd-progress": {
+    title: "ECD Progress",
+    description: "Developmental milestones",
+    steps: [
+      S.welcome("ECD Progress", "Track and record developmental milestones for each ECD pupil."),
+      S.step("Recording Progress", "Assess pupils against learning areas. Record observations, achievements, and areas needing support."),
     ],
   },
 };
@@ -382,6 +252,7 @@ export function isEducationRoute(pathname: string): boolean {
     "/business/ecd-learning-areas",
     "/business/ecd-marks-entry",
     "/business/ecd-pupil-cards",
+    "/business/ecd-learning-activities",
   ];
   return educationPrefixes.some((prefix) => pathname.startsWith(prefix));
 }
