@@ -77,10 +77,9 @@ const TeacherOnboarding = () => {
     return allSubjects.filter(s => {
       const lv = s.level?.toLowerCase() || "";
       return schoolLevels.some(sl => {
-        if (sl === "ecd") return lv.includes("ecd");
-        if (sl === "primary") return lv.includes("primary");
-        if (sl === "lower_secondary") return lv === "o-level";
-        if (sl === "a_level") return lv.includes("a-level");
+        if (sl === "ecd") return lv === "kindergarten";
+        if (sl === "primary") return lv === "primary";
+        if (sl === "lower_secondary" || sl === "a_level") return lv === "secondary";
         return true;
       });
     });
