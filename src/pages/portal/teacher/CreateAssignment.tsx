@@ -27,7 +27,7 @@ const CreateAssignment = () => {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
-      const { data: profile } = await supabase.from("profiles").select("tenant_id").eq("id", session.user.id).single();
+      const { data: profile } = await supabase.from("profiles").select("id, tenant_id").eq("id", session.user.id).single();
       if (!profile?.tenant_id) return;
       setTenantId(profile.tenant_id);
 
@@ -36,7 +36,19 @@ const CreateAssignment = () => {
         supabase.from("subjects").select("id, name").eq("tenant_id", profile.tenant_id).eq("is_active", true),
       ]);
       setClasses(cls || []);
-      setSubjects(sub || []);
+      if (sub) {
+        const { data: subAssignments } = await supabase
+          .from("teacher_subject_assignments")
+          .select("subject_id")
+          .eq("teacher_id", profile.id)
+          .eq("tenant_id", profile.tenant_id);
+        if (subAssignments && subAssignments.length > 0) {
+          const allowedIds = new Set(subAssignments.map(s => s.subject_id));
+          setSubjects(sub.filter(s => allowedIds.has(s.id)));
+        } else {
+          setSubjects(sub);
+        }
+      }
     };
     init();
   }, [navigate]);

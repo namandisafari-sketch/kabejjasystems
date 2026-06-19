@@ -35,15 +35,30 @@ const OnlineMarking = () => {
     if (!p?.tenant_id) return;
     setTenantId(p.tenant_id);
 
-    const [cl, sb, ex] = await Promise.all([
+    const [cl, ex] = await Promise.all([
       supabase.from("school_classes").select("*").eq("tenant_id", p.tenant_id).eq("is_active", true).order("name"),
-      supabase.from("subjects").select("*").eq("tenant_id", p.tenant_id).eq("is_active", true).order("name"),
       supabase.from("exam_results").select("exam_id").eq("tenant_id", p.tenant_id).not("exam_id", "is", null).order("submitted_at", { ascending: false }),
     ]);
     setClasses(cl.data || []);
-    setSubjects(sb.data || []);
     const uniqueExams = [...new Set((ex.data || []).map(r => r.exam_id))];
     setExams(uniqueExams.map(id => ({ id })));
+
+    const { data: subAssignments } = await supabase
+      .from("teacher_subject_assignments")
+      .select("subject_id, class_id")
+      .eq("teacher_id", p.id)
+      .eq("tenant_id", p.tenant_id);
+    const subIds = [...new Set((subAssignments || []).map(s => s.subject_id))];
+    if (subIds.length > 0) {
+      const { data: subs } = await supabase
+        .from("subjects")
+        .select("*")
+        .in("id", subIds)
+        .eq("is_active", true)
+        .order("name");
+      setSubjects(subs || []);
+    }
+
     setLoading(false);
   };
 

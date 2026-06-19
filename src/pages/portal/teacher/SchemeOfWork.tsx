@@ -41,7 +41,7 @@ const SchemeOfWork = () => {
   const init = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { navigate("/login"); return; }
-    const { data: p } = await supabase.from("profiles").select("tenant_id").eq("id", session.user.id).single();
+    const { data: p } = await supabase.from("profiles").select("id, tenant_id").eq("id", session.user.id).single();
     if (!p?.tenant_id) return;
     setTenantId(p.tenant_id);
 
@@ -51,7 +51,17 @@ const SchemeOfWork = () => {
       supabase.from("school_classes").select("*").eq("tenant_id", p.tenant_id).eq("is_active", true),
     ]);
     setSchemes(sc.data || []);
-    setSubjects(sb.data || []);
+    let filteredSubjects = sb.data || [];
+    const { data: subAssignments } = await supabase
+      .from("teacher_subject_assignments")
+      .select("subject_id")
+      .eq("teacher_id", p.id)
+      .eq("tenant_id", p.tenant_id);
+    if (subAssignments && subAssignments.length > 0) {
+      const allowedIds = new Set(subAssignments.map(s => s.subject_id));
+      filteredSubjects = filteredSubjects.filter(s => allowedIds.has(s.id));
+    }
+    setSubjects(filteredSubjects);
     setClasses(cl.data || []);
     setLoading(false);
   };

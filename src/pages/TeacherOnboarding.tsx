@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Check, ChevronRight, BookOpen, Users, GraduationCap } from "lucide-react";
+import { Loader2, Check, ChevronRight, BookOpen, Users, GraduationCap, ChevronDown } from "lucide-react";
 import { detectSchoolLevels } from "@/lib/subjects-data";
 
-const STEPS = ["Welcome", "Your Role", "Your Subjects", "Your Classes", "Done"];
+const STEPS = ["Welcome", "Your Role", "Your Subjects", "Your Classes", "Match Subjects", "Done"];
 
 const TeacherOnboarding = () => {
   const navigate = useNavigate();
@@ -22,6 +24,8 @@ const TeacherOnboarding = () => {
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const [isClassTeacher, setIsClassTeacher] = useState(false);
+  const [pairings, setPairings] = useState<Record<string, string[]>>({});
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
 
   useEffect(() => { init(); }, []);
 
@@ -55,6 +59,17 @@ const TeacherOnboarding = () => {
     setLoading(false);
   };
 
+  useEffect(() => {
+    if (step === 4 && selectedClasses.length > 0 && selectedSubjects.length > 0) {
+      const initial: Record<string, string[]> = {};
+      selectedClasses.forEach(cid => { initial[cid] = [...selectedSubjects]; });
+      setPairings(initial);
+      const open: Record<string, boolean> = {};
+      selectedClasses.forEach(cid => { open[cid] = true; });
+      setOpenSections(open);
+    }
+  }, [step]);
+
   const filteredSubjects = () => {
     if (schoolLevels.length === 0) return allSubjects;
     return allSubjects.filter(s => {
@@ -81,17 +96,24 @@ const TeacherOnboarding = () => {
     );
   };
 
+  const togglePairing = (classId: string, subjectId: string) => {
+    setPairings(prev => {
+      const current = prev[classId] || [];
+      const updated = current.includes(subjectId)
+        ? current.filter(s => s !== subjectId)
+        : [...current, subjectId];
+      return { ...prev, [classId]: updated };
+    });
+  };
+
+  const getSubjectById = (id: string) => allSubjects.find(s => s.id === id);
+  const getClassById = (id: string) => classes.find(c => c.id === id);
+
   const handleFinish = async () => {
     setSaving(true);
 
-    if (selectedSubjects.length > 0) {
-      const subjectAssignments = selectedSubjects.map(sid => ({
-        teacher_id: profileId,
-        subject_id: sid,
-        tenant_id: tenantId,
-      }));
-      await supabase.from("teacher_subject_assignments").insert(subjectAssignments);
-    }
+    await supabase.from("teacher_subject_assignments").delete().eq("teacher_id", profileId).eq("tenant_id", tenantId);
+    await supabase.from("teacher_class_assignments").delete().eq("teacher_id", profileId).eq("tenant_id", tenantId);
 
     if (selectedClasses.length > 0) {
       const classAssignments = selectedClasses.map(cid => ({
@@ -101,6 +123,25 @@ const TeacherOnboarding = () => {
         is_class_teacher: isClassTeacher && selectedClasses.indexOf(cid) === 0,
       }));
       await supabase.from("teacher_class_assignments").insert(classAssignments);
+    }
+
+    const subjectRows: any[] = [];
+    const pairedSubjects = new Set<string>();
+    selectedClasses.forEach(cid => {
+      (pairings[cid] || []).forEach(sid => {
+        subjectRows.push({ teacher_id: profileId, subject_id: sid, class_id: cid, tenant_id: tenantId });
+        pairedSubjects.add(sid);
+      });
+    });
+
+    selectedSubjects.forEach(sid => {
+      if (!pairedSubjects.has(sid)) {
+        subjectRows.push({ teacher_id: profileId, subject_id: sid, class_id: null, tenant_id: tenantId });
+      }
+    });
+
+    if (subjectRows.length > 0) {
+      await supabase.from("teacher_subject_assignments").insert(subjectRows);
     }
 
     setSaving(false);
@@ -114,6 +155,13 @@ const TeacherOnboarding = () => {
     primary: "Primary (P1-P7)",
     lower_secondary: "O-Level (S1-S4)",
     a_level: "A-Level (S5-S6)",
+  };
+
+  const canContinue = () => {
+    if (step === 1 && !teacherType) return false;
+    if (step === 2 && selectedSubjects.length === 0) return false;
+    if (step === 3 && selectedClasses.length === 0) return false;
+    return true;
   };
 
   return (
@@ -137,14 +185,16 @@ const TeacherOnboarding = () => {
             {step === 1 && "What Type of Teacher Are You?"}
             {step === 2 && "Select Your Subjects"}
             {step === 3 && "Select Your Classes"}
-            {step === 4 && "You're All Set!"}
+            {step === 4 && "Match Subjects to Classes"}
+            {step === 5 && "You're All Set!"}
           </CardTitle>
           <CardDescription>
             {step === 0 && "Let's set up your profile. This takes just a minute."}
             {step === 1 && "Choose how you'll be assigned to classes and subjects."}
             {step === 2 && schoolLevels.length > 0 && `Subjects for: ${schoolLevels.map(sl => levelLabels[sl] || sl).join(", ")}`}
             {step === 3 && "Which classes will you be teaching?"}
-            {step === 4 && "Your profile is configured. You can always change these later."}
+            {step === 4 && "Tell us which subjects you teach in each class. Skip if you teach all subjects in all classes."}
+            {step === 5 && "Your profile is configured. You can always change these later."}
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
@@ -214,6 +264,52 @@ const TeacherOnboarding = () => {
           )}
 
           {step === 4 && (
+            <div className="py-4 space-y-3">
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                By default, all your subjects are assigned to all your classes. Uncheck subjects that don't apply to specific classes.
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {Object.values(pairings).flat().length} total class-subject assignments configured
+              </p>
+              <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                {selectedClasses.map(cid => {
+                  const cl = getClassById(cid);
+                  if (!cl) return null;
+                  const isOpen = openSections[cid] ?? false;
+                  const classPairings = pairings[cid] || [];
+                  return (
+                    <Collapsible key={cid} open={isOpen} onOpenChange={o => setOpenSections(prev => ({ ...prev, [cid]: o }))}
+                      className="border rounded-lg overflow-hidden">
+                      <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-3 text-sm font-medium hover:bg-muted/30">
+                        <span>{cl.name} <span className="text-muted-foreground font-normal">({cl.level})</span></span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">{classPairings.length}/{selectedSubjects.length}</span>
+                          <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="px-4 pb-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2">
+                          {selectedSubjects.map(sid => {
+                            const sub = getSubjectById(sid);
+                            if (!sub) return null;
+                            const checked = classPairings.includes(sid);
+                            return (
+                              <label key={sid} className={`flex items-center gap-2 p-2 rounded border text-sm cursor-pointer transition-colors ${checked ? "border-primary bg-primary/5" : "border-border hover:bg-muted/30"}`}>
+                                <Checkbox checked={checked} onCheckedChange={() => togglePairing(cid, sid)} />
+                                <span className="truncate">{sub.name}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {step === 5 && (
             <div className="py-6 space-y-4 text-center">
               <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
                 <Check className="h-8 w-8 text-green-600" />
@@ -222,6 +318,11 @@ const TeacherOnboarding = () => {
                 Your profile is configured. You'll only see <strong>{selectedSubjects.length} subject{selectedSubjects.length !== 1 ? "s" : ""}</strong>
                 {selectedClasses.length > 0 && <> across <strong>{selectedClasses.length} class{selectedClasses.length !== 1 ? "es" : ""}</strong></>}.
               </p>
+              {selectedClasses.length > 1 && (
+                <p className="text-xs text-muted-foreground">
+                  Subjects are isolated per class — you'll only see the right subjects when working in each class.
+                </p>
+              )}
             </div>
           )}
 
@@ -229,12 +330,8 @@ const TeacherOnboarding = () => {
             <Button variant="ghost" onClick={() => step > 0 ? setStep(step - 1) : navigate("/teacher")} disabled={saving}>
               {step === 0 ? "Skip Setup" : "Back"}
             </Button>
-            {step < 4 ? (
-              <Button onClick={() => {
-                if (step === 1 && !teacherType) return;
-                if (step === 2 && selectedSubjects.length === 0) return;
-                setStep(step + 1);
-              }} disabled={(step === 1 && !teacherType) || (step === 2 && selectedSubjects.length === 0)}>
+            {step < 5 ? (
+              <Button onClick={() => setStep(step + 1)} disabled={!canContinue()}>
                 Continue <ChevronRight className="h-4 w-4 ml-2" />
               </Button>
             ) : (
