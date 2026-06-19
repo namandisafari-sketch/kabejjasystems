@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Check, ChevronRight, BookOpen, Users, GraduationCap, ChevronDown } from "lucide-react";
-import { detectSchoolLevels, seedDefaultSubjects } from "@/lib/subjects-data";
+import { detectSchoolLevels, seedDefaultSubjects, seedDefaultClasses } from "@/lib/subjects-data";
 
 const STEPS = ["Welcome", "Your Role", "Your Subjects", "Your Classes", "Match Subjects", "Done"];
 
@@ -38,6 +38,7 @@ const TeacherOnboarding = () => {
     setProfileId(p.id);
 
     await seedDefaultSubjects(supabase, p.tenant_id);
+    await seedDefaultClasses(supabase, p.tenant_id);
 
     const [cls, subs] = await Promise.all([
       supabase.from("school_classes").select("*").eq("tenant_id", p.tenant_id).eq("is_active", true).order("name"),
