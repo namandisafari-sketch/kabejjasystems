@@ -90,27 +90,27 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   BadgeCheck,
 };
 
-  const categoryLabels: Record<string, string> = {
-    core: t.nav.dashboard || "General",
-    students: t.students.title || "Students",
-    school: t.settings.school || "School",
-    academics: t.nav.marksEntry?.replace(" Marks Entry", "Academics") || "Academics",
-    restaurant: "Restaurant",
-    hotel: "Hotel",
-    repair: "Repair",
-    salon: "Salon",
-    pharmacy: "Pharmacy",
-    property: "Properties",
-    rental: "Rental",
-    finance: t.nav.fees || "Finance",
-    people: t.staff.title || "People",
-    operations: "Operations",
-    communication: "Communication",
-    analytics: t.reports.title || "Analytics",
-    admin: t.settings.title || "Admin",
-    legal: "Legal",
-    hr: t.hr.employeeDetails || "HR",
-  };
+const categoryLabels: Record<string, string> = {
+  core: "General",
+  students: "Students",
+  school: "School",
+  academics: "Academics",
+  restaurant: "Restaurant",
+  hotel: "Hotel",
+  repair: "Repair",
+  salon: "Salon",
+  pharmacy: "Pharmacy",
+  property: "Properties",
+  rental: "Rental",
+  finance: "Finance",
+  people: "People",
+  operations: "Operations",
+  communication: "Communication",
+  analytics: "Analytics",
+  admin: "Admin",
+  legal: "Legal",
+  hr: "HR",
+};
 
 const categoryOrder = [
   'core', 'students', 'school', 'academics', 'restaurant', 'hotel', 'repair',
