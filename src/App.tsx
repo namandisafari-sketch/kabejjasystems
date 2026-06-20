@@ -130,6 +130,7 @@ import ProductDetail from "./pages/business/ProductDetail";
 import Letters from "./pages/business/Letters";
 import StudentsImport from "./pages/business/StudentsImport";
 import StaffImport from "./pages/business/StaffImport";
+import EmployeeOnboarding from "./pages/business/EmployeeOnboarding";
 import FeesImport from "./pages/business/FeesImport";
 import AttendanceImport from "./pages/business/AttendanceImport";
 import InventoryImport from "./pages/business/InventoryImport";
@@ -320,6 +321,7 @@ const App = () => {
                 <Route path="term-requirements" element={<TermRequirements />} />
                 <Route path="report-cards" element={<ReportCards />} />
                 <Route path="marks-entry" element={<MarksEntry />} />
+                <Route path="employee-onboarding" element={<EmployeeOnboarding />} />
                 <Route path="staff" element={<Staff />} />
                 <Route path="staff-import" element={<StaffImport />} />
                 <Route path="parents" element={<Parents />} />

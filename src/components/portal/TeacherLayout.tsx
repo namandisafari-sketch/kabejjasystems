@@ -9,6 +9,7 @@ import {
   ClipboardCheck, Target, GitBranch,
 } from "lucide-react";
 import type { PortalMenuItem } from "@/components/portal/PortalSidebar";
+import { TranslationProvider } from "@/components/TranslationProvider";
 
 const teacherMenuItems: PortalMenuItem[] = [
   { title: "Dashboard", url: "/teacher", icon: LayoutDashboard },
@@ -119,7 +120,9 @@ export function TeacherLayout() {
             <SidebarTrigger />
           </header>
           <main className="flex-1 overflow-auto p-6">
-            <Outlet />
+            <TranslationProvider>
+              <Outlet />
+            </TranslationProvider>
           </main>
         </div>
       </div>

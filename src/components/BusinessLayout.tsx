@@ -15,6 +15,7 @@ import { useSubscriptionCheck } from "@/hooks/use-subscription-check";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import PharmacyAdminLayout from "@/components/pharmacy/PharmacyAdminLayout";
+import { TranslationProvider } from "@/components/TranslationProvider";
 
 interface LocationState {
   devBusinessType?: string;
@@ -131,7 +132,9 @@ export function BusinessLayout() {
     };
     return (
       <PharmacyAdminLayout title={getTitle()} subtitle={`Welcome back, ${businessName || "Admin"}`}>
-        <Outlet />
+        <TranslationProvider>
+          <Outlet />
+        </TranslationProvider>
       </PharmacyAdminLayout>
     );
   }
@@ -169,7 +172,9 @@ export function BusinessLayout() {
           
           {/* Main content - add bottom padding on mobile for bottom nav */}
           <main className="flex-1 overflow-auto p-4 sm:p-6 pb-24 md:pb-6 safe-bottom">
-            <Outlet />
+            <TranslationProvider>
+              <Outlet />
+            </TranslationProvider>
           </main>
         </div>
         
