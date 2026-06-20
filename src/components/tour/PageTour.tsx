@@ -121,6 +121,8 @@ export function PageTour() {
           showProgress
           showSkipButton
           hideBackButton={stepIndex === 0}
+          disableOverlay
+          disableScrolling
           callback={handleJoyrideCallback}
           styles={{
             options: {
@@ -130,6 +132,9 @@ export function PageTour() {
               backgroundColor: "#ffffff",
               arrowColor: "#ffffff",
               overlayColor: "transparent",
+            },
+            overlay: {
+              pointerEvents: "none",
             },
             tooltipContainer: {
               textAlign: "left",
