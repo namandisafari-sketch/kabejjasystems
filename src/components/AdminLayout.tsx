@@ -23,17 +23,17 @@ export function AdminLayout() {
       }
 
       // Check if user has admin or superadmin role
-      const { data: roles, error } = await supabase
-        .from('user_roles')
+      const { data: profile, error } = await supabase
+        .from('profiles')
         .select('role')
-        .eq('user_id', session.user.id)
-        .in('role', ['admin', 'superadmin']);
+        .eq('id', session.user.id)
+        .single();
 
       if (error) {
-        console.error('Role fetch error:', error);
+        console.error('Profile fetch error:', error);
       }
 
-      if (!roles || roles.length === 0) {
+      if (!profile || (profile.role !== 'admin' && profile.role !== 'superadmin')) {
         toast({
           title: "Access Denied",
           description: "You don't have admin permissions",

@@ -14,9 +14,10 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { isSchoolBusiness } from "@/config/businessTypes";
+import { isSchoolBusiness, isPharmacyBusiness } from "@/config/businessTypes";
 import SchoolDashboard from "@/components/dashboard/SchoolDashboard";
 import RentalDashboard from "./rental/RentalDashboard";
+import PharmacyDashboard from "@/components/dashboard/PharmacyDashboard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Uganda timezone offset (UTC+3)
@@ -39,6 +40,7 @@ const BusinessDashboard = () => {
 
   const isSchool = tenant?.businessType && isSchoolBusiness(tenant.businessType);
   const isRental = tenant?.businessType === 'rental_management';
+  const isPharmacy = tenant?.businessType && isPharmacyBusiness(tenant.businessType);
   const selectedDateStr = formatUgandaDate(selectedDate);
 
   const formatCurrency = (amount: number) => {
@@ -108,7 +110,7 @@ const BusinessDashboard = () => {
         totalCreditSalesAmount,
       };
     },
-    enabled: !!tenant?.tenantId && !isSchool && !isRental,
+    enabled: !!tenant?.tenantId && !isSchool && !isRental && !isPharmacy,
   });
 
   // Weekly summary data
@@ -167,7 +169,7 @@ const BusinessDashboard = () => {
 
       return results;
     },
-    enabled: !!tenant?.tenantId && !isSchool && !isRental,
+    enabled: !!tenant?.tenantId && !isSchool && !isRental && !isPharmacy,
   });
 
   // Recent sales query
@@ -185,7 +187,7 @@ const BusinessDashboard = () => {
 
       return data || [];
     },
-    enabled: !!tenant?.tenantId && !isSchool && !isRental,
+    enabled: !!tenant?.tenantId && !isSchool && !isRental && !isPharmacy,
   });
 
   if (isRental) {
@@ -194,6 +196,10 @@ const BusinessDashboard = () => {
 
   if (isSchool) {
     return <SchoolDashboard />;
+  }
+
+  if (isPharmacy && tenant?.tenantId) {
+    return <PharmacyDashboard tenantId={tenant.tenantId} />;
   }
 
   return (

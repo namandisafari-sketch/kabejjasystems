@@ -101,3 +101,8 @@ export const isSchoolBusiness = (businessType: string): boolean => {
   const config = getBusinessTypeConfig(businessType);
   return config?.billingType === 'per_term';
 };
+
+export const isPharmacyBusiness = (businessType: string): boolean => {
+  const config = getBusinessTypeConfig(businessType);
+  return config?.category === 'pharmacy';
+};

@@ -6,10 +6,11 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Package, Search, RefreshCw, Plus } from "lucide-react";
+import { AlertTriangle, Package, Search, RefreshCw, Plus, Clock, Calendar, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Drawer,
   DrawerContent,
@@ -17,11 +18,13 @@ import {
   DrawerTitle,
   DrawerFooter,
 } from "@/components/ui/drawer";
+import { format, differenceInDays, isAfter, isBefore } from "date-fns";
 
 const StockAlerts = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("stock");
   const [isRestockDrawerOpen, setIsRestockDrawerOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [restockQuantity, setRestockQuantity] = useState("");
@@ -40,17 +43,41 @@ const StockAlerts = () => {
     queryKey: ['products-stock', profile?.tenant_id],
     queryFn: async () => {
       if (!profile?.tenant_id) return [];
-      const { data, error } = await supabase.from('products').select('*').eq('tenant_id', profile.tenant_id).eq('is_active', true).order('stock_quantity', { ascending: true });
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('tenant_id', profile.tenant_id)
+        .eq('is_active', true)
+        .order('stock_quantity', { ascending: true });
       if (error) throw error;
       return data;
     },
     enabled: !!profile?.tenant_id,
   });
 
+  // Stock alerts
   const outOfStockProducts = products.filter(p => p.stock_quantity === 0);
   const lowStockProducts = products.filter(p => p.min_stock_level !== null && p.min_stock_level > 0 && p.stock_quantity <= p.min_stock_level && p.stock_quantity > 0);
   const alertProducts = products.filter(p => p.stock_quantity === 0 || (p.min_stock_level !== null && p.min_stock_level > 0 && p.stock_quantity <= p.min_stock_level));
   const filteredAlertProducts = alertProducts.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  // Batch expiry alerts
+  const now = new Date();
+  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const ninetyDaysFromNow = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+
+  const expiredProducts = products.filter(p => p.expiry_date && isBefore(new Date(p.expiry_date), now));
+  const expiringSoonProducts = products.filter(p => p.expiry_date && isAfter(new Date(p.expiry_date), now) && isBefore(new Date(p.expiry_date), thirtyDaysFromNow));
+  const expiringLaterProducts = products.filter(p => p.expiry_date && isAfter(new Date(p.expiry_date), thirtyDaysFromNow) && isBefore(new Date(p.expiry_date), ninetyDaysFromNow));
+
+  const expiryFiltered = (tab: string) => {
+    let list = [];
+    if (tab === "expired") list = expiredProducts;
+    else if (tab === "urgent") list = expiringSoonProducts;
+    else list = expiringLaterProducts;
+    if (searchTerm) list = list.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    return list;
+  };
 
   const restockMutation = useMutation({
     mutationFn: async ({ productId, quantity }: { productId: string; quantity: number }) => {
@@ -97,6 +124,14 @@ const StockAlerts = () => {
     return Math.min((product.stock_quantity / optimalLevel) * 100, 100);
   };
 
+  const getExpiryBadge = (expiryDate: string) => {
+    const days = differenceInDays(new Date(expiryDate), now);
+    if (days < 0) return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Expired {Math.abs(days)}d ago</Badge>;
+    if (days <= 30) return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />{days}d left</Badge>;
+    if (days <= 90) return <Badge variant="outline"><Calendar className="h-3 w-3 mr-1" />{days}d left</Badge>;
+    return <Badge variant="outline">{format(new Date(expiryDate), "MMM d, yyyy")}</Badge>;
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* HEADER */}
@@ -104,7 +139,9 @@ const StockAlerts = () => {
         <div className="flex items-center justify-between mb-3">
           <div>
             <h1 className="text-xl font-bold">Stock Alerts</h1>
-            <p className="text-xs text-muted-foreground">{alertProducts.length} need attention</p>
+            <p className="text-xs text-muted-foreground">
+              {activeTab === "stock" ? `${alertProducts.length} need attention` : `${expiredProducts.length + expiringSoonProducts.length} expiring items`}
+            </p>
           </div>
           <Button variant="outline" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ['products-stock'] })}>
             <RefreshCw className="h-4 w-4" />
@@ -116,85 +153,197 @@ const StockAlerts = () => {
         </div>
       </div>
 
-      {/* STATS */}
-      <div className="grid grid-cols-3 gap-2 p-4">
-        <Card className={`p-3 ${outOfStockProducts.length > 0 ? "border-destructive" : ""}`}>
-          <div className="flex items-center gap-2">
-            <Package className="h-4 w-4 text-destructive" />
-            <div>
-              <p className="text-xs text-muted-foreground">Out</p>
-              <p className="text-lg font-bold text-destructive">{outOfStockProducts.length}</p>
-            </div>
-          </div>
-        </Card>
-        <Card className={`p-3 ${lowStockProducts.length > 0 ? "border-yellow-500" : ""}`}>
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-yellow-500" />
-            <div>
-              <p className="text-xs text-muted-foreground">Low</p>
-              <p className="text-lg font-bold text-yellow-600">{lowStockProducts.length}</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-3">
-          <div className="flex items-center gap-2">
-            <Package className="h-4 w-4 text-muted-foreground" />
-            <div>
-              <p className="text-xs text-muted-foreground">Total</p>
-              <p className="text-lg font-bold">{products.length}</p>
-            </div>
-          </div>
-        </Card>
-      </div>
+      {/* TABS */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="px-4 pt-2">
+        <TabsList className="w-full">
+          <TabsTrigger value="stock" className="flex-1">Stock Levels</TabsTrigger>
+          <TabsTrigger value="expiry" className="flex-1">Batch Expiry</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
-      {/* ALERT LIST */}
-      <ScrollArea className="flex-1 px-4 pb-20">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+      {/* STOCK LEVELS TAB */}
+      {activeTab === "stock" && (
+        <>
+          <div className="grid grid-cols-3 gap-2 p-4">
+            <Card className={`p-3 ${outOfStockProducts.length > 0 ? "border-destructive" : ""}`}>
+              <div className="flex items-center gap-2">
+                <Package className="h-4 w-4 text-destructive" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Out</p>
+                  <p className="text-lg font-bold text-destructive">{outOfStockProducts.length}</p>
+                </div>
+              </div>
+            </Card>
+            <Card className={`p-3 ${lowStockProducts.length > 0 ? "border-yellow-500" : ""}`}>
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Low</p>
+                  <p className="text-lg font-bold text-yellow-600">{lowStockProducts.length}</p>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-3">
+              <div className="flex items-center gap-2">
+                <Package className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Total</p>
+                  <p className="text-lg font-bold">{products.length}</p>
+                </div>
+              </div>
+            </Card>
           </div>
-        ) : alertProducts.length === 0 ? (
-          <div className="text-center py-12">
-            <Package className="h-12 w-12 mx-auto text-green-500 mb-3" />
-            <p className="text-lg font-medium text-green-600">All stock levels healthy!</p>
-            <p className="text-sm text-muted-foreground">No products below reorder level</p>
+
+          <ScrollArea className="flex-1 px-4 pb-20">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+              </div>
+            ) : alertProducts.length === 0 ? (
+              <div className="text-center py-12">
+                <Package className="h-12 w-12 mx-auto text-green-500 mb-3" />
+                <p className="text-lg font-medium text-green-600">All stock levels healthy!</p>
+                <p className="text-sm text-muted-foreground">No products below reorder level</p>
+              </div>
+            ) : !filteredAlertProducts.length ? (
+              <div className="text-center py-12">
+                <Search className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                <p className="text-muted-foreground">No matching products</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filteredAlertProducts.map((product) => {
+                  const status = getStockStatus(product);
+                  const percentage = getStockPercentage(product);
+                  return (
+                    <Card key={product.id} className="p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{product.name}</p>
+                          {product.category && <p className="text-xs text-muted-foreground">{product.category}</p>}
+                        </div>
+                        <Badge variant={status.variant} className="text-xs ml-2">{status.label}</Badge>
+                      </div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="flex-1">
+                          <Progress value={percentage} className={`h-2 ${percentage < 33 ? '[&>div]:bg-destructive' : percentage < 66 ? '[&>div]:bg-yellow-500' : ''}`} />
+                        </div>
+                        <span className={`text-sm font-semibold ${product.stock_quantity === 0 ? "text-destructive" : ""}`}>
+                          {product.stock_quantity}/{product.min_stock_level || "—"}
+                        </span>
+                      </div>
+                      <Button size="sm" className="w-full" onClick={() => handleRestock(product)}>
+                        <Plus className="h-4 w-4 mr-1" /> Restock
+                      </Button>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </ScrollArea>
+        </>
+      )}
+
+      {/* BATCH EXPIRY TAB */}
+      {activeTab === "expiry" && (
+        <>
+          <div className="grid grid-cols-3 gap-2 p-4">
+            <Card className={`p-3 ${expiredProducts.length > 0 ? "border-destructive" : ""}`}>
+              <div className="flex items-center gap-2">
+                <XCircle className="h-4 w-4 text-destructive" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Expired</p>
+                  <p className="text-lg font-bold text-destructive">{expiredProducts.length}</p>
+                </div>
+              </div>
+            </Card>
+            <Card className={`p-3 ${expiringSoonProducts.length > 0 ? "border-yellow-500" : ""}`}>
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-yellow-500" />
+                <div>
+                  <p className="text-xs text-muted-foreground">&le;30 Days</p>
+                  <p className="text-lg font-bold text-yellow-600">{expiringSoonProducts.length}</p>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-3">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="text-xs text-muted-foreground">31-90 Days</p>
+                  <p className="text-lg font-bold">{expiringLaterProducts.length}</p>
+                </div>
+              </div>
+            </Card>
           </div>
-        ) : !filteredAlertProducts.length ? (
-          <div className="text-center py-12">
-            <Search className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">No matching products</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {filteredAlertProducts.map((product) => {
-              const status = getStockStatus(product);
-              const percentage = getStockPercentage(product);
-              return (
-                <Card key={product.id} className="p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{product.name}</p>
-                      {product.category && <p className="text-xs text-muted-foreground">{product.category}</p>}
+
+          {/* Expiry sub-tabs */}
+          <Tabs defaultValue="urgent" className="px-4">
+            <TabsList className="w-full mb-3">
+              <TabsTrigger value="urgent" className="flex-1 text-xs">Urgent (&le;30d)</TabsTrigger>
+              <TabsTrigger value="upcoming" className="flex-1 text-xs">Upcoming (31-90d)</TabsTrigger>
+              <TabsTrigger value="expired" className="flex-1 text-xs">Expired</TabsTrigger>
+            </TabsList>
+
+            {["urgent", "upcoming", "expired"].map((tab) => (
+              <TabsContent key={tab} value={tab}>
+                <ScrollArea className="max-h-[calc(100vh-380px)]">
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
                     </div>
-                    <Badge variant={status.variant} className="text-xs ml-2">{status.label}</Badge>
-                  </div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="flex-1">
-                      <Progress value={percentage} className={`h-2 ${percentage < 33 ? '[&>div]:bg-destructive' : percentage < 66 ? '[&>div]:bg-yellow-500' : ''}`} />
+                  ) : expiryFiltered(tab).length === 0 ? (
+                    <div className="text-center py-12">
+                      {tab === "expired" ? (
+                        <>
+                          <Package className="h-12 w-12 mx-auto text-green-500 mb-3" />
+                          <p className="text-lg font-medium text-green-600">No expired items!</p>
+                        </>
+                      ) : (
+                        <>
+                          <Calendar className="h-12 w-12 mx-auto text-green-500 mb-3" />
+                          <p className="text-lg font-medium text-green-600">All items have good shelf life</p>
+                        </>
+                      )}
                     </div>
-                    <span className={`text-sm font-semibold ${product.stock_quantity === 0 ? "text-destructive" : ""}`}>
-                      {product.stock_quantity}/{product.min_stock_level || "—"}
-                    </span>
-                  </div>
-                  <Button size="sm" className="w-full" onClick={() => handleRestock(product)}>
-                    <Plus className="h-4 w-4 mr-1" /> Restock
-                  </Button>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-      </ScrollArea>
+                  ) : (
+                    <div className="space-y-2 pb-20">
+                      {expiryFiltered(tab).map((product) => {
+                        const daysLeft = differenceInDays(new Date(product.expiry_date), now);
+                        return (
+                          <Card key={product.id} className="p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{product.name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Stock: {product.stock_quantity} {product.unit_of_measure || "units"}
+                                  {product.batch_no && ` | Batch: ${product.batch_no}`}
+                                </p>
+                              </div>
+                              {getExpiryBadge(product.expiry_date)}
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="flex-1">
+                                <Progress
+                                  value={daysLeft < 0 ? 0 : Math.min((daysLeft / 90) * 100, 100)}
+                                  className={`h-2 ${daysLeft < 0 ? '[&>div]:bg-destructive' : daysLeft <= 30 ? '[&>div]:bg-yellow-500' : ''}`}
+                                />
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                Exp: {format(new Date(product.expiry_date), "MMM d, yyyy")}
+                              </span>
+                            </div>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  )}
+                </ScrollArea>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </>
+      )}
 
       {/* RESTOCK DRAWER */}
       <Drawer open={isRestockDrawerOpen} onOpenChange={setIsRestockDrawerOpen}>

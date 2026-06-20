@@ -4,7 +4,7 @@ import {
   GraduationCap, ShoppingCart, UtensilsCrossed, Bed, 
   Scissors, Pill, Wrench, Building2, LogIn,
   Sparkles, Users, BookOpen, Briefcase, RefreshCw, Download,
-  Award, FileSearch, Moon, Star
+  Award, FileSearch
 } from "lucide-react";
 import { CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -267,69 +267,6 @@ export default function PWAHome() {
           </div>
         </div>
       </motion.header>
-
-      {/* Ramadan Kareem Banner */}
-      <section className="px-4 pt-6 pb-2">
-        <motion.div 
-          className="max-w-2xl mx-auto"
-          initial={{ opacity: 0, scale: 0.9, y: 30 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.21, 0.45, 0.27, 0.9] }}
-        >
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 p-5 text-center shadow-lg">
-            {/* Decorative stars */}
-            {[...Array(8)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute"
-                animate={{
-                  opacity: [0.1, 0.4, 0.1],
-                  scale: [0.8, 1.2, 0.8],
-                  rotate: [0, 180, 360],
-                }}
-                transition={{
-                  duration: Math.random() * 3 + 3,
-                  delay: Math.random() * 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-                style={{
-                  top: `${Math.random() * 100}%`,
-                  left: `${Math.random() * 100}%`,
-                }}
-              >
-                <Star
-                  className="text-yellow-300/30"
-                  size={Math.random() * 10 + 5}
-                  fill="currentColor"
-                />
-              </motion.div>
-            ))}
-            <div className="relative z-10 flex flex-col items-center gap-2">
-              <motion.div
-                animate={{ 
-                  rotate: [0, 10, -10, 0],
-                  y: [0, -5, 0],
-                }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <Moon className="text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,0.4)]" size={36} strokeWidth={1.5} />
-              </motion.div>
-              <p className="text-yellow-400/90 text-lg font-light" style={{ fontFamily: 'serif' }}>رمضان كريم</p>
-              <h3 className="text-xl font-bold text-white tracking-tight">Ramadan Kareem 🌙</h3>
-              <p className="text-emerald-200/70 text-xs max-w-xs">
-                Wishing all Muslims a blessed and peaceful holy month 🤲
-              </p>
-              <div className="mt-3 pt-3 border-t border-emerald-700/40 w-full">
-                <p className="text-white font-semibold text-sm">✝️ Happy Lenten Season</p>
-                <p className="text-emerald-200/70 text-xs max-w-xs mx-auto">
-                  Wishing all Christians a reflective and blessed season of prayer & fasting 🙏
-                </p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </section>
 
       {/* Hero Section */}
       <section className="px-4 py-6 text-center relative">

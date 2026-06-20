@@ -120,6 +120,7 @@ import AcademicTerms from "./pages/business/AcademicTerms";
 import Attendance from "./pages/business/Attendance";
 import Subjects from "./pages/business/Subjects";
 import Inventory from "./pages/business/Inventory";
+import ProductDetail from "./pages/business/ProductDetail";
 import Letters from "./pages/business/Letters";
 import StudentsImport from "./pages/business/StudentsImport";
 import StaffImport from "./pages/business/StaffImport";
@@ -279,6 +280,7 @@ const App = () => {
                 <Route path="subjects" element={<Subjects />} />
                 <Route path="subjects-import" element={<SubjectsImport />} />
                 <Route path="inventory" element={<Inventory />} />
+                <Route path="inventory/:id" element={<ProductDetail />} />
                 <Route path="inventory-import" element={<InventoryImport />} />
                 <Route path="letters" element={<Letters />} />
                 <Route path="student-cards" element={<StudentCards />} />
