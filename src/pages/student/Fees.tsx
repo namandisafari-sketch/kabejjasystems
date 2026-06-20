@@ -5,12 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getStudentSession } from "@/pages/StudentLogin";
-import { CreditCard, Download, Receipt } from "lucide-react";
+import { CreditCard, Download, Receipt, Printer } from "lucide-react";
 import { format } from "date-fns";
+import { FeeReceiptThermal } from "@/components/fees/FeeReceiptThermal";
 
 export default function StudentFees() {
   const session = getStudentSession()!;
+  const [selectedPayment, setSelectedPayment] = useState<any>(null);
 
   const { data: feeRecord } = useQuery({
     queryKey: ["student-fee-record", session.studentId],
@@ -31,13 +34,52 @@ export default function StudentFees() {
     queryFn: async () => {
       const { data } = await supabase
         .from("fee_payments")
-        .select("amount, payment_date, payment_method, receipt_number, reference_number, notes, created_at")
+        .select("id, amount, payment_date, payment_method, receipt_number, reference_number, notes, created_at")
         .eq("student_id", session.studentId)
         .order("payment_date", { ascending: false })
         .limit(50);
       return data || [];
     },
   });
+
+  const { data: tenant } = useQuery({
+    queryKey: ["student-tenant-receipt", session.tenantId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("tenants")
+        .select("name, phone, email, address, logo_url")
+        .eq("id", session.tenantId)
+        .single();
+      return data;
+    },
+  });
+
+  const { data: receiptSettings } = useQuery({
+    queryKey: ["student-receipt-settings", session.tenantId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("receipt_settings")
+        .select("*")
+        .eq("tenant_id", session.tenantId)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const handlePrintReceipt = (payment: any) => {
+    const printWin = window.open("", "_blank");
+    if (!printWin) return;
+    const receiptEl = document.getElementById("receipt-content");
+    if (!receiptEl) return;
+    printWin.document.write(`
+      <!DOCTYPE html><html><head><title>Receipt ${payment.receipt_number}</title>
+      <style>body { font-family: 'Inter', sans-serif; display: flex; justify-content: center; padding: 20px; }
+      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+      </style></head><body>${receiptEl.innerHTML}</body></html>
+    `);
+    printWin.document.close();
+    setTimeout(() => { printWin.print(); printWin.close(); }, 500);
+  };
 
   return (
     <div className="space-y-6">
@@ -118,7 +160,7 @@ export default function StudentFees() {
                     <TableCell className="text-xs text-muted-foreground">{p.reference_number || "—"}</TableCell>
                     <TableCell>
                       {p.receipt_number && (
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedPayment(p)}>
                           <Download className="h-4 w-4" />
                         </Button>
                       )}
@@ -136,6 +178,47 @@ export default function StudentFees() {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={!!selectedPayment} onOpenChange={(o) => { if (!o) setSelectedPayment(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Payment Receipt</DialogTitle>
+          </DialogHeader>
+          <div id="receipt-content">
+            {selectedPayment && tenant && (
+              <FeeReceiptThermal
+                receipt_number={selectedPayment.receipt_number}
+                student={{
+                  full_name: session.fullName,
+                  admission_number: session.admissionNumber,
+                  class_name: session.className,
+                }}
+                amount={selectedPayment.amount}
+                payment_method={selectedPayment.payment_method}
+                reference_number={selectedPayment.reference_number}
+                date={new Date(selectedPayment.payment_date || selectedPayment.created_at)}
+                previous_balance={(feeRecord?.total_amount || 0) - (feeRecord?.amount_paid || 0) + selectedPayment.amount}
+                new_balance={(feeRecord?.balance || 0)}
+                tenant={{
+                  name: tenant.name,
+                  phone: tenant.phone || undefined,
+                  email: tenant.email || undefined,
+                  address: tenant.address || undefined,
+                  logo_url: tenant.logo_url || undefined,
+                }}
+                term={feeRecord?.academic_terms ? { name: feeRecord.academic_terms.name, year: new Date().getFullYear() } : undefined}
+                settings={receiptSettings || undefined}
+              />
+            )}
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setSelectedPayment(null)}>Close</Button>
+            <Button onClick={() => handlePrintReceipt(selectedPayment)}>
+              <Printer className="h-4 w-4 mr-2" /> Print
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

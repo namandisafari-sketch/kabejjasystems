@@ -187,6 +187,8 @@ import StudentLogin from "./pages/StudentLogin";
 import StudentSetPassword from "./pages/StudentSetPassword";
 import StudentLayout from "./pages/StudentLayout";
 import StudentIDCard from "./pages/student/IDCard";
+import StudentExams from "./pages/student/Exams";
+import StudentExamCards from "./pages/student/ExamCards";
 import StudentDashboard from "./pages/student/Dashboard";
 import StudentPerformance from "./pages/student/Performance";
 import StudentReportCards from "./pages/student/ReportCards";
@@ -384,6 +386,8 @@ const App = () => {
                 <Route index element={<StudentDashboard />} />
                 <Route path="dashboard" element={<StudentDashboard />} />
                 <Route path="id-card" element={<StudentIDCard />} />
+                <Route path="exams" element={<StudentExams />} />
+                <Route path="exam-cards" element={<StudentExamCards />} />
                 <Route path="performance" element={<StudentPerformance />} />
                 <Route path="report-cards" element={<StudentReportCards />} />
                 <Route path="timetable" element={<StudentTimetable />} />

@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard, BarChart3, FileText, Calendar, CreditCard,
   CalendarCheck, BookOpen, Lightbulb, LogOut, IdCard,
+  CalendarClock, ScrollText,
 } from "lucide-react";
 import type { PortalMenuItem } from "@/components/portal/PortalSidebar";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,8 @@ export default function StudentLayout() {
   const menuItems: PortalMenuItem[] = [
     { title: "Dashboard", url: "/student/dashboard", icon: LayoutDashboard },
     { title: "ID Card", url: "/student/id-card", icon: IdCard },
+    { title: "Exam Timetable", url: "/student/exams", icon: CalendarClock },
+    { title: "Exam Cards", url: "/student/exam-cards", icon: ScrollText },
     { title: "Performance", url: "/student/performance", icon: BarChart3 },
     { title: "Report Cards", url: "/student/report-cards", icon: FileText },
     { title: "Timetable", url: "/student/timetable", icon: Calendar },
