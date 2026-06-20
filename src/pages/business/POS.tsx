@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
 import {
   Search, Plus, Minus, Trash2, ShoppingCart, CreditCard, Printer, X, User,
   ScanBarcode, Wallet, Edit3, CalendarIcon, Keyboard, History, PauseCircle, PlayCircle,
@@ -79,14 +78,17 @@ const DISTRICTS = [
 ];
 
 export default function POS() {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [tenantId, setTenantId] = useState<string | null>(null);
   useEffect(() => {
-    if (!user) return;
-    supabase.from("profiles").select("tenant_id").eq("id", user.id).single()
-      .then(({ data }) => { if (data) setTenantId(data.tenant_id); });
-  }, [user]);
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from("profiles").select("tenant_id").eq("id", user.id).single();
+      if (data) setTenantId(data.tenant_id);
+    };
+    init();
+  }, []);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
