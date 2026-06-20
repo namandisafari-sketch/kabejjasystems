@@ -77,6 +77,9 @@ import AdminFeatureFlags from "./pages/admin/AdminFeatureFlags";
 import AdminStorage from "./pages/admin/AdminStorage";
 import AdminBackups from "./pages/admin/AdminBackups";
 import AdminSponsors from "./pages/admin/AdminSponsors";
+import AdminSuggestions from "./pages/admin/AdminSuggestions";
+import AdminStaffReviews from "./pages/admin/AdminStaffReviews";
+import AdminNotifications from "./pages/admin/AdminNotifications";
 import SubmitTestimonial from "./pages/SubmitTestimonial";
 import { BusinessLayout } from "./components/BusinessLayout";
 import BusinessDashboard from "./pages/business/BusinessDashboard";
@@ -240,6 +243,9 @@ const App = () => {
                 <Route path="backups" element={<AdminBackups />} />
                 <Route path="sponsors" element={<AdminSponsors />} />
                 <Route path="audit-logs" element={<AdminAuditLogs />} />
+                <Route path="suggestions" element={<AdminSuggestions />} />
+                <Route path="staff-reviews" element={<AdminStaffReviews />} />
+                <Route path="notifications" element={<AdminNotifications />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
 

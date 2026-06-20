@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CreditCard, Package, Settings, LogOut, GraduationCap, Building2, Shield, Activity, Flag, PlusCircle, HardDrive, Sparkles, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Users, CreditCard, Package, Settings, LogOut, GraduationCap, Building2, Shield, Activity, Flag, PlusCircle, HardDrive, Sparkles, ChevronRight, Lightbulb, Star, Bell } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,6 +66,14 @@ const navCategories: NavCategory[] = [
       { title: "System Health", url: "/admin/system-health", icon: Activity },
       { title: "Backups", url: "/admin/backups", icon: HardDrive },
       { title: "Feature Flags", url: "/admin/feature-flags", icon: Flag },
+    ],
+  },
+  {
+    label: "Community",
+    items: [
+      { title: "Suggestions", url: "/admin/suggestions", icon: Lightbulb },
+      { title: "Staff Reviews", url: "/admin/staff-reviews", icon: Star },
+      { title: "Notifications", url: "/admin/notifications", icon: Bell },
     ],
   },
   {

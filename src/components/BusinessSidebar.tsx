@@ -105,13 +105,12 @@ const categoryLabels: Record<string, string> = {
   analytics: "Analytics",
   admin: "Admin",
   legal: "Legal",
-  community: "Community",
 };
 
 const categoryOrder = [
   'core', 'school', 'academics', 'restaurant', 'hotel', 'repair',
   'salon', 'pharmacy', 'property', 'rental', 'finance', 'people',
-  'operations', 'communication', 'community', 'analytics', 'admin', 'legal',
+  'operations', 'communication', 'analytics', 'admin', 'legal',
 ];
 
 interface MenuItem {

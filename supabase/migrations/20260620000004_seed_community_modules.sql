@@ -1,11 +1,11 @@
 -- Seed community hub modules into business_modules
 INSERT INTO public.business_modules (code, name, description, icon, category, applicable_business_types, is_core, is_active, display_order)
 VALUES
-  ('suggestions', 'Suggestion Box', 'Collect and manage public suggestions', 'Lightbulb', 'community', ARRAY['kindergarten', 'primary_school', 'secondary_school'], false, true, 100),
-  ('staff_reviews', 'Staff Reviews', 'Public reviews and ratings for staff members', 'Star', 'community', ARRAY['kindergarten', 'primary_school', 'secondary_school'], false, true, 101),
-  ('notification_settings', 'Notification Settings', 'Configure SMS, WhatsApp, and email notification providers', 'Bell', 'community', ARRAY['kindergarten', 'primary_school', 'secondary_school'], false, true, 102),
-  ('notification_log', 'Notification Log', 'View outgoing notification history', 'MessageSquare', 'community', ARRAY['kindergarten', 'primary_school', 'secondary_school'], false, true, 103),
-  ('parent_notification_preferences', 'Parent Notifications', 'Manage parent notification preferences per channel', 'Bell', 'community', ARRAY['kindergarten', 'primary_school', 'secondary_school'], false, true, 104)
+  ('suggestions', 'Suggestion Box', 'Collect and manage public suggestions', 'Lightbulb', 'school', ARRAY['kindergarten', 'primary_school', 'secondary_school'], false, true, 100),
+  ('staff_reviews', 'Staff Reviews', 'Public reviews and ratings for staff members', 'Star', 'school', ARRAY['kindergarten', 'primary_school', 'secondary_school'], false, true, 101),
+  ('notification_settings', 'Notification Settings', 'Configure SMS, WhatsApp, and email notification providers', 'Bell', 'admin', ARRAY['kindergarten', 'primary_school', 'secondary_school'], false, true, 102),
+  ('notification_log', 'Notification Log', 'View outgoing notification history', 'MessageSquare', 'admin', ARRAY['kindergarten', 'primary_school', 'secondary_school'], false, true, 103),
+  ('parent_notification_preferences', 'Parent Notifications', 'Manage parent notification preferences per channel', 'Bell', 'school', ARRAY['kindergarten', 'primary_school', 'secondary_school'], false, true, 104)
 ON CONFLICT (code) DO UPDATE SET
   name = EXCLUDED.name,
   description = EXCLUDED.description,
