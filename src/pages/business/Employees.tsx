@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Loader2, Users, UserCheck, Wallet, Search, Phone, Mail } from "lucide-react";
+import { Plus, Loader2, Users, UserCheck, Wallet, Search, Phone, Mail, ClipboardList } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/i18n";
+import { Link } from "react-router-dom";
 import {
   Drawer,
   DrawerContent,
@@ -138,10 +139,18 @@ export default function Employees() {
             <h1 className="text-xl font-bold">{isSchool ? t.staff.title : t.nav.employees}</h1>
             <p className="text-xs text-muted-foreground">{employees?.length || 0} {t.common.members}</p>
           </div>
-          <Button size="sm" onClick={() => { resetForm(); setIsDrawerOpen(true); }}>
-            <Plus className="h-4 w-4 mr-1 rtl:ml-1 rtl:mr-0" />
-            {t.common.add}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Link to="/business/employee-onboarding">
+              <Button size="sm" variant="outline">
+                <ClipboardList className="h-4 w-4 mr-1" />
+                Onboard
+              </Button>
+            </Link>
+            <Button size="sm" onClick={() => { resetForm(); setIsDrawerOpen(true); }}>
+              <Plus className="h-4 w-4 mr-1 rtl:ml-1 rtl:mr-0" />
+              {t.common.add}
+            </Button>
+          </div>
         </div>
         <div className="relative">
           <Search className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
