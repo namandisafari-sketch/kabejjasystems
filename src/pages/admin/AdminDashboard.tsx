@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Clock, Users, Package, TrendingUp, DollarSign } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Users, Package, TrendingUp, DollarSign, GraduationCap, UserCheck, UserX, School } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -37,11 +37,14 @@ const AdminDashboard = () => {
   const { data: stats } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
-      const [tenants, payments, pendingCount, approvedPayments] = await Promise.all([
+      const [tenants, payments, pendingCount, approvedPayments, allStudents, activeStudents, schoolTenants] = await Promise.all([
         supabase.from('tenants').select('id', { count: 'exact' }),
         supabase.from('payment_uploads').select('id', { count: 'exact' }),
         supabase.from('payment_uploads').select('id', { count: 'exact' }).eq('status', 'pending'),
         supabase.from('payment_uploads').select('amount').eq('status', 'approved'),
+        supabase.from('students').select('id', { count: 'exact' }),
+        supabase.from('students').select('id', { count: 'exact' }).eq('is_active', true),
+        supabase.from('tenants').select('id', { count: 'exact' }).in('business_type', ['kindergarten', 'primary_school', 'secondary_school']),
       ]);
       
       const totalRevenue = approvedPayments.data?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
@@ -51,6 +54,9 @@ const AdminDashboard = () => {
         totalPayments: payments.count || 0,
         pendingPayments: pendingCount.count || 0,
         totalRevenue,
+        totalStudents: allStudents.count || 0,
+        activeStudents: activeStudents.count || 0,
+        totalSchools: schoolTenants.count || 0,
       };
     },
   });
@@ -189,56 +195,51 @@ const AdminDashboard = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Stats */}
-      <div className="grid md:grid-cols-4 gap-6 mb-8">
+      <div className="grid md:grid-cols-4 gap-6 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Tenants
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Tenants</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.totalTenants || 0}</div>
+            <p className="text-xs text-muted-foreground">{stats?.totalSchools || 0} schools</p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Payments
-            </CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Students</CardTitle>
+            <GraduationCap className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalPayments || 0}</div>
+            <div className="text-2xl font-bold">{stats?.totalStudents || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              <UserCheck className="h-3 w-3 inline mr-1 text-green-500" />
+              {stats?.activeStudents || 0} active
+              <UserX className="h-3 w-3 inline ml-2 mr-1 text-red-400" />
+              {(stats?.totalStudents || 0) - (stats?.activeStudents || 0)} inactive
+            </p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pending Reviews
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Pending Reviews</CardTitle>
             <Clock className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-warning">{stats?.pendingPayments || 0}</div>
+            <p className="text-xs text-muted-foreground">Payment uploads awaiting approval</p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Revenue
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-success" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
+            <DollarSign className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">
+            <div className="text-2xl font-bold text-green-600">
               {new Intl.NumberFormat('en-UG', {
-                style: 'currency',
-                currency: 'UGX',
-                maximumFractionDigits: 0,
+                style: 'currency', currency: 'UGX', maximumFractionDigits: 0,
               }).format(stats?.totalRevenue || 0)}
             </div>
           </CardContent>

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CreditCard, Package, Settings, LogOut, GraduationCap, Building2, Shield, Activity, Flag, PlusCircle, HardDrive, Sparkles, ChevronRight, Lightbulb, Star, Bell } from "lucide-react";
+import { LayoutDashboard, Users, CreditCard, Package, Settings, LogOut, GraduationCap, Building2, Shield, Activity, Flag, PlusCircle, HardDrive, Sparkles, ChevronRight, Lightbulb, Star, Bell, UserPlus, Archive } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,6 +48,13 @@ const navCategories: NavCategory[] = [
       { title: "Create Business", url: "/admin/create-business", icon: PlusCircle },
       { title: "Tenants", url: "/admin/tenants", icon: Users },
       { title: "Sponsors", url: "/admin/sponsors", icon: Sparkles },
+    ],
+  },
+  {
+    label: "Students",
+    items: [
+      { title: "Student Accounts", url: "/admin/student-accounts", icon: UserPlus },
+      { title: "Withdrawal", url: "/admin/withdrawal", icon: Archive },
     ],
   },
   {

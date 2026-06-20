@@ -80,6 +80,8 @@ import AdminSponsors from "./pages/admin/AdminSponsors";
 import AdminSuggestions from "./pages/admin/AdminSuggestions";
 import AdminStaffReviews from "./pages/admin/AdminStaffReviews";
 import AdminNotifications from "./pages/admin/AdminNotifications";
+import AdminStudentAccounts from "./pages/admin/AdminStudentAccounts";
+import AdminWithdrawal from "./pages/admin/AdminWithdrawal";
 import SubmitTestimonial from "./pages/SubmitTestimonial";
 import { BusinessLayout } from "./components/BusinessLayout";
 import BusinessDashboard from "./pages/business/BusinessDashboard";
@@ -181,6 +183,16 @@ import SubmitPaymentProof from "./pages/public/SubmitPaymentProof";
 import JobStatus from "./pages/public/JobStatus";
 import SelfAdmission from "./pages/public/SelfAdmission";
 import SuggestionBox from "./pages/public/SuggestionBox";
+import StudentLogin from "./pages/StudentLogin";
+import StudentLayout from "./pages/StudentLayout";
+import StudentDashboard from "./pages/student/Dashboard";
+import StudentPerformance from "./pages/student/Performance";
+import StudentReportCards from "./pages/student/ReportCards";
+import StudentTimetable from "./pages/student/Timetable";
+import StudentFees from "./pages/student/Fees";
+import StudentEvents from "./pages/student/Events";
+import StudentResources from "./pages/student/Resources";
+import StudentSuggestions from "./pages/student/Suggestions";
 import PublicStaffReviews from "./pages/public/StaffReviews";
 import ParentPortal from "./pages/ParentPortal";
 import ParentDashboard from "./pages/ParentDashboard";
@@ -246,6 +258,8 @@ const App = () => {
                 <Route path="suggestions" element={<AdminSuggestions />} />
                 <Route path="staff-reviews" element={<AdminStaffReviews />} />
                 <Route path="notifications" element={<AdminNotifications />} />
+                <Route path="student-accounts" element={<AdminStudentAccounts />} />
+                <Route path="withdrawal" element={<AdminWithdrawal />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
 
@@ -360,6 +374,20 @@ const App = () => {
               {/* ECD Parent Portal Routes - Distinct child-friendly design */}
               <Route path="/ecd-parent" element={<ECDParentPortal />} />
               <Route path="/ecd-parent/dashboard" element={<ECDParentDashboard />} />
+
+              {/* Student Portal Routes */}
+              <Route path="/student/login" element={<StudentLogin />} />
+              <Route path="/student" element={<StudentLayout />}>
+                <Route index element={<StudentDashboard />} />
+                <Route path="dashboard" element={<StudentDashboard />} />
+                <Route path="performance" element={<StudentPerformance />} />
+                <Route path="report-cards" element={<StudentReportCards />} />
+                <Route path="timetable" element={<StudentTimetable />} />
+                <Route path="fees" element={<StudentFees />} />
+                <Route path="events" element={<StudentEvents />} />
+                <Route path="resources" element={<StudentResources />} />
+                <Route path="suggestions" element={<StudentSuggestions />} />
+              </Route>
 
               {/* Renter Portal Routes */}
               <Route path="/renter" element={<RenterPortal />} />
