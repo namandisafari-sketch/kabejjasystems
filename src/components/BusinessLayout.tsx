@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { BusinessSidebar } from "@/components/BusinessSidebar";
@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionCheck } from "@/hooks/use-subscription-check";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useIsMobile } from "@/hooks/use-mobile";
+import PharmacyAdminLayout from "@/components/pharmacy/PharmacyAdminLayout";
 
 interface LocationState {
   devBusinessType?: string;
@@ -116,6 +117,26 @@ export function BusinessLayout() {
   // Keyboard shortcuts
   const { shortcuts } = useKeyboardShortcuts(businessType);
 
+  const isPharmacy = useMemo(() =>
+    ["pharmacy", "hospital", "clinic"].includes(businessType),
+    [businessType]
+  );
+
+  // Pharmacy-specific layout (linkmenn-style sidebar)
+  if (isPharmacy) {
+    const getTitle = () => {
+      const path = location.pathname;
+      if (path === "/business" || path === "/business/") return "Dashboard";
+      const segment = path.split("/").pop() || "";
+      return segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, " ");
+    };
+    return (
+      <PharmacyAdminLayout title={getTitle()} subtitle={`Welcome back, ${businessName || "Admin"}`}>
+        <Outlet />
+      </PharmacyAdminLayout>
+    );
+  }
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background relative">
@@ -127,7 +148,7 @@ export function BusinessLayout() {
         <div className="flex-1 flex flex-col min-w-0">
           
           {/* Desktop header with sidebar trigger - hidden on mobile */}
-          <header className="hidden md:flex h-14 border-b border-border items-center px-4 bg-card/95 backdrop-blur-sm sticky top-0 z-40">
+          <header className="hidden md:flex h-14 border-b border-border px-4 bg-card/95 backdrop-blur-sm sticky top-0 z-40">
             <SidebarTrigger className="touch-target" />
             <div className="ml-auto flex items-center gap-1">
               <LanguageSwitcher />
@@ -138,7 +159,7 @@ export function BusinessLayout() {
           </header>
           
           {/* Mobile header - shown only on mobile (screens < 768px) */}
-          <header className="flex md:hidden h-14 border-b border-border items-center px-4 bg-card/95 backdrop-blur-sm sticky top-0 z-40 safe-top">
+          <header className="flex md:hidden h-14 border-b border-border px-4 bg-card/95 backdrop-blur-sm sticky top-0 z-40 safe-top">
             <span className="font-semibold text-sm truncate flex-1">{businessName}</span>
             <div className="flex items-center gap-1">
               <LanguageSwitcher />
