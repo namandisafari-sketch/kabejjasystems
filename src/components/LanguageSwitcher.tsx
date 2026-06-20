@@ -27,6 +27,12 @@ export function LanguageSwitcher() {
           🇬🇧 English
         </DropdownMenuItem>
         <DropdownMenuItem
+          onClick={() => setLanguage("lug")}
+          className={language === "lug" ? "bg-accent" : ""}
+        >
+          🇺🇬 Luganda
+        </DropdownMenuItem>
+        <DropdownMenuItem
           onClick={() => setLanguage("ar")}
           className={language === "ar" ? "bg-accent" : ""}
         >

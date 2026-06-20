@@ -245,6 +245,7 @@ export const ar: TranslationKeys = {
     selectLanguage: "اختر اللغة",
     english: "English",
     arabic: "العربية",
+    luganda: "Luganda",
   },
 
   // Reports

@@ -243,6 +243,7 @@ export const en = {
     selectLanguage: "Select Language",
     english: "English",
     arabic: "العربية",
+    luganda: "Luganda",
   },
 
   // Reports

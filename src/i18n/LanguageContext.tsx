@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { en, type TranslationKeys } from "./translations/en";
 import { ar } from "./translations/ar";
+import { lug } from "./translations/lug";
 
-export type Language = "en" | "ar";
+export type Language = "en" | "ar" | "lug";
 
 interface LanguageContextType {
   language: Language;
@@ -11,7 +12,7 @@ interface LanguageContextType {
   isRTL: boolean;
 }
 
-const translations: Record<Language, TranslationKeys> = { en, ar };
+const translations: Record<Language, TranslationKeys> = { en, ar, lug };
 
 const LanguageContext = createContext<LanguageContextType>({
   language: "en",
@@ -25,7 +26,8 @@ export const useLanguage = () => useContext(LanguageContext);
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>(() => {
     const saved = localStorage.getItem("app-language");
-    return (saved === "ar" ? "ar" : "en") as Language;
+    if (saved === "lug" || saved === "ar") return saved;
+    return "en";
   });
 
   const setLanguage = useCallback((lang: Language) => {
