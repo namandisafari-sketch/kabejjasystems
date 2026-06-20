@@ -224,7 +224,7 @@ export default function PWAHome() {
 
       {/* Header */}
       <motion.header 
-        className="sticky top-0 z-50 glass border-b border-border/50 safe-top backdrop-blur-xl"
+        className="sticky top-0 z-50 glass safe-top"
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ type: "spring", stiffness: 100, damping: 20 }}

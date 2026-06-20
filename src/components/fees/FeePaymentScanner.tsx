@@ -510,17 +510,20 @@ export function FeePaymentScanner({ tenantId }: FeePaymentScannerProps) {
 
       const totalAmount = selectedFeeList.reduce((sum, fee) => sum + (fee?.amount || 0), 0);
 
-      const { data: currentTermData } = await supabase
+      const { data: currentTerm, error: termErr } = await supabase
         .from('academic_terms')
-        .select('id')
+        .select('id, name')
         .eq('tenant_id', tenantId)
         .eq('is_current', true)
         .maybeSingle();
 
+      if (termErr) throw termErr;
+      if (!currentTerm) throw new Error("No active academic term found. Please set a current term first.");
+
       const { data: newFee, error } = await supabase.from('student_fees').insert({
         tenant_id: tenantId,
         student_id: student.id,
-        term_id: currentTermData?.id || null,
+        term_id: currentTerm.id,
         total_amount: totalAmount,
         amount_paid: 0,
         status: 'pending',

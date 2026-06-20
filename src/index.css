@@ -181,7 +181,7 @@
 
   /* Glass effect for overlays */
   .glass {
-    @apply bg-background/85 backdrop-blur-lg border border-border/30;
+    @apply bg-card border-b border-border;
   }
 
   /* Gradient backgrounds */

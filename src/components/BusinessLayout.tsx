@@ -147,7 +147,7 @@ export function BusinessLayout() {
         <div className="flex-1 flex flex-col min-w-0">
           
           {/* Desktop header with sidebar trigger - hidden on mobile */}
-          <header className="hidden md:flex h-14 border-b border-border px-4 bg-card/95 backdrop-blur-sm sticky top-0 z-40">
+          <header className="hidden md:flex h-14 border-b border-border px-4 bg-card sticky top-0 z-40">
             <SidebarTrigger className="touch-target" />
             <div className="ml-auto flex items-center gap-1">
               <LanguageSwitcher />
@@ -158,7 +158,7 @@ export function BusinessLayout() {
           </header>
           
           {/* Mobile header - shown only on mobile (screens < 768px) */}
-          <header className="flex md:hidden h-14 border-b border-border px-4 bg-card/95 backdrop-blur-sm sticky top-0 z-40 safe-top">
+          <header className="flex md:hidden h-14 border-b border-border px-4 bg-card sticky top-0 z-40 safe-top">
             <span className="font-semibold text-sm truncate flex-1">{businessName}</span>
             <div className="flex items-center gap-1">
               <LanguageSwitcher />
