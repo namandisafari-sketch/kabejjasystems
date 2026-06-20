@@ -69,6 +69,7 @@ export default function Classes() {
     grade: "",
     section: "",
     capacity: "",
+    secondary_level: "",
   });
 
   // Fetch school settings for custom streams
@@ -109,6 +110,7 @@ export default function Classes() {
         tenant_id: tenantData!.tenantId,
         name: data.name,
         level: data.level,
+        secondary_level: data.secondary_level || null,
         grade: data.grade || data.name,
         section: data.section || null,
         capacity: data.capacity ? parseInt(data.capacity) : null,
@@ -130,6 +132,7 @@ export default function Classes() {
       const { error } = await supabase.from('school_classes').update({
         name: data.name,
         level: data.level,
+        secondary_level: data.secondary_level || null,
         grade: data.grade || data.name,
         section: data.section || null,
         capacity: data.capacity ? parseInt(data.capacity) : null,
@@ -161,7 +164,7 @@ export default function Classes() {
   });
 
   const resetForm = () => {
-    setFormData({ name: "", level: defaultLevel, grade: "", section: "", capacity: "" });
+    setFormData({ name: "", level: defaultLevel, grade: "", section: "", capacity: "", secondary_level: "" });
     setEditingClass(null);
     setIsDialogOpen(false);
   };
@@ -174,6 +177,7 @@ export default function Classes() {
       grade: cls.grade || "",
       section: cls.section || "",
       capacity: cls.capacity?.toString() || "",
+      secondary_level: (cls as any).secondary_level || "",
     });
     setIsDialogOpen(true);
   };
@@ -222,7 +226,8 @@ export default function Classes() {
                           ...formData, 
                           grade: value,
                           name: classInfo?.label || value,
-                          level: classInfo?.level || "o-level"
+                          level: "secondary",
+                          secondary_level: classInfo?.level || "o-level"
                         });
                       }}
                     >
@@ -247,7 +252,7 @@ export default function Classes() {
                         setFormData({ 
                           ...formData, 
                           section: value,
-                          name: `${classLabel} ${value}`
+                          name: `${classLabel} ${value}`,
                         });
                       }}
                     >
