@@ -314,27 +314,27 @@ export default function PWAHome() {
 
       {/* Category Cards Grid */}
       <section className="px-4 pb-8">
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-2xl mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 max-w-5xl mx-auto">
           {categories.map((category, index) => (
             <AnimatedCard
               key={category.id}
               className="cursor-pointer overflow-hidden rounded-xl border-0 shadow-md"
-              delay={index * 0.08}
+              delay={index * 0.06}
               onClick={() => handleCategoryClick(category)}
             >
               <CardContent className="p-0">
-                <div className={`bg-gradient-to-br ${category.gradient} p-4 text-white`}>
+                <div className={`bg-gradient-to-br ${category.gradient} p-3 sm:p-4 text-white`}>
                   <motion.div 
-                    className="flex items-center justify-center w-12 h-12 mb-3 rounded-xl bg-white/20 backdrop-blur-sm"
+                    className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 mb-2 sm:mb-3 rounded-xl bg-white/20 backdrop-blur-sm"
                     whileHover={{ rotate: [0, -10, 10, 0], scale: 1.15 }}
                     transition={{ duration: 0.5 }}
                   >
-                    {category.icon}
+                    <div className="scale-90 sm:scale-100">{category.icon}</div>
                   </motion.div>
-                  <h3 className="font-semibold text-sm sm:text-base leading-tight mb-1">
+                  <h3 className="font-semibold text-xs sm:text-sm leading-tight mb-0.5">
                     {category.title}
                   </h3>
-                  <p className="text-xs text-white/80 line-clamp-2">
+                  <p className="text-2xs sm:text-xs text-white/80 line-clamp-2 leading-tight">
                     {category.description}
                   </p>
                 </div>
@@ -346,7 +346,7 @@ export default function PWAHome() {
 
       {/* Public Services Section */}
       <section className="px-4 pb-8">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <motion.div 
             className="text-center mb-4"
             initial={{ opacity: 0, y: 20 }}
@@ -361,7 +361,7 @@ export default function PWAHome() {
               Access these services without logging in
             </p>
           </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {publicServices.map((service, index) => (
               <AnimatedCard
                 key={service.id}
@@ -397,7 +397,7 @@ export default function PWAHome() {
 
       {/* Secondary Users Section */}
       <section className="px-4 pb-8">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <motion.div 
             className="text-center mb-4"
             initial={{ opacity: 0, y: 20 }}
