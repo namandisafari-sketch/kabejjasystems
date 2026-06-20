@@ -82,7 +82,7 @@ export default function StudentLogin() {
 
     const { data: student, error: studentError } = await supabase
       .from("students")
-      .select("id, full_name, admission_number, school_classes!inner(name)")
+      .select("id, full_name, admission_number, school_classes(name)")
       .eq("user_id", authData.user.id)
       .eq("tenant_id", tenantId)
       .single();
