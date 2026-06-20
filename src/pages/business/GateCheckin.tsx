@@ -24,10 +24,13 @@ import {
   X,
   Lock,
   Sun,
-  Camera
+  Camera,
+  ClipboardList
 } from "lucide-react";
 import { BarcodeScanner } from "@/components/pos/BarcodeScanner";
 import { GateBlockDialog } from "@/components/gate/GateBlockDialog";
+import GateStaffCheckin from "@/components/gate/GateStaffCheckin";
+import GateVisitorCheckin from "@/components/gate/GateVisitorCheckin";
 import { OverrideRequestsPanel } from "@/components/bursar/OverrideRequestsPanel";
 import { checkStudentRedListStatus, checkTodayOverrideApproval, RedListStatus } from "@/hooks/use-red-list-check";
 import {
@@ -61,7 +64,10 @@ interface Student {
 
 interface CheckinRecord {
   id: string;
-  student_id: string;
+  student_id: string | null;
+  person_type: string;
+  person_name: string | null;
+  employee_id: string | null;
   check_type: string;
   checked_at: string;
   is_late: boolean;
@@ -123,6 +129,11 @@ function StatCard({
 
 // Checkin Card for mobile view
 function CheckinCard({ checkin }: { checkin: CheckinRecord }) {
+  const displayName = checkin.person_type === "staff" ? checkin.person_name : checkin.students?.full_name;
+  const displaySub = checkin.person_type === "staff"
+    ? "Staff"
+    : `${checkin.students?.admission_number}${checkin.students?.school_classes?.name ? ` • ${checkin.students.school_classes.name}` : ""}`;
+
   return (
     <div className={`p-3 rounded-lg border ${
       checkin.is_late ? "bg-warning/10 border-warning/30" : 
@@ -131,10 +142,10 @@ function CheckinCard({ checkin }: { checkin: CheckinRecord }) {
     }`}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="font-medium text-sm truncate">{checkin.students?.full_name}</p>
-          <p className="text-xs text-muted-foreground truncate">
-            {checkin.students?.admission_number} • {checkin.students?.school_classes?.name}
-          </p>
+          <p className="font-medium text-sm truncate">{displayName}</p>
+          {displaySub && (
+            <p className="text-xs text-muted-foreground truncate">{displaySub}</p>
+          )}
         </div>
         <div className="shrink-0 text-right">
           <p className="text-xs font-mono">{format(new Date(checkin.checked_at), "h:mm a")}</p>
@@ -239,6 +250,8 @@ export default function GateCheckin() {
   } | null>(null);
   const [blockingReasons, setBlockingReasons] = useState<string[]>([]);
 
+  const [personType, setPersonType] = useState<"student" | "staff" | "visitor">("student");
+
   // Check if current user is an administrator (can approve requests)
   const { data: userProfile } = useQuery({
     queryKey: ["user-profile"],
@@ -285,6 +298,7 @@ export default function GateCheckin() {
           )
         `)
         .eq("tenant_id", tenantId)
+        .eq("person_type", "student")
         .gte("checked_at", today.toISOString())
         .order("checked_at", { ascending: false });
 
@@ -664,361 +678,402 @@ export default function GateCheckin() {
             </Select>
           </div>
 
-          {/* Stats Cards - ECD themed, Responsive Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-4">
-            <Card className="border-0 shadow-lg" style={{ background: '#4ECDC4', borderRadius: '12px', border: '3px solid #FF6B9D' }}>
-              <CardContent className="p-3 md:pt-4 text-white">
-                <div className="text-xl md:text-3xl mb-1">👋</div>
-                <p className="text-lg md:text-2xl font-bold">{arrivals.length}</p>
-                <p className="text-xs md:text-sm opacity-90">Arrived</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-0 shadow-lg" style={{ background: '#FF6B9D', borderRadius: '12px', border: '3px solid #4ECDC4' }}>
-              <CardContent className="p-3 md:pt-4 text-white">
-                <div className="text-xl md:text-3xl mb-1">🏠</div>
-                <p className="text-lg md:text-2xl font-bold">{departures.length}</p>
-                <p className="text-xs md:text-sm opacity-90">Went Home</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-0 shadow-lg" style={{ background: '#FFD93D', borderRadius: '12px', border: '3px solid #FF6B9D' }}>
-              <CardContent className="p-3 md:pt-4" style={{ color: '#1e293b' }}>
-                <div className="text-xl md:text-3xl mb-1">🏃</div>
-                <p className="text-lg md:text-2xl font-bold">{lateArrivals.length}</p>
-                <p className="text-xs md:text-sm opacity-90">Late</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-0 shadow-lg" style={{ background: '#B19CD9', borderRadius: '12px', border: '3px solid #4ECDC4' }}>
-              <CardContent className="p-3 md:pt-4 text-white">
-                <div className="text-xl md:text-3xl mb-1">⏳</div>
-                <p className="text-lg md:text-2xl font-bold">{pendingRequests.length}</p>
-                <p className="text-xs md:text-sm opacity-90">Pending</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-0 shadow-lg" style={{ background: 'white', borderRadius: '12px', border: '3px solid #4ECDC4' }}>
-              <CardContent className="p-3 md:pt-4" style={{ color: '#1e293b' }}>
-                <div className="text-xl md:text-3xl mb-1">🌅</div>
-                <p className="text-lg md:text-2xl font-bold" style={{ color: '#4ECDC4' }}>
-                  {tenantSettings?.school_start_time?.slice(0, 5) || "08:00"}
-                </p>
-                <p className="text-xs md:text-sm text-muted-foreground">Start</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-0 shadow-lg" style={{ background: 'white', borderRadius: '12px', border: '3px solid #FF6B9D' }}>
-              <CardContent className="p-3 md:pt-4" style={{ color: '#1e293b' }}>
-                <div className="text-xl md:text-3xl mb-1">🌆</div>
-                <p className="text-lg md:text-2xl font-bold" style={{ color: '#FF6B9D' }}>
-                  {tenantSettings?.school_end_time?.slice(0, 5) || "16:00"}
-                </p>
-                <p className="text-xs md:text-sm text-muted-foreground">End</p>
-              </CardContent>
-            </Card>
+          {/* Person Type Selector - ECD styled */}
+          <div className="flex gap-1 p-1 bg-white/80 backdrop-blur rounded-lg w-fit shadow-sm" style={{ border: '2px solid #4ECDC4' }}>
+            <button
+              type="button"
+              onClick={() => setPersonType("student")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                personType === "student" ? "bg-[#4ECDC4] text-white shadow-sm" : "text-[#666] hover:text-[#1e293b]"
+              }`}
+            >
+              👶 Students
+            </button>
+            <button
+              type="button"
+              onClick={() => setPersonType("staff")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                personType === "staff" ? "bg-[#4ECDC4] text-white shadow-sm" : "text-[#666] hover:text-[#1e293b]"
+              }`}
+            >
+              👤 Staff
+            </button>
+            <button
+              type="button"
+              onClick={() => setPersonType("visitor")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                personType === "visitor" ? "bg-[#4ECDC4] text-white shadow-sm" : "text-[#666] hover:text-[#1e293b]"
+              }`}
+            >
+              📋 Visitors
+            </button>
           </div>
 
-          {/* Scanner Section - ECD themed, Responsive */}
-          <Card 
-            className="shadow-lg transition-all duration-300"
-            style={{ 
-              background: scanStatus === "success" ? '#E0F7FA' : 
-                         scanStatus === "late" ? '#FFF9E0' : 
-                         scanStatus === "error" ? '#FFE4EC' : 'white',
-              borderRadius: '12px',
-              border: `3px solid ${scanStatus === "success" ? '#4ECDC4' : 
-                                   scanStatus === "late" ? '#FFD93D' : 
-                                   scanStatus === "error" ? '#FF6B9D' : '#4ECDC4'}`
-            }}
-          >
-            <CardHeader className="pb-2 md:pb-4">
-              <CardTitle className="flex flex-wrap items-center gap-2 text-base md:text-lg" style={{ color: '#1e293b' }}>
-                <span className="text-xl md:text-2xl">📱</span>
-                Scan Pupil ID Card
-                {checkType === "departure" && isBeforeEndTime() && (
-                  <Badge className="text-2xs md:text-xs" style={{ background: '#FFD93D', color: '#1e293b', borderRadius: '10px' }}>
-                    🔔 Early pickup needs approval
-                  </Badge>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 md:space-y-6">
-              <form onSubmit={handleScan} className="flex flex-col gap-2 md:gap-4">
-                <div className="flex flex-row gap-2 md:gap-4">
-                  <Input
-                    ref={inputRef}
-                    value={barcodeInput}
-                    onChange={(e) => setBarcodeInput(e.target.value)}
-                    placeholder="Scan card or type admission number..."
-                    className="text-lg md:text-2xl h-12 md:h-16 font-mono flex-1"
-                    style={{ borderRadius: '12px', border: '2px solid #FF6B9D' }}
-                    autoComplete="off"
-                  />
-                  <Button 
-                    type="button" 
-                    variant="outline"
-                    size="lg"
-                    className="h-12 md:h-16 px-3 md:px-4 shrink-0"
-                    style={{ borderRadius: '12px', border: '2px solid #4ECDC4' }}
-                    onClick={() => setIsScannerOpen(true)}
-                  >
-                    <Camera className="h-5 w-5 md:h-6 md:w-6" style={{ color: '#4ECDC4' }} />
-                  </Button>
-                </div>
-                <Button 
-                  type="submit" 
-                  size="lg" 
-                  className="h-12 md:h-16 px-6 md:px-8 text-white shadow-lg w-full"
-                  style={{ background: checkType === "arrival" ? '#4ECDC4' : '#FF6B9D', borderRadius: '12px' }}
-                  disabled={checkinMutation.isPending}
-                >
-                  {checkinMutation.isPending ? (
-                    <span className="animate-pulse">Scanning...</span>
-                  ) : (
-                    <>{checkType === "arrival" ? "👋 Check In" : "🏠 Check Out"}</>
-                  )}
-                </Button>
-              </form>
-
-              {/* Camera Scanner Dialog */}
-              <BarcodeScanner 
-                isOpen={isScannerOpen}
-                onClose={() => setIsScannerOpen(false)}
-                onScan={handleCameraScan}
-              />
-
-              {/* Scan Result Display - ECD themed */}
-              {lastScanned && (
-                <div 
-                  className="p-4 md:p-6 rounded-xl md:rounded-2xl flex flex-col sm:flex-row items-center gap-4 md:gap-6"
-                  style={{ 
-                    background: scanStatus === "success" ? '#4ECDC4' : 
-                               scanStatus === "late" ? '#FFD93D' : '#FF6B9D',
-                    border: '3px solid white'
-                  }}
-                >
-                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center shadow-lg shrink-0" style={{ background: 'white' }}>
-                    <span className="text-3xl md:text-4xl">
-                      {scanStatus === "success" ? "😊" : scanStatus === "late" ? "🏃" : "😢"}
-                    </span>
-                  </div>
-                  <div className="flex-1 text-center sm:text-left">
-                    <h3 className="text-xl md:text-2xl font-bold" style={{ color: scanStatus === "late" ? '#1e293b' : 'white' }}>
-                      {lastScanned.full_name}
-                    </h3>
-                    <p className="text-sm md:text-lg" style={{ color: scanStatus === "late" ? '#666' : 'rgba(255,255,255,0.9)' }}>
-                      {lastScanned.admission_number} • {lastScanned.school_classes?.name}
+          {personType === "student" && (
+            <>
+              {/* Stats Cards - ECD themed, Responsive Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-4">
+                <Card className="border-0 shadow-lg" style={{ background: '#4ECDC4', borderRadius: '12px', border: '3px solid #FF6B9D' }}>
+                  <CardContent className="p-3 md:pt-4 text-white">
+                    <div className="text-xl md:text-3xl mb-1">👋</div>
+                    <p className="text-lg md:text-2xl font-bold">{arrivals.length}</p>
+                    <p className="text-xs md:text-sm opacity-90">Arrived</p>
+                  </CardContent>
+                </Card>
+                
+                <Card className="border-0 shadow-lg" style={{ background: '#FF6B9D', borderRadius: '12px', border: '3px solid #4ECDC4' }}>
+                  <CardContent className="p-3 md:pt-4 text-white">
+                    <div className="text-xl md:text-3xl mb-1">🏠</div>
+                    <p className="text-lg md:text-2xl font-bold">{departures.length}</p>
+                    <p className="text-xs md:text-sm opacity-90">Went Home</p>
+                  </CardContent>
+                </Card>
+                
+                <Card className="border-0 shadow-lg" style={{ background: '#FFD93D', borderRadius: '12px', border: '3px solid #FF6B9D' }}>
+                  <CardContent className="p-3 md:pt-4" style={{ color: '#1e293b' }}>
+                    <div className="text-xl md:text-3xl mb-1">🏃</div>
+                    <p className="text-lg md:text-2xl font-bold">{lateArrivals.length}</p>
+                    <p className="text-xs md:text-sm opacity-90">Late</p>
+                  </CardContent>
+                </Card>
+                
+                <Card className="border-0 shadow-lg" style={{ background: '#B19CD9', borderRadius: '12px', border: '3px solid #4ECDC4' }}>
+                  <CardContent className="p-3 md:pt-4 text-white">
+                    <div className="text-xl md:text-3xl mb-1">⏳</div>
+                    <p className="text-lg md:text-2xl font-bold">{pendingRequests.length}</p>
+                    <p className="text-xs md:text-sm opacity-90">Pending</p>
+                  </CardContent>
+                </Card>
+                
+                <Card className="border-0 shadow-lg" style={{ background: 'white', borderRadius: '12px', border: '3px solid #4ECDC4' }}>
+                  <CardContent className="p-3 md:pt-4" style={{ color: '#1e293b' }}>
+                    <div className="text-xl md:text-3xl mb-1">🌅</div>
+                    <p className="text-lg md:text-2xl font-bold" style={{ color: '#4ECDC4' }}>
+                      {tenantSettings?.school_start_time?.slice(0, 5) || "08:00"}
                     </p>
-                  </div>
-                  <div className="text-center sm:text-right">
-                    {scanStatus === "late" && (
-                      <Badge style={{ background: '#FF6B9D', color: 'white', borderRadius: '10px', padding: '6px 12px', fontSize: '12px' }}>
-                        🏃 LATE
+                    <p className="text-xs md:text-sm text-muted-foreground">Start</p>
+                  </CardContent>
+                </Card>
+                
+                <Card className="border-0 shadow-lg" style={{ background: 'white', borderRadius: '12px', border: '3px solid #FF6B9D' }}>
+                  <CardContent className="p-3 md:pt-4" style={{ color: '#1e293b' }}>
+                    <div className="text-xl md:text-3xl mb-1">🌆</div>
+                    <p className="text-lg md:text-2xl font-bold" style={{ color: '#FF6B9D' }}>
+                      {tenantSettings?.school_end_time?.slice(0, 5) || "16:00"}
+                    </p>
+                    <p className="text-xs md:text-sm text-muted-foreground">End</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Scanner Section - ECD themed, Responsive */}
+              <Card 
+                className="shadow-lg transition-all duration-300"
+                style={{ 
+                  background: scanStatus === "success" ? '#E0F7FA' : 
+                             scanStatus === "late" ? '#FFF9E0' : 
+                             scanStatus === "error" ? '#FFE4EC' : 'white',
+                  borderRadius: '12px',
+                  border: `3px solid ${scanStatus === "success" ? '#4ECDC4' : 
+                                       scanStatus === "late" ? '#FFD93D' : 
+                                       scanStatus === "error" ? '#FF6B9D' : '#4ECDC4'}`
+                }}
+              >
+                <CardHeader className="pb-2 md:pb-4">
+                  <CardTitle className="flex flex-wrap items-center gap-2 text-base md:text-lg" style={{ color: '#1e293b' }}>
+                    <span className="text-xl md:text-2xl">📱</span>
+                    Scan Pupil ID Card
+                    {checkType === "departure" && isBeforeEndTime() && (
+                      <Badge className="text-2xs md:text-xs" style={{ background: '#FFD93D', color: '#1e293b', borderRadius: '10px' }}>
+                        🔔 Early pickup needs approval
                       </Badge>
                     )}
-                    <p className="text-base md:text-lg mt-2" style={{ color: scanStatus === "late" ? '#1e293b' : 'white' }}>
-                      {format(new Date(), "h:mm a")}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Tabs for Check-ins and Pending Approvals - ECD themed */}
-          <Tabs defaultValue="checkins" className="w-full">
-            <ScrollArea className="w-full">
-              <TabsList className="w-full sm:w-auto" style={{ background: 'white', borderRadius: '12px', border: '2px solid #4ECDC4' }}>
-                <TabsTrigger value="checkins" className="flex-1 sm:flex-none flex items-center gap-1 md:gap-2 text-xs md:text-sm data-[state=active]:bg-[#4ECDC4] data-[state=active]:text-white rounded-lg px-2 md:px-4">
-                  👶 <span className="hidden sm:inline">Today's</span> Check-ins
-                </TabsTrigger>
-                <TabsTrigger value="pending" className="flex-1 sm:flex-none flex items-center gap-1 md:gap-2 text-xs md:text-sm data-[state=active]:bg-[#FF6B9D] data-[state=active]:text-white rounded-lg px-2 md:px-4">
-                  ⏳ <span className="hidden sm:inline">Pending</span> Approvals
-                  {pendingRequests.length > 0 && (
-                    <Badge className="ml-1" style={{ background: '#FFD93D', color: '#1e293b', borderRadius: '10px' }}>{pendingRequests.length}</Badge>
-                  )}
-                </TabsTrigger>
-              </TabsList>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
-
-            <TabsContent value="checkins" className="mt-4">
-              <Card className="shadow-lg" style={{ background: 'white', borderRadius: '12px', border: '3px solid #4ECDC4' }}>
-                <CardContent className="pt-4 md:pt-6">
-                  {todayCheckins.length === 0 ? (
-                    <div className="text-center py-8 md:py-12">
-                      <div className="text-4xl md:text-6xl mb-4">👶</div>
-                      <p className="text-base md:text-lg" style={{ color: '#FF6B9D' }}>No check-ins yet today!</p>
-                      <p className="text-sm" style={{ color: '#4ECDC4' }}>Scan a pupil's ID card to start</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4">
-                      {todayCheckins.slice(0, 20).map((checkin) => (
-                        <div
-                          key={checkin.id}
-                          className="p-2 md:p-4 text-center"
-                          style={{
-                            borderRadius: '12px',
-                            border: `3px solid ${checkin.check_type === 'arrival' ? '#4ECDC4' : '#FF6B9D'}`,
-                            background: checkin.is_late ? '#FFF9E0' : checkin.check_type === 'arrival' ? '#E0F7FA' : '#FFE4EC'
-                          }}
-                        >
-                          <div className="text-xl md:text-3xl mb-1 md:mb-2">
-                            {checkin.check_type === 'arrival' ? '👋' : '🏠'}
-                            {checkin.is_late && '🏃'}
-                          </div>
-                          <p className="font-medium text-xs md:text-sm truncate" style={{ color: '#1e293b' }}>
-                            {checkin.students?.full_name}
-                          </p>
-                          <p className="text-2xs md:text-xs" style={{ color: '#666' }}>
-                            {format(new Date(checkin.checked_at), "h:mm a")}
-                          </p>
-                          {checkin.is_late && (
-                            <Badge className="mt-1 md:mt-2" style={{ background: '#FFD93D', color: '#1e293b', borderRadius: '8px', fontSize: '8px' }}>
-                              Late
-                            </Badge>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="pending" className="mt-4">
-              <Card className="shadow-lg" style={{ background: 'white', borderRadius: '12px', border: '3px solid #FF6B9D' }}>
-                <CardHeader className="pb-2 md:pb-4">
-                  <CardTitle className="text-base md:text-lg" style={{ color: '#FF6B9D' }}>⏳ Early Pickup Requests</CardTitle>
-                  {!canApproveRequests && (
-                    <CardDescription className="flex items-center gap-2 text-xs md:text-sm" style={{ color: '#FFD93D' }}>
-                      🔒 Only administrators can approve requests
-                    </CardDescription>
-                  )}
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  {pendingRequests.length === 0 ? (
-                    <div className="text-center py-8 md:py-12">
-                      <div className="text-4xl md:text-6xl mb-4">✨</div>
-                      <p className="text-base md:text-lg" style={{ color: '#4ECDC4' }}>No pending requests!</p>
+                <CardContent className="space-y-4 md:space-y-6">
+                  <form onSubmit={handleScan} className="flex flex-col gap-2 md:gap-4">
+                    <div className="flex flex-row gap-2 md:gap-4">
+                      <Input
+                        ref={inputRef}
+                        value={barcodeInput}
+                        onChange={(e) => setBarcodeInput(e.target.value)}
+                        placeholder="Scan card or type admission number..."
+                        className="text-lg md:text-2xl h-12 md:h-16 font-mono flex-1"
+                        style={{ borderRadius: '12px', border: '2px solid #FF6B9D' }}
+                        autoComplete="off"
+                      />
+                      <Button 
+                        type="button" 
+                        variant="outline"
+                        size="lg"
+                        className="h-12 md:h-16 px-3 md:px-4 shrink-0"
+                        style={{ borderRadius: '12px', border: '2px solid #4ECDC4' }}
+                        onClick={() => setIsScannerOpen(true)}
+                      >
+                        <Camera className="h-5 w-5 md:h-6 md:w-6" style={{ color: '#4ECDC4' }} />
+                      </Button>
                     </div>
-                  ) : (
-                    <div className="space-y-3 md:space-y-4">
-                      {pendingRequests.map((request) => (
-                        <div
-                          key={request.id}
-                          className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4"
-                          style={{ borderRadius: '12px', border: '2px solid #FFD93D', background: '#FFF9E0' }}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #FF6B9D 0%, #4ECDC4 100%)' }}>
-                              <span className="text-lg md:text-xl">👶</span>
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-medium text-sm md:text-base truncate" style={{ color: '#1e293b' }}>{request.students?.full_name}</p>
-                              <p className="text-xs md:text-sm truncate" style={{ color: '#666' }}>{request.reason}</p>
-                              <p className="text-2xs md:text-xs" style={{ color: '#999' }}>{format(new Date(request.requested_at), "h:mm a")}</p>
-                            </div>
-                          </div>
-                          {canApproveRequests && (
-                            <div className="flex gap-2 w-full sm:w-auto">
-                              <Button
-                                size="sm"
-                                className="flex-1 sm:flex-none text-white h-9"
-                                style={{ background: '#4ECDC4', borderRadius: '8px' }}
-                                onClick={() => approveRequestMutation.mutate(request.id)}
-                                disabled={approveRequestMutation.isPending}
-                              >
-                                ✓ Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                className="flex-1 sm:flex-none text-white h-9"
-                                style={{ background: '#FF6B9D', borderRadius: '8px' }}
-                                onClick={() => rejectRequestMutation.mutate(request.id)}
-                                disabled={rejectRequestMutation.isPending}
-                              >
-                                ✗ Reject
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                    <Button 
+                      type="submit" 
+                      size="lg" 
+                      className="h-12 md:h-16 px-6 md:px-8 text-white shadow-lg w-full"
+                      style={{ background: checkType === "arrival" ? '#4ECDC4' : '#FF6B9D', borderRadius: '12px' }}
+                      disabled={checkinMutation.isPending}
+                    >
+                      {checkinMutation.isPending ? (
+                        <span className="animate-pulse">Scanning...</span>
+                      ) : (
+                        <>{checkType === "arrival" ? "👋 Check In" : "🏠 Check Out"}</>
+                      )}
+                    </Button>
+                  </form>
+
+                  <BarcodeScanner 
+                    isOpen={isScannerOpen}
+                    onClose={() => setIsScannerOpen(false)}
+                    onScan={handleCameraScan}
+                  />
+
+                  {lastScanned && (
+                    <div 
+                      className="p-4 md:p-6 rounded-xl md:rounded-2xl flex flex-col sm:flex-row items-center gap-4 md:gap-6"
+                      style={{ 
+                        background: scanStatus === "success" ? '#4ECDC4' : 
+                                   scanStatus === "late" ? '#FFD93D' : '#FF6B9D',
+                        border: '3px solid white'
+                      }}
+                    >
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center shadow-lg shrink-0" style={{ background: 'white' }}>
+                        <span className="text-3xl md:text-4xl">
+                          {scanStatus === "success" ? "😊" : scanStatus === "late" ? "🏃" : "😢"}
+                        </span>
+                      </div>
+                      <div className="flex-1 text-center sm:text-left">
+                        <h3 className="text-xl md:text-2xl font-bold" style={{ color: scanStatus === "late" ? '#1e293b' : 'white' }}>
+                          {lastScanned.full_name}
+                        </h3>
+                        <p className="text-sm md:text-lg" style={{ color: scanStatus === "late" ? '#666' : 'rgba(255,255,255,0.9)' }}>
+                          {lastScanned.admission_number} • {lastScanned.school_classes?.name}
+                        </p>
+                      </div>
+                      <div className="text-center sm:text-right">
+                        {scanStatus === "late" && (
+                          <Badge style={{ background: '#FF6B9D', color: 'white', borderRadius: '10px', padding: '6px 12px', fontSize: '12px' }}>
+                            🏃 LATE
+                          </Badge>
+                        )}
+                        <p className="text-base md:text-lg mt-2" style={{ color: scanStatus === "late" ? '#1e293b' : 'white' }}>
+                          {format(new Date(), "h:mm a")}
+                        </p>
+                      </div>
                     </div>
                   )}
                 </CardContent>
               </Card>
-            </TabsContent>
-          </Tabs>
+
+              {/* Tabs for Check-ins and Pending Approvals - ECD themed */}
+              <Tabs defaultValue="checkins" className="w-full">
+                <ScrollArea className="w-full">
+                  <TabsList className="w-full sm:w-auto" style={{ background: 'white', borderRadius: '12px', border: '2px solid #4ECDC4' }}>
+                    <TabsTrigger value="checkins" className="flex-1 sm:flex-none flex items-center gap-1 md:gap-2 text-xs md:text-sm data-[state=active]:bg-[#4ECDC4] data-[state=active]:text-white rounded-lg px-2 md:px-4">
+                      👶 <span className="hidden sm:inline">Today's</span> Check-ins
+                    </TabsTrigger>
+                    <TabsTrigger value="pending" className="flex-1 sm:flex-none flex items-center gap-1 md:gap-2 text-xs md:text-sm data-[state=active]:bg-[#FF6B9D] data-[state=active]:text-white rounded-lg px-2 md:px-4">
+                      ⏳ <span className="hidden sm:inline">Pending</span> Approvals
+                      {pendingRequests.length > 0 && (
+                        <Badge className="ml-1" style={{ background: '#FFD93D', color: '#1e293b', borderRadius: '10px' }}>{pendingRequests.length}</Badge>
+                      )}
+                    </TabsTrigger>
+                  </TabsList>
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
+
+                <TabsContent value="checkins" className="mt-4">
+                  <Card className="shadow-lg" style={{ background: 'white', borderRadius: '12px', border: '3px solid #4ECDC4' }}>
+                    <CardContent className="pt-4 md:pt-6">
+                      {todayCheckins.length === 0 ? (
+                        <div className="text-center py-8 md:py-12">
+                          <div className="text-4xl md:text-6xl mb-4">👶</div>
+                          <p className="text-base md:text-lg" style={{ color: '#FF6B9D' }}>No check-ins yet today!</p>
+                          <p className="text-sm" style={{ color: '#4ECDC4' }}>Scan a pupil's ID card to start</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4">
+                          {todayCheckins.slice(0, 20).map((checkin) => (
+                            <div
+                              key={checkin.id}
+                              className="p-2 md:p-4 text-center"
+                              style={{
+                                borderRadius: '12px',
+                                border: `3px solid ${checkin.check_type === 'arrival' ? '#4ECDC4' : '#FF6B9D'}`,
+                                background: checkin.is_late ? '#FFF9E0' : checkin.check_type === 'arrival' ? '#E0F7FA' : '#FFE4EC'
+                              }}
+                            >
+                              <div className="text-xl md:text-3xl mb-1 md:mb-2">
+                                {checkin.check_type === 'arrival' ? '👋' : '🏠'}
+                                {checkin.is_late && '🏃'}
+                              </div>
+                              <p className="font-medium text-xs md:text-sm truncate" style={{ color: '#1e293b' }}>
+                                {checkin.students?.full_name}
+                              </p>
+                              <p className="text-2xs md:text-xs" style={{ color: '#666' }}>
+                                {format(new Date(checkin.checked_at), "h:mm a")}
+                              </p>
+                              {checkin.is_late && (
+                                <Badge className="mt-1 md:mt-2" style={{ background: '#FFD93D', color: '#1e293b', borderRadius: '8px', fontSize: '8px' }}>
+                                  Late
+                                </Badge>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="pending" className="mt-4">
+                  <Card className="shadow-lg" style={{ background: 'white', borderRadius: '12px', border: '3px solid #FF6B9D' }}>
+                    <CardHeader className="pb-2 md:pb-4">
+                      <CardTitle className="text-base md:text-lg" style={{ color: '#FF6B9D' }}>⏳ Early Pickup Requests</CardTitle>
+                      {!canApproveRequests && (
+                        <CardDescription className="flex items-center gap-2 text-xs md:text-sm" style={{ color: '#FFD93D' }}>
+                          🔒 Only administrators can approve requests
+                        </CardDescription>
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      {pendingRequests.length === 0 ? (
+                        <div className="text-center py-8 md:py-12">
+                          <div className="text-4xl md:text-6xl mb-4">✨</div>
+                          <p className="text-base md:text-lg" style={{ color: '#4ECDC4' }}>No pending requests!</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3 md:space-y-4">
+                          {pendingRequests.map((request) => (
+                            <div
+                              key={request.id}
+                              className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4"
+                              style={{ borderRadius: '12px', border: '2px solid #FFD93D', background: '#FFF9E0' }}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #FF6B9D 0%, #4ECDC4 100%)' }}>
+                                  <span className="text-lg md:text-xl">👶</span>
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-medium text-sm md:text-base truncate" style={{ color: '#1e293b' }}>{request.students?.full_name}</p>
+                                  <p className="text-xs md:text-sm truncate" style={{ color: '#666' }}>{request.reason}</p>
+                                  <p className="text-2xs md:text-xs" style={{ color: '#999' }}>{format(new Date(request.requested_at), "h:mm a")}</p>
+                                </div>
+                              </div>
+                              {canApproveRequests && (
+                                <div className="flex gap-2 w-full sm:w-auto">
+                                  <Button
+                                    size="sm"
+                                    className="flex-1 sm:flex-none text-white h-9"
+                                    style={{ background: '#4ECDC4', borderRadius: '8px' }}
+                                    onClick={() => approveRequestMutation.mutate(request.id)}
+                                    disabled={approveRequestMutation.isPending}
+                                  >
+                                    ✓ Approve
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    className="flex-1 sm:flex-none text-white h-9"
+                                    style={{ background: '#FF6B9D', borderRadius: '8px' }}
+                                    onClick={() => rejectRequestMutation.mutate(request.id)}
+                                    disabled={rejectRequestMutation.isPending}
+                                  >
+                                    ✗ Reject
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+
+              {/* Early Departure Request Dialog - ECD themed */}
+              <Dialog open={showEarlyDepartureDialog} onOpenChange={setShowEarlyDepartureDialog}>
+                <DialogContent className="max-w-[95vw] sm:max-w-md" style={{ borderRadius: '16px', border: '3px solid #4ECDC4' }}>
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2 text-base md:text-lg" style={{ color: '#FF6B9D' }}>
+                      🔔 Early Pickup Request
+                    </DialogTitle>
+                    <DialogDescription className="text-xs md:text-sm">
+                      School ends at {tenantSettings?.school_end_time?.slice(0, 5) || "16:00"}. 
+                      Early pickup needs approval.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  {pendingStudent && (
+                    <div className="space-y-4">
+                      <div className="p-3 md:p-4 flex items-center gap-3" style={{ borderRadius: '12px', background: 'linear-gradient(135deg, #FFE4EC 0%, #E0F7FA 100%)', border: '2px solid #4ECDC4' }}>
+                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #FF6B9D 0%, #4ECDC4 100%)' }}>
+                          <span className="text-lg md:text-xl">👶</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm md:text-base truncate" style={{ color: '#1e293b' }}>{pendingStudent.full_name}</p>
+                          <p className="text-xs md:text-sm truncate" style={{ color: '#666' }}>
+                            {pendingStudent.admission_number} • {pendingStudent.school_classes?.name}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="reason" className="text-sm" style={{ color: '#FF6B9D' }}>Reason for Early Pickup *</Label>
+                        <Textarea
+                          id="reason"
+                          value={earlyDepartureReason}
+                          onChange={(e) => setEarlyDepartureReason(e.target.value)}
+                          placeholder="e.g., Doctor's appointment, Family event..."
+                          rows={3}
+                          className="text-sm"
+                          style={{ borderRadius: '10px', border: '2px solid #4ECDC4' }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <DialogFooter className="flex-col sm:flex-row gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="w-full sm:w-auto"
+                      onClick={() => {
+                        setShowEarlyDepartureDialog(false);
+                        setEarlyDepartureReason("");
+                        setPendingStudent(null);
+                      }}
+                      style={{ borderRadius: '10px' }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      className="w-full sm:w-auto text-white"
+                      onClick={handleSubmitEarlyDeparture}
+                      disabled={createEarlyDepartureMutation.isPending || !earlyDepartureReason.trim()}
+                      style={{ background: '#4ECDC4', borderRadius: '10px' }}
+                    >
+                      {createEarlyDepartureMutation.isPending ? "Submitting..." : "Submit Request"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </>
+          )}
+
+          {personType === "staff" && (
+            <GateStaffCheckin tenantId={tenantId || ""} />
+          )}
+
+          {personType === "visitor" && (
+            <GateVisitorCheckin tenantId={tenantId || ""} />
+          )}
         </div>
-
-        {/* Early Departure Request Dialog - ECD themed */}
-        <Dialog open={showEarlyDepartureDialog} onOpenChange={setShowEarlyDepartureDialog}>
-          <DialogContent className="max-w-[95vw] sm:max-w-md" style={{ borderRadius: '16px', border: '3px solid #4ECDC4' }}>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-base md:text-lg" style={{ color: '#FF6B9D' }}>
-                🔔 Early Pickup Request
-              </DialogTitle>
-              <DialogDescription className="text-xs md:text-sm">
-                School ends at {tenantSettings?.school_end_time?.slice(0, 5) || "16:00"}. 
-                Early pickup needs approval.
-              </DialogDescription>
-            </DialogHeader>
-            
-            {pendingStudent && (
-              <div className="space-y-4">
-                <div className="p-3 md:p-4 flex items-center gap-3" style={{ borderRadius: '12px', background: 'linear-gradient(135deg, #FFE4EC 0%, #E0F7FA 100%)', border: '2px solid #4ECDC4' }}>
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #FF6B9D 0%, #4ECDC4 100%)' }}>
-                    <span className="text-lg md:text-xl">👶</span>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-medium text-sm md:text-base truncate" style={{ color: '#1e293b' }}>{pendingStudent.full_name}</p>
-                    <p className="text-xs md:text-sm truncate" style={{ color: '#666' }}>
-                      {pendingStudent.admission_number} • {pendingStudent.school_classes?.name}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="reason" className="text-sm" style={{ color: '#FF6B9D' }}>Reason for Early Pickup *</Label>
-                  <Textarea
-                    id="reason"
-                    value={earlyDepartureReason}
-                    onChange={(e) => setEarlyDepartureReason(e.target.value)}
-                    placeholder="e.g., Doctor's appointment, Family event..."
-                    rows={3}
-                    className="text-sm"
-                    style={{ borderRadius: '10px', border: '2px solid #4ECDC4' }}
-                  />
-                </div>
-              </div>
-            )}
-
-            <DialogFooter className="flex-col sm:flex-row gap-2">
-              <Button 
-                variant="outline" 
-                className="w-full sm:w-auto"
-                onClick={() => {
-                  setShowEarlyDepartureDialog(false);
-                  setEarlyDepartureReason("");
-                  setPendingStudent(null);
-                }}
-                style={{ borderRadius: '10px' }}
-              >
-                Cancel
-              </Button>
-              <Button 
-                className="w-full sm:w-auto text-white"
-                onClick={handleSubmitEarlyDeparture}
-                disabled={createEarlyDepartureMutation.isPending || !earlyDepartureReason.trim()}
-                style={{ background: '#4ECDC4', borderRadius: '10px' }}
-              >
-                {createEarlyDepartureMutation.isPending ? "Submitting..." : "Submit Request"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     );
   }
@@ -1035,319 +1090,365 @@ export default function GateCheckin() {
               {format(new Date(), "EEEE, MMMM d, yyyy")}
             </p>
           </div>
-          <Select value={checkType} onValueChange={(v) => setCheckType(v as "arrival" | "departure")}>
-            <SelectTrigger className="w-full sm:w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="arrival">
-                <div className="flex items-center gap-2">
-                  <ArrowDownCircle className="h-4 w-4 text-green-500" />
-                  Arrival
-                </div>
-              </SelectItem>
-              <SelectItem value="departure">
-                <div className="flex items-center gap-2">
-                  <ArrowUpCircle className="h-4 w-4 text-orange-500" />
-                  Departure
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          {personType === "student" && (
+            <Select value={checkType} onValueChange={(v) => setCheckType(v as "arrival" | "departure")}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="arrival">
+                  <div className="flex items-center gap-2">
+                    <ArrowDownCircle className="h-4 w-4 text-green-500" />
+                    Arrival
+                  </div>
+                </SelectItem>
+                <SelectItem value="departure">
+                  <div className="flex items-center gap-2">
+                    <ArrowUpCircle className="h-4 w-4 text-orange-500" />
+                    Departure
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
-        {/* Stats Cards - Responsive Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-4">
-          <StatCard
-            icon={<div className="p-2 md:p-3 bg-success/20 rounded-full"><ArrowDownCircle className="h-4 w-4 md:h-6 md:w-6 text-green-600" /></div>}
-            label="Arrivals"
-            value={arrivals.length}
-            variant="success"
-          />
-          <StatCard
-            icon={<div className="p-2 md:p-3 bg-warning/20 rounded-full"><ArrowUpCircle className="h-4 w-4 md:h-6 md:w-6 text-orange-600" /></div>}
-            label="Departures"
-            value={departures.length}
-            variant="warning"
-          />
-          <StatCard
-            icon={<div className="p-2 md:p-3 bg-destructive/20 rounded-full"><AlertTriangle className="h-4 w-4 md:h-6 md:w-6 text-red-600" /></div>}
-            label="Late"
-            value={lateArrivals.length}
-            variant="danger"
-          />
-          <StatCard
-            icon={<div className="p-2 md:p-3 bg-warning/20 rounded-full"><ShieldAlert className="h-4 w-4 md:h-6 md:w-6 text-yellow-600" /></div>}
-            label="Pending"
-            value={pendingRequests.length}
-            variant="warning"
-          />
-          <StatCard
-            icon={<div className="p-2 md:p-3 bg-success/20 rounded-full"><Clock className="h-4 w-4 md:h-6 md:w-6 text-green-600" /></div>}
-            label="Start Time"
-            value={tenantSettings?.school_start_time?.slice(0, 5) || "08:00"}
-            variant="success"
-          />
-          <StatCard
-            icon={<div className="p-2 md:p-3 bg-primary/20 rounded-full"><Clock className="h-4 w-4 md:h-6 md:w-6 text-primary" /></div>}
-            label="End Time"
-            value={tenantSettings?.school_end_time?.slice(0, 5) || "16:00"}
-            variant="info"
-          />
+        {/* Person Type Selector */}
+        <div className="flex gap-1 p-1 bg-muted rounded-lg w-fit">
+          <button
+            type="button"
+            onClick={() => setPersonType("student")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              personType === "student" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Users className="h-4 w-4" />
+            Students
+          </button>
+          <button
+            type="button"
+            onClick={() => setPersonType("staff")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              personType === "staff" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <UserCheck className="h-4 w-4" />
+            Staff
+          </button>
+          <button
+            type="button"
+            onClick={() => setPersonType("visitor")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              personType === "visitor" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <ClipboardList className="h-4 w-4" />
+            Visitors
+          </button>
         </div>
 
-        {/* Scanner Section - Responsive */}
-        <Card className={`transition-all duration-300 ${
-          scanStatus === "success" ? "ring-2 md:ring-4 ring-green-500 bg-green-50 dark:bg-green-950" :
-          scanStatus === "late" ? "ring-2 md:ring-4 ring-yellow-500 bg-yellow-50 dark:bg-yellow-950" :
-          scanStatus === "error" ? "ring-2 md:ring-4 ring-red-500 bg-red-50 dark:bg-red-950" :
-          ""
-        }`}>
-          <CardHeader className="pb-2 md:pb-4">
-            <CardTitle className="flex flex-wrap items-center gap-2 text-base md:text-lg">
-              <ScanLine className="h-4 w-4 md:h-5 md:w-5" />
-              Scan Student ID Card
-              {checkType === "departure" && isBeforeEndTime() && (
-                <Badge variant="outline" className="text-2xs md:text-xs text-yellow-600 border-yellow-600">
-                  Early departure requires approval
-                </Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 md:space-y-6">
-            <form onSubmit={handleScan} className="flex flex-col gap-2 md:gap-4">
-              <div className="flex flex-row gap-2 md:gap-4">
-                <Input
-                  ref={inputRef}
-                  value={barcodeInput}
-                  onChange={(e) => setBarcodeInput(e.target.value)}
-                  placeholder="Scan barcode or enter admission number..."
-                  className="text-base md:text-2xl h-12 md:h-16 font-mono flex-1"
-                  autoComplete="off"
-                />
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  size="lg"
-                  className="h-12 md:h-16 px-3 md:px-4 shrink-0"
-                  onClick={() => setIsScannerOpen(true)}
-                >
-                  <Camera className="h-5 w-5 md:h-6 md:w-6" />
-                </Button>
-              </div>
-              <Button type="submit" size="lg" className="h-12 md:h-16 px-6 md:px-8 w-full" disabled={checkinMutation.isPending}>
-                {checkinMutation.isPending ? (
-                  <span className="animate-pulse">Scanning...</span>
-                ) : (
-                  <>
-                    <UserCheck className="h-4 w-4 md:h-5 md:w-5 mr-2" />
-                    <span className="hidden sm:inline">Check</span> {checkType === "arrival" ? "In" : "Out"}
-                  </>
-                )}
-              </Button>
-            </form>
+        {personType === "student" && (
+          <>
+            {/* Stats Cards - Responsive Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-4">
+              <StatCard
+                icon={<div className="p-2 md:p-3 bg-success/20 rounded-full"><ArrowDownCircle className="h-4 w-4 md:h-6 md:w-6 text-green-600" /></div>}
+                label="Arrivals"
+                value={arrivals.length}
+                variant="success"
+              />
+              <StatCard
+                icon={<div className="p-2 md:p-3 bg-warning/20 rounded-full"><ArrowUpCircle className="h-4 w-4 md:h-6 md:w-6 text-orange-600" /></div>}
+                label="Departures"
+                value={departures.length}
+                variant="warning"
+              />
+              <StatCard
+                icon={<div className="p-2 md:p-3 bg-destructive/20 rounded-full"><AlertTriangle className="h-4 w-4 md:h-6 md:w-6 text-red-600" /></div>}
+                label="Late"
+                value={lateArrivals.length}
+                variant="danger"
+              />
+              <StatCard
+                icon={<div className="p-2 md:p-3 bg-warning/20 rounded-full"><ShieldAlert className="h-4 w-4 md:h-6 md:w-6 text-yellow-600" /></div>}
+                label="Pending"
+                value={pendingRequests.length}
+                variant="warning"
+              />
+              <StatCard
+                icon={<div className="p-2 md:p-3 bg-success/20 rounded-full"><Clock className="h-4 w-4 md:h-6 md:w-6 text-green-600" /></div>}
+                label="Start Time"
+                value={tenantSettings?.school_start_time?.slice(0, 5) || "08:00"}
+                variant="success"
+              />
+              <StatCard
+                icon={<div className="p-2 md:p-3 bg-primary/20 rounded-full"><Clock className="h-4 w-4 md:h-6 md:w-6 text-primary" /></div>}
+                label="End Time"
+                value={tenantSettings?.school_end_time?.slice(0, 5) || "16:00"}
+                variant="info"
+              />
+            </div>
 
-            {/* Camera Scanner Dialog */}
-            <BarcodeScanner 
-              isOpen={isScannerOpen}
-              onClose={() => setIsScannerOpen(false)}
-              onScan={handleCameraScan}
-            />
-
-            {/* Scan Result Display - Responsive */}
-            {lastScanned && (
-              <div className={`p-4 md:p-6 rounded-lg flex flex-col sm:flex-row items-center gap-4 md:gap-6 ${
-                scanStatus === "success" ? "bg-green-100 dark:bg-green-900/50" :
-                scanStatus === "late" ? "bg-yellow-100 dark:bg-yellow-900/50" :
-                "bg-red-100 dark:bg-red-900/50"
-              }`}>
-                <div className={`p-3 md:p-4 rounded-full shrink-0 ${
-                  scanStatus === "success" ? "bg-green-500" :
-                  scanStatus === "late" ? "bg-yellow-500" :
-                  "bg-red-500"
-                }`}>
-                  {scanStatus === "success" ? (
-                    <CheckCircle2 className="h-8 w-8 md:h-12 md:w-12 text-white" />
-                  ) : scanStatus === "late" ? (
-                    <Clock className="h-8 w-8 md:h-12 md:w-12 text-white" />
-                  ) : (
-                    <XCircle className="h-8 w-8 md:h-12 md:w-12 text-white" />
-                  )}
-                </div>
-                <div className="flex-1 text-center sm:text-left min-w-0">
-                  <h3 className="text-lg md:text-2xl font-bold truncate">{lastScanned.full_name}</h3>
-                  <p className="text-sm md:text-lg text-muted-foreground truncate">
-                    {lastScanned.admission_number} • {lastScanned.school_classes?.name}
-                  </p>
-                </div>
-                <div className="text-center sm:text-right shrink-0">
-                  {scanStatus === "late" && (
-                    <Badge variant="destructive" className="text-sm md:text-lg px-2 md:px-4 py-1 md:py-2">
-                      LATE ARRIVAL
+            {/* Scanner Section - Responsive */}
+            <Card className={`transition-all duration-300 ${
+              scanStatus === "success" ? "ring-2 md:ring-4 ring-green-500 bg-green-50 dark:bg-green-950" :
+              scanStatus === "late" ? "ring-2 md:ring-4 ring-yellow-500 bg-yellow-50 dark:bg-yellow-950" :
+              scanStatus === "error" ? "ring-2 md:ring-4 ring-red-500 bg-red-50 dark:bg-red-950" :
+              ""
+            }`}>
+              <CardHeader className="pb-2 md:pb-4">
+                <CardTitle className="flex flex-wrap items-center gap-2 text-base md:text-lg">
+                  <ScanLine className="h-4 w-4 md:h-5 md:w-5" />
+                  Scan Student ID Card
+                  {checkType === "departure" && isBeforeEndTime() && (
+                    <Badge variant="outline" className="text-2xs md:text-xs text-yellow-600 border-yellow-600">
+                      Early departure requires approval
                     </Badge>
                   )}
-                  <p className="text-sm md:text-lg mt-2">{format(new Date(), "h:mm a")}</p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Tabs for Check-ins and Pending Approvals - Responsive */}
-        <Tabs defaultValue="checkins" className="w-full">
-          <ScrollArea className="w-full">
-            <TabsList className="w-full sm:w-auto">
-              <TabsTrigger value="checkins" className="flex-1 sm:flex-none flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-4">
-                <Users className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden xs:inline">Today's</span> Check-ins
-              </TabsTrigger>
-              <TabsTrigger value="overrides" className="flex-1 sm:flex-none flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-4">
-                <ShieldAlert className="h-3 w-3 md:h-4 md:w-4 text-destructive" />
-                <span className="hidden xs:inline">Red List</span> Overrides
-              </TabsTrigger>
-              <TabsTrigger value="pending" className="flex-1 sm:flex-none flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-4">
-                <Clock className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden xs:inline">Early</span> Departure
-                {pendingRequests.length > 0 && (
-                  <Badge variant="destructive" className="ml-1 text-2xs">{pendingRequests.length}</Badge>
-                )}
-              </TabsTrigger>
-            </TabsList>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
-
-          <TabsContent value="checkins" className="mt-4">
-            <Card>
-              <CardContent className="pt-4 md:pt-6">
-                {todayCheckins.length === 0 ? (
-                  <div className="text-center py-8 md:py-12">
-                    <Users className="h-10 w-10 md:h-12 md:w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-sm md:text-base text-muted-foreground">No check-ins yet today</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2 md:space-y-3">
-                    {todayCheckins.slice(0, 20).map((checkin) => (
-                      <CheckinCard key={checkin.id} checkin={checkin} />
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="overrides" className="mt-4">
-            <OverrideRequestsPanel showPendingOnly={true} maxHeight="400px" />
-          </TabsContent>
-
-          <TabsContent value="pending" className="mt-4">
-            <Card>
-              <CardHeader className="pb-2 md:pb-4">
-                <CardTitle className="text-base md:text-lg">Early Departure Requests</CardTitle>
-                {!canApproveRequests && (
-                  <CardDescription className="flex items-center gap-2 text-xs md:text-sm text-yellow-600">
-                    <Lock className="h-3 w-3 md:h-4 md:w-4" />
-                    Only administrators can approve requests
-                  </CardDescription>
-                )}
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                {pendingRequests.length === 0 ? (
-                  <div className="text-center py-8 md:py-12">
-                    <ShieldAlert className="h-10 w-10 md:h-12 md:w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-sm md:text-base text-muted-foreground">No pending early departure requests</p>
+              <CardContent className="space-y-4 md:space-y-6">
+                <form onSubmit={handleScan} className="flex flex-col gap-2 md:gap-4">
+                  <div className="flex flex-row gap-2 md:gap-4">
+                    <Input
+                      ref={inputRef}
+                      value={barcodeInput}
+                      onChange={(e) => setBarcodeInput(e.target.value)}
+                      placeholder="Scan barcode or enter admission number..."
+                      className="text-base md:text-2xl h-12 md:h-16 font-mono flex-1"
+                      autoComplete="off"
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      size="lg"
+                      className="h-12 md:h-16 px-3 md:px-4 shrink-0"
+                      onClick={() => setIsScannerOpen(true)}
+                    >
+                      <Camera className="h-5 w-5 md:h-6 md:w-6" />
+                    </Button>
                   </div>
-                ) : (
-                  <div className="space-y-2 md:space-y-3">
-                    {pendingRequests.map((request) => (
-                      <RequestCard
-                        key={request.id}
-                        request={request}
-                        canApprove={!!canApproveRequests}
-                        onApprove={() => approveRequestMutation.mutate(request.id)}
-                        onReject={() => rejectRequestMutation.mutate(request.id)}
-                        isApproving={approveRequestMutation.isPending}
-                        isRejecting={rejectRequestMutation.isPending}
-                      />
-                    ))}
+                  <Button type="submit" size="lg" className="h-12 md:h-16 px-6 md:px-8 w-full" disabled={checkinMutation.isPending}>
+                    {checkinMutation.isPending ? (
+                      <span className="animate-pulse">Scanning...</span>
+                    ) : (
+                      <>
+                        <UserCheck className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+                        <span className="hidden sm:inline">Check</span> {checkType === "arrival" ? "In" : "Out"}
+                      </>
+                    )}
+                  </Button>
+                </form>
+
+                <BarcodeScanner 
+                  isOpen={isScannerOpen}
+                  onClose={() => setIsScannerOpen(false)}
+                  onScan={handleCameraScan}
+                />
+
+                {lastScanned && (
+                  <div className={`p-4 md:p-6 rounded-lg flex flex-col sm:flex-row items-center gap-4 md:gap-6 ${
+                    scanStatus === "success" ? "bg-green-100 dark:bg-green-900/50" :
+                    scanStatus === "late" ? "bg-yellow-100 dark:bg-yellow-900/50" :
+                    "bg-red-100 dark:bg-red-900/50"
+                  }`}>
+                    <div className={`p-3 md:p-4 rounded-full shrink-0 ${
+                      scanStatus === "success" ? "bg-green-500" :
+                      scanStatus === "late" ? "bg-yellow-500" :
+                      "bg-red-500"
+                    }`}>
+                      {scanStatus === "success" ? (
+                        <CheckCircle2 className="h-8 w-8 md:h-12 md:w-12 text-white" />
+                      ) : scanStatus === "late" ? (
+                        <Clock className="h-8 w-8 md:h-12 md:w-12 text-white" />
+                      ) : (
+                        <XCircle className="h-8 w-8 md:h-12 md:w-12 text-white" />
+                      )}
+                    </div>
+                    <div className="flex-1 text-center sm:text-left min-w-0">
+                      <h3 className="text-lg md:text-2xl font-bold truncate">{lastScanned.full_name}</h3>
+                      <p className="text-sm md:text-lg text-muted-foreground truncate">
+                        {lastScanned.admission_number} • {lastScanned.school_classes?.name}
+                      </p>
+                    </div>
+                    <div className="text-center sm:text-right shrink-0">
+                      {scanStatus === "late" && (
+                        <Badge variant="destructive" className="text-sm md:text-lg px-2 md:px-4 py-1 md:py-2">
+                          LATE ARRIVAL
+                        </Badge>
+                      )}
+                      <p className="text-sm md:text-lg mt-2">{format(new Date(), "h:mm a")}</p>
+                    </div>
                   </div>
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+
+            {/* Tabs for Check-ins and Pending Approvals - Responsive */}
+            <Tabs defaultValue="checkins" className="w-full">
+              <ScrollArea className="w-full">
+                <TabsList className="w-full sm:w-auto">
+                  <TabsTrigger value="checkins" className="flex-1 sm:flex-none flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-4">
+                    <Users className="h-3 w-3 md:h-4 md:w-4" />
+                    <span className="hidden xs:inline">Today's</span> Check-ins
+                  </TabsTrigger>
+                  <TabsTrigger value="overrides" className="flex-1 sm:flex-none flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-4">
+                    <ShieldAlert className="h-3 w-3 md:h-4 md:w-4 text-destructive" />
+                    <span className="hidden xs:inline">Red List</span> Overrides
+                  </TabsTrigger>
+                  <TabsTrigger value="pending" className="flex-1 sm:flex-none flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-4">
+                    <Clock className="h-3 w-3 md:h-4 md:w-4" />
+                    <span className="hidden xs:inline">Early</span> Departure
+                    {pendingRequests.length > 0 && (
+                      <Badge variant="destructive" className="ml-1 text-2xs">{pendingRequests.length}</Badge>
+                    )}
+                  </TabsTrigger>
+                </TabsList>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
+
+              <TabsContent value="checkins" className="mt-4">
+                <Card>
+                  <CardContent className="pt-4 md:pt-6">
+                    {todayCheckins.length === 0 ? (
+                      <div className="text-center py-8 md:py-12">
+                        <Users className="h-10 w-10 md:h-12 md:w-12 mx-auto text-muted-foreground mb-4" />
+                        <p className="text-sm md:text-base text-muted-foreground">No check-ins yet today</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 md:space-y-3">
+                        {todayCheckins.slice(0, 20).map((checkin) => (
+                          <CheckinCard key={checkin.id} checkin={checkin} />
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="overrides" className="mt-4">
+                <OverrideRequestsPanel showPendingOnly={true} maxHeight="400px" />
+              </TabsContent>
+
+              <TabsContent value="pending" className="mt-4">
+                <Card>
+                  <CardHeader className="pb-2 md:pb-4">
+                    <CardTitle className="text-base md:text-lg">Early Departure Requests</CardTitle>
+                    {!canApproveRequests && (
+                      <CardDescription className="flex items-center gap-2 text-xs md:text-sm text-yellow-600">
+                        <Lock className="h-3 w-3 md:h-4 md:w-4" />
+                        Only administrators can approve requests
+                      </CardDescription>
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    {pendingRequests.length === 0 ? (
+                      <div className="text-center py-8 md:py-12">
+                        <ShieldAlert className="h-10 w-10 md:h-12 md:w-12 mx-auto text-muted-foreground mb-4" />
+                        <p className="text-sm md:text-base text-muted-foreground">No pending early departure requests</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 md:space-y-3">
+                        {pendingRequests.map((request) => (
+                          <RequestCard
+                            key={request.id}
+                            request={request}
+                            canApprove={!!canApproveRequests}
+                            onApprove={() => approveRequestMutation.mutate(request.id)}
+                            onReject={() => rejectRequestMutation.mutate(request.id)}
+                            isApproving={approveRequestMutation.isPending}
+                            isRejecting={rejectRequestMutation.isPending}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+
+            {/* Early Departure Request Dialog - Responsive */}
+            <Dialog open={showEarlyDepartureDialog} onOpenChange={setShowEarlyDepartureDialog}>
+              <DialogContent className="max-w-[95vw] sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-base md:text-lg">
+                    <ShieldAlert className="h-4 w-4 md:h-5 md:w-5 text-yellow-500" />
+                    Early Departure Request
+                  </DialogTitle>
+                  <DialogDescription className="text-xs md:text-sm">
+                    School ends at {tenantSettings?.school_end_time?.slice(0, 5) || "16:00"}. 
+                    Early departure requires administrator approval.
+                  </DialogDescription>
+                </DialogHeader>
+                
+                {pendingStudent && (
+                  <div className="space-y-4">
+                    <div className="p-3 md:p-4 bg-muted rounded-lg">
+                      <p className="font-medium text-sm md:text-base">{pendingStudent.full_name}</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">
+                        {pendingStudent.admission_number} • {pendingStudent.school_classes?.name}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="reason" className="text-sm">Reason for Early Departure *</Label>
+                      <Textarea
+                        id="reason"
+                        value={earlyDepartureReason}
+                        onChange={(e) => setEarlyDepartureReason(e.target.value)}
+                        placeholder="e.g., Medical appointment, Family emergency, Feeling unwell..."
+                        rows={3}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <DialogFooter className="flex-col sm:flex-row gap-2">
+                  <Button variant="outline" className="w-full sm:w-auto" onClick={() => {
+                    setShowEarlyDepartureDialog(false);
+                    setEarlyDepartureReason("");
+                    setPendingStudent(null);
+                  }}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    className="w-full sm:w-auto"
+                    onClick={handleSubmitEarlyDeparture}
+                    disabled={createEarlyDepartureMutation.isPending || !earlyDepartureReason.trim()}
+                  >
+                    {createEarlyDepartureMutation.isPending ? "Submitting..." : "Submit for Approval"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Gate Block Dialog (Bursar Red List) */}
+            <GateBlockDialog
+              isOpen={showBlockDialog}
+              onClose={() => {
+                setShowBlockDialog(false);
+                setBlockedStudent(null);
+                setBlockingReasons([]);
+              }}
+              student={blockedStudent}
+              blockingReasons={blockingReasons}
+              tenantId={tenantId || ""}
+              onRequestSubmitted={() => {
+                queryClient.invalidateQueries({ queryKey: ["override-requests"] });
+              }}
+            />
+          </>
+        )}
+
+        {personType === "staff" && (
+          <GateStaffCheckin tenantId={tenantId || ""} />
+        )}
+
+        {personType === "visitor" && (
+          <GateVisitorCheckin tenantId={tenantId || ""} />
+        )}
       </div>
-
-      {/* Early Departure Request Dialog - Responsive */}
-      <Dialog open={showEarlyDepartureDialog} onOpenChange={setShowEarlyDepartureDialog}>
-        <DialogContent className="max-w-[95vw] sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base md:text-lg">
-              <ShieldAlert className="h-4 w-4 md:h-5 md:w-5 text-yellow-500" />
-              Early Departure Request
-            </DialogTitle>
-            <DialogDescription className="text-xs md:text-sm">
-              School ends at {tenantSettings?.school_end_time?.slice(0, 5) || "16:00"}. 
-              Early departure requires administrator approval.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {pendingStudent && (
-            <div className="space-y-4">
-              <div className="p-3 md:p-4 bg-muted rounded-lg">
-                <p className="font-medium text-sm md:text-base">{pendingStudent.full_name}</p>
-                <p className="text-xs md:text-sm text-muted-foreground">
-                  {pendingStudent.admission_number} • {pendingStudent.school_classes?.name}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="reason" className="text-sm">Reason for Early Departure *</Label>
-                <Textarea
-                  id="reason"
-                  value={earlyDepartureReason}
-                  onChange={(e) => setEarlyDepartureReason(e.target.value)}
-                  placeholder="e.g., Medical appointment, Family emergency, Feeling unwell..."
-                  rows={3}
-                  className="text-sm"
-                />
-              </div>
-            </div>
-          )}
-
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => {
-              setShowEarlyDepartureDialog(false);
-              setEarlyDepartureReason("");
-              setPendingStudent(null);
-            }}>
-              Cancel
-            </Button>
-            <Button 
-              className="w-full sm:w-auto"
-              onClick={handleSubmitEarlyDeparture}
-              disabled={createEarlyDepartureMutation.isPending || !earlyDepartureReason.trim()}
-            >
-              {createEarlyDepartureMutation.isPending ? "Submitting..." : "Submit for Approval"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Gate Block Dialog (Bursar Red List) */}
-      <GateBlockDialog
-        isOpen={showBlockDialog}
-        onClose={() => {
-          setShowBlockDialog(false);
-          setBlockedStudent(null);
-          setBlockingReasons([]);
-        }}
-        student={blockedStudent}
-        blockingReasons={blockingReasons}
-        tenantId={tenantId || ""}
-        onRequestSubmitted={() => {
-          queryClient.invalidateQueries({ queryKey: ["override-requests"] });
-        }}
-      />
     </div>
   );
 }

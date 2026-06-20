@@ -2709,11 +2709,14 @@ export type Database = {
           checked_at: string
           checked_by: string | null
           created_at: string
+          employee_id: string | null
           id: string
           is_late: boolean | null
           notes: string | null
           override_request_id: string | null
-          student_id: string
+          person_name: string | null
+          person_type: string
+          student_id: string | null
           tenant_id: string
           was_blocked: boolean | null
         }
@@ -2722,11 +2725,14 @@ export type Database = {
           checked_at?: string
           checked_by?: string | null
           created_at?: string
+          employee_id?: string | null
           id?: string
           is_late?: boolean | null
           notes?: string | null
           override_request_id?: string | null
-          student_id: string
+          person_name?: string | null
+          person_type?: string
+          student_id?: string | null
           tenant_id: string
           was_blocked?: boolean | null
         }
@@ -2735,15 +2741,25 @@ export type Database = {
           checked_at?: string
           checked_by?: string | null
           created_at?: string
+          employee_id?: string | null
           id?: string
           is_late?: boolean | null
           notes?: string | null
           override_request_id?: string | null
-          student_id?: string
+          person_name?: string | null
+          person_type?: string
+          student_id?: string | null
           tenant_id?: string
           was_blocked?: boolean | null
         }
         Relationships: [
+          {
+            foreignKeyName: "gate_checkins_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "gate_checkins_override_request_id_fkey"
             columns: ["override_request_id"]
