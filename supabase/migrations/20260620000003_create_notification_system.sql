@@ -25,11 +25,11 @@ CREATE POLICY "Parents can upsert their own preferences" ON public.parent_notifi
 CREATE POLICY "Parents can update their own preferences" ON public.parent_notification_preferences FOR UPDATE
   USING (parent_id IN (SELECT id FROM public.parents WHERE user_id = auth.uid()));
 
+-- Add tenant_id first, then create policies that reference it
+ALTER TABLE public.parent_notification_preferences ADD COLUMN tenant_id UUID REFERENCES public.tenants(id) ON DELETE CASCADE;
+
 CREATE POLICY "Staff can view parent preferences" ON public.parent_notification_preferences FOR SELECT
   USING (tenant_id IN (SELECT tenant_id FROM public.profiles WHERE id = auth.uid()));
-
--- Add tenant_id to parent_notification_preferences after creation
-ALTER TABLE public.parent_notification_preferences ADD COLUMN tenant_id UUID REFERENCES public.tenants(id) ON DELETE CASCADE;
 
 -- Tenant-level notification service configuration
 CREATE TABLE public.notification_config (

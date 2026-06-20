@@ -45,7 +45,6 @@ const categories = [
   "food",
   "transport",
   "safety",
-  "staff",
   "other",
 ];
 
@@ -277,66 +276,10 @@ export default function Suggestions() {
                         </Badge>
                       </td>
                       <td className="p-3 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button size="sm" variant="ghost">
-                              <Search className="h-4 w-4 mr-1" />
-                              View
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-lg">
-                            <DialogHeader>
-                              <DialogTitle>Suggestion from {suggestion.submitter_name}</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                  <p className="text-muted-foreground">Name</p>
-                                  <p className="font-medium">{suggestion.submitter_name}</p>
-                                </div>
-                                <div>
-                                  <p className="text-muted-foreground">Date</p>
-                                  <p className="font-medium">
-                                    {format(new Date(suggestion.created_at), "MMMM d, yyyy h:mm a")}
-                                  </p>
-                                </div>
-                                {suggestion.submitter_email && (
-                                  <div>
-                                    <p className="text-muted-foreground">Email</p>
-                                    <p className="font-medium">{suggestion.submitter_email}</p>
-                                  </div>
-                                )}
-                                {suggestion.submitter_phone && (
-                                  <div>
-                                    <p className="text-muted-foreground">Phone</p>
-                                    <p className="font-medium">{suggestion.submitter_phone}</p>
-                                  </div>
-                                )}
-                                <div>
-                                  <p className="text-muted-foreground">Category</p>
-                                  <Badge variant="outline" className="capitalize mt-1">
-                                    {suggestion.category}
-                                  </Badge>
-                                </div>
-                                <div>
-                                  <p className="text-muted-foreground">Status</p>
-                                  <Badge className={cfg.className + " mt-1"}>
-                                    <span className="flex items-center gap-1">
-                                      {cfg.icon}
-                                      {cfg.label}
-                                    </span>
-                                  </Badge>
-                                </div>
-                              </div>
-                              <div>
-                                <p className="text-sm text-muted-foreground mb-1">Message</p>
-                                <div className="p-3 bg-muted rounded-lg text-sm whitespace-pre-wrap">
-                                  {suggestion.message}
-                                </div>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                        <Button size="sm" variant="ghost" onClick={() => openDetail(suggestion)}>
+                          <Search className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
                       </td>
                     </tr>
                   );

@@ -95,8 +95,7 @@ export default function NotificationSettings() {
       };
       const { error } = await supabase
         .from("notification_config")
-        .upsert(payload)
-        .eq("tenant_id", tenantId);
+        .upsert(payload);
       if (error) throw error;
     },
     onSuccess: () => {

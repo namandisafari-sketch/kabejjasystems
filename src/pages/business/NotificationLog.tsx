@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
 import { Bell, MessageSquare, Mail, Smartphone, CheckCircle2, XCircle, Clock, Search, Loader2 } from "lucide-react";
 
 interface NotificationLogEntry {
