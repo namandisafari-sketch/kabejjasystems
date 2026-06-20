@@ -158,6 +158,11 @@ import AdmissionConfirmations from "./pages/business/AdmissionConfirmations";
 import StudentLifecycle from "./pages/business/StudentLifecycle";
 import PromotionRules from "./pages/business/PromotionRules";
 import SchoolHolidays from "./pages/business/SchoolHolidays";
+import Suggestions from "./pages/business/Suggestions";
+import StaffReviews from "./pages/business/StaffReviews";
+import NotificationSettings from "./pages/business/NotificationSettings";
+import NotificationLog from "./pages/business/NotificationLog";
+import ParentNotificationPreferences from "./pages/business/ParentNotificationPreferences";
 import RentalDashboard from "./pages/business/rental/RentalDashboard";
 import RentalProperties from "./pages/business/rental/RentalProperties";
 import RentalUnits from "./pages/business/rental/RentalUnits";
@@ -172,6 +177,8 @@ import PublicMenu from "./pages/public/PublicMenu";
 import SubmitPaymentProof from "./pages/public/SubmitPaymentProof";
 import JobStatus from "./pages/public/JobStatus";
 import SelfAdmission from "./pages/public/SelfAdmission";
+import SuggestionBox from "./pages/public/SuggestionBox";
+import PublicStaffReviews from "./pages/public/StaffReviews";
 import ParentPortal from "./pages/ParentPortal";
 import ParentDashboard from "./pages/ParentDashboard";
 import ECDParentPortal from "./pages/ECDParentPortal";
@@ -321,6 +328,12 @@ const App = () => {
                 <Route path="student-lifecycle" element={<StudentLifecycle />} />
                 <Route path="promotion-rules" element={<PromotionRules />} />
                 <Route path="school-holidays" element={<SchoolHolidays />} />
+                {/* Community Hub Routes */}
+                <Route path="suggestions" element={<Suggestions />} />
+                <Route path="staff-reviews" element={<StaffReviews />} />
+                <Route path="notification-settings" element={<NotificationSettings />} />
+                <Route path="notification-log" element={<NotificationLog />} />
+                <Route path="parent-notification-preferences" element={<ParentNotificationPreferences />} />
                 {/* Rental Management Routes */}
                 <Route path="rental-dashboard" element={<RentalDashboard />} />
                 <Route path="rental-tax-dashboard" element={<RentalTaxDashboard />} />
@@ -424,6 +437,8 @@ const App = () => {
               <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
 
               {/* Public Routes */}
+              <Route path="/suggestions" element={<SuggestionBox />} />
+              <Route path="/staff-reviews" element={<PublicStaffReviews />} />
               <Route path="/menu/:tenantId" element={<PublicMenu />} />
               <Route path="/menu/:tenantId/:tableId" element={<PublicMenu />} />
               <Route path="/job-status" element={<JobStatus />} />

@@ -9,7 +9,6 @@ import { TermsFooterLink } from "@/components/TermsFooterLink";
 import { NetworkStatusIndicator } from "@/components/NetworkStatusIndicator";
 import { FullscreenToggle } from "@/components/FullscreenToggle";
 import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
-import { PageTour } from "@/components/tour/PageTour";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionCheck } from "@/hooks/use-subscription-check";
@@ -179,11 +178,6 @@ export function BusinessLayout() {
           <MobileBottomNav businessType={businessType} devMode={isDevMode} />
         </div>
         
-        {/* Page tour guide for education pages */}
-        {(businessType === 'school' || businessType === 'secondary_school' || businessType === 'kindergarten' || businessType === 'primary_school') && (
-          <PageTour />
-        )}
-
         {/* Terms & Conditions link for school businesses - positioned fixed */}
         {(businessType === 'school' || businessType === 'secondary_school' || businessType === 'kindergarten' || businessType === 'primary_school') && (
           <TermsFooterLink />

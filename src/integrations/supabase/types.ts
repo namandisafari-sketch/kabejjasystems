@@ -10520,6 +10520,271 @@ export type Database = {
           },
         ]
       }
+      suggestions: {
+        Row: {
+          id: string
+          tenant_id: string
+          submitter_name: string
+          submitter_email: string | null
+          submitter_phone: string | null
+          category: string
+          message: string
+          status: string
+          admin_notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          submitter_name: string
+          submitter_email?: string | null
+          submitter_phone?: string | null
+          category?: string
+          message: string
+          status?: string
+          admin_notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string
+          submitter_name?: string
+          submitter_email?: string | null
+          submitter_phone?: string | null
+          category?: string
+          message?: string
+          status?: string
+          admin_notes?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suggestions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_reviews: {
+        Row: {
+          id: string
+          tenant_id: string
+          student_name: string
+          school_code: string
+          staff_name: string
+          rating: number
+          review: string
+          device_fingerprint: string | null
+          ip_address: string | null
+          user_agent: string | null
+          screen_resolution: string | null
+          browser_language: string | null
+          is_anonymous: boolean | null
+          is_verified: boolean | null
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          student_name: string
+          school_code: string
+          staff_name: string
+          rating: number
+          review: string
+          device_fingerprint?: string | null
+          ip_address?: string | null
+          user_agent?: string | null
+          screen_resolution?: string | null
+          browser_language?: string | null
+          is_anonymous?: boolean | null
+          is_verified?: boolean | null
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string
+          student_name?: string
+          school_code?: string
+          staff_name?: string
+          rating?: number
+          review?: string
+          device_fingerprint?: string | null
+          ip_address?: string | null
+          user_agent?: string | null
+          screen_resolution?: string | null
+          browser_language?: string | null
+          is_anonymous?: boolean | null
+          is_verified?: boolean | null
+          status?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_reviews_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parent_notification_preferences: {
+        Row: {
+          id: string
+          parent_id: string
+          tenant_id: string | null
+          whatsapp_enabled: boolean | null
+          email_enabled: boolean | null
+          sms_enabled: boolean | null
+          gate_alerts: boolean | null
+          attendance_alerts: boolean | null
+          timetable_alerts: boolean | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          parent_id: string
+          tenant_id?: string | null
+          whatsapp_enabled?: boolean | null
+          email_enabled?: boolean | null
+          sms_enabled?: boolean | null
+          gate_alerts?: boolean | null
+          attendance_alerts?: boolean | null
+          timetable_alerts?: boolean | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          parent_id?: string
+          tenant_id?: string | null
+          whatsapp_enabled?: boolean | null
+          email_enabled?: boolean | null
+          sms_enabled?: boolean | null
+          gate_alerts?: boolean | null
+          attendance_alerts?: boolean | null
+          timetable_alerts?: boolean | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_notification_preferences_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: true
+            referencedRelation: "parents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_config: {
+        Row: {
+          id: string
+          tenant_id: string
+          provider: string
+          api_key: string | null
+          username: string | null
+          sender_id: string | null
+          whatsapp_number: string | null
+          email_from: string | null
+          sms_enabled: boolean | null
+          whatsapp_enabled: boolean | null
+          email_enabled: boolean | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          provider?: string
+          api_key?: string | null
+          username?: string | null
+          sender_id?: string | null
+          whatsapp_number?: string | null
+          email_from?: string | null
+          sms_enabled?: boolean | null
+          whatsapp_enabled?: boolean | null
+          email_enabled?: boolean | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string
+          provider?: string
+          api_key?: string | null
+          username?: string | null
+          sender_id?: string | null
+          whatsapp_number?: string | null
+          email_from?: string | null
+          sms_enabled?: boolean | null
+          whatsapp_enabled?: boolean | null
+          email_enabled?: boolean | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_config_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outgoing_notifications: {
+        Row: {
+          id: string
+          tenant_id: string
+          parent_id: string | null
+          channel: string
+          recipient: string
+          subject: string | null
+          message: string
+          status: string
+          error_message: string | null
+          sent_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          parent_id?: string | null
+          channel: string
+          recipient: string
+          subject?: string | null
+          message: string
+          status?: string
+          error_message?: string | null
+          sent_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string
+          parent_id?: string | null
+          channel?: string
+          recipient?: string
+          subject?: string | null
+          message?: string
+          status?: string
+          error_message?: string | null
+          sent_at?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outgoing_notifications_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
