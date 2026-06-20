@@ -4,7 +4,7 @@ import {
   Scissors, Calendar, Pill, HeartPulse, Wrench, Cog, PackageMinus, Truck, Tags, AlertTriangle, 
   ClipboardList, CreditCard, Wallet2, Sparkles, GraduationCap, ClipboardCheck, Award, BookOpen, FileText, ScanLine,
   ShieldAlert, Building2, DoorOpen, Calculator, Home, Upload, Shield, Link, UserPlus,
-  ChevronRight
+  ChevronRight, Lightbulb, Star, Bell, MessageSquare
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
@@ -81,6 +81,10 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Shield,
   Link,
   UserPlus,
+  Lightbulb,
+  Star,
+  Bell,
+  MessageSquare,
 };
 
 const categoryLabels: Record<string, string> = {
@@ -101,12 +105,13 @@ const categoryLabels: Record<string, string> = {
   analytics: "Analytics",
   admin: "Admin",
   legal: "Legal",
+  community: "Community",
 };
 
 const categoryOrder = [
   'core', 'school', 'academics', 'restaurant', 'hotel', 'repair',
   'salon', 'pharmacy', 'property', 'rental', 'finance', 'people',
-  'operations', 'communication', 'analytics', 'admin', 'legal',
+  'operations', 'communication', 'community', 'analytics', 'admin', 'legal',
 ];
 
 interface MenuItem {

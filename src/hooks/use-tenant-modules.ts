@@ -270,6 +270,12 @@ export const moduleRoutes: Record<string, { url: string; icon: string }> = {
   rental_maintenance: { url: '/business/rental-maintenance', icon: 'Wrench' },
   rental_id_cards: { url: '/business/rental-id-cards', icon: 'CreditCard' },
   rental_payment_proofs: { url: '/business/rental-payment-proofs', icon: 'Receipt' },
+  // Community Hub modules
+  suggestions: { url: '/business/suggestions', icon: 'Lightbulb' },
+  staff_reviews: { url: '/business/staff-reviews', icon: 'Star' },
+  notification_settings: { url: '/business/notification-settings', icon: 'Bell' },
+  notification_log: { url: '/business/notification-log', icon: 'MessageSquare' },
+  parent_notification_preferences: { url: '/business/parent-notification-preferences', icon: 'Bell' },
   // School admin modules (integrated into SchoolSettings & StaffManagement sub-tabs)
   // governing_bodies, departments, staff_roles, school_inspections - integrated into pages
   // NCDC New Curriculum modules (integrated into Subjects, MarksEntry, ReportCards sub-tabs)
