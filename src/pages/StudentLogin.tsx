@@ -104,7 +104,12 @@ export default function StudentLogin() {
     };
     sessionStorage.setItem("studentSession", JSON.stringify(session));
     setLoading(false);
-    navigate("/student/dashboard", { replace: true });
+
+    if (authData.user.user_metadata?.must_reset_password) {
+      navigate("/student/set-password", { replace: true });
+    } else {
+      navigate("/student/dashboard", { replace: true });
+    }
   };
 
   return (

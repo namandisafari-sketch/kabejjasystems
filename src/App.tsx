@@ -184,6 +184,7 @@ import JobStatus from "./pages/public/JobStatus";
 import SelfAdmission from "./pages/public/SelfAdmission";
 import SuggestionBox from "./pages/public/SuggestionBox";
 import StudentLogin from "./pages/StudentLogin";
+import StudentSetPassword from "./pages/StudentSetPassword";
 import StudentLayout from "./pages/StudentLayout";
 import StudentDashboard from "./pages/student/Dashboard";
 import StudentPerformance from "./pages/student/Performance";
@@ -377,6 +378,7 @@ const App = () => {
 
               {/* Student Portal Routes */}
               <Route path="/student/login" element={<StudentLogin />} />
+              <Route path="/student/set-password" element={<StudentSetPassword />} />
               <Route path="/student" element={<StudentLayout />}>
                 <Route index element={<StudentDashboard />} />
                 <Route path="dashboard" element={<StudentDashboard />} />

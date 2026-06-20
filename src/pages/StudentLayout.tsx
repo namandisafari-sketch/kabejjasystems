@@ -23,6 +23,14 @@ export default function StudentLayout() {
       return;
     }
     setStudentName(session.fullName);
+
+    if (location.pathname !== "/student/set-password") {
+      supabase.auth.getUser().then(({ data }) => {
+        if (data.user?.user_metadata?.must_reset_password) {
+          navigate("/student/set-password", { replace: true });
+        }
+      });
+    }
   }, [navigate, location.pathname]);
 
   const menuItems: PortalMenuItem[] = [
