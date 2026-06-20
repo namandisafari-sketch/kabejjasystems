@@ -111,7 +111,7 @@ export function PageTour() {
 
   return (
     <>
-      {steps.length > 0 && (
+      {run && steps.length > 0 && (
         <Joyride
           key={tourKey}
           steps={steps}
