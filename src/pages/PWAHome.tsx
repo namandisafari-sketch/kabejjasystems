@@ -84,6 +84,14 @@ const secondaryUsers: SecondaryUserCard[] = [
     icon: <Briefcase className="w-6 h-6" />,
     gradient: "from-teal-500 to-emerald-600",
     route: "/login"
+  },
+  {
+    id: "student",
+    title: "Student Portal",
+    description: "View performance, fees & timetable",
+    icon: <GraduationCap className="w-6 h-6" />,
+    gradient: "from-green-500 to-emerald-600",
+    route: "/student/login"
   }
 ];
 
