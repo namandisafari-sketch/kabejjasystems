@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Eye, EyeOff, Building2, AlertCircle, GraduationCap, Shield, Clock } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { getStaffPortalRoute } from "@/lib/staff-routing";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -136,7 +137,18 @@ const Login = () => {
           title: "Welcome back!",
           description: `Logged in to ${tenant.name}`,
         });
-        navigate('/dashboard');
+
+        // Route by staff_type
+        const { data: staffPerms } = await supabase
+          .from('staff_permissions')
+          .select('staff_type')
+          .eq('profile_id', data.user.id)
+          .eq('tenant_id', profile.tenant_id!)
+          .maybeSingle();
+
+        const staffType = staffPerms?.staff_type || 'general';
+        const portalRoute = getStaffPortalRoute(staffType);
+        navigate(portalRoute || '/business');
         return;
       }
 

@@ -4,7 +4,7 @@ import {
   Scissors, Calendar, Pill, HeartPulse, Wrench, Cog, PackageMinus, Truck, Tags, AlertTriangle, 
   ClipboardList, CreditCard, Wallet2, Sparkles, GraduationCap, ClipboardCheck, Award, BookOpen, FileText, ScanLine,
   ShieldAlert, Building2, DoorOpen, Calculator, Home, Upload, Shield, Link, UserPlus,
-  ChevronRight, Lightbulb, Star, Bell, MessageSquare
+  ChevronRight, Lightbulb, Star, Bell, MessageSquare, BadgeCheck
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
@@ -28,6 +28,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TennaHubLogo } from "@/components/TennaHubLogo";
 import { useTenantModules, moduleRoutes, ecdRouteOverrides, ecdNameOverrides } from "@/hooks/use-tenant-modules";
@@ -35,6 +36,7 @@ import { useTenant } from "@/hooks/use-tenant";
 import { useStaffPermissions } from "@/hooks/use-staff-permissions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/i18n";
+import { getStaffDashboardLabel } from "@/lib/staff-routing";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard,
@@ -85,6 +87,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Star,
   Bell,
   MessageSquare,
+  BadgeCheck,
 };
 
 const categoryLabels: Record<string, string> = {
@@ -133,7 +136,7 @@ export function BusinessSidebar({ businessName, businessType, devMode }: { busin
     devMode ? businessType : null,
     tenantData?.businessType
   );
-  const { isModuleAllowed, hasFullAccess, isLoading: isLoadingPermissions } = useStaffPermissions();
+  const { isModuleAllowed, hasFullAccess, staffType, isLoading: isLoadingPermissions } = useStaffPermissions();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -176,9 +179,39 @@ export function BusinessSidebar({ businessName, businessType, devMode }: { busin
     return acc;
   }, {});
 
-  const sortedCategories = Object.keys(groupedItems).sort(
-    (a, b) => categoryOrder.indexOf(a) - categoryOrder.indexOf(b)
-  );
+  // Role-aware category promotion: bring relevant categories to the top
+  const roleCategoryPriority: Record<string, string[]> = {
+    bursar: ['finance', 'students', 'school'],
+    accountant: ['finance', 'students'],
+    guidance_counselor: ['people', 'students'],
+    school_nurse: ['people', 'students'],
+    discipline_master: ['students', 'people'],
+    games_master: ['students', 'people'],
+    games_mistress: ['students', 'people'],
+    librarian: ['operations', 'school'],
+    lab_technician: ['operations', 'school'],
+    ict_technician: ['operations', 'school'],
+    gate_keeper: ['operations'],
+    transport_officer: ['operations'],
+    kitchen_staff: ['operations'],
+    admissions_officer: ['students', 'school'],
+    store_keeper: ['operations', 'finance'],
+    procurement_officer: ['operations', 'finance'],
+  };
+  const prioritizedCategories = roleCategoryPriority[staffType] || [];
+
+  const sortedCategories = Object.keys(groupedItems).sort((a, b) => {
+    const pa = prioritizedCategories.indexOf(a);
+    const pb = prioritizedCategories.indexOf(b);
+    if (pa !== -1 && pb !== -1) return pa - pb;
+    if (pa !== -1) return -1;
+    if (pb !== -1) return 1;
+    return categoryOrder.indexOf(a) - categoryOrder.indexOf(b);
+  });
+
+  const staffLabel = !hasFullAccess && staffType !== 'general' && staffType !== 'owner'
+    ? getStaffDashboardLabel(staffType)
+    : null;
 
   return (
     <Sidebar>
@@ -189,6 +222,12 @@ export function BusinessSidebar({ businessName, businessType, devMode }: { busin
             <div>
               <h2 className="text-sm font-bold text-foreground truncate">{businessName || "Business"}</h2>
               <p className="text-xs text-muted-foreground">{t.nav.managementPortal}</p>
+              {staffLabel && (
+                <Badge variant="secondary" className="mt-1 text-xs px-1.5 py-0 h-5">
+                  <BadgeCheck className="h-3 w-3 mr-1" />
+                  {staffLabel}
+                </Badge>
+              )}
             </div>
           </div>
         )}

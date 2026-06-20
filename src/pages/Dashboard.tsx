@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getStaffPortalRoute, STAFF_BUSINESS_ROLES } from "@/lib/staff-routing";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -55,9 +56,23 @@ const Dashboard = () => {
         return;
       }
 
-      // Staff members go to teacher portal
+      // Staff members - route by staff_type
       if (profileData.role === 'staff') {
-        navigate('/teacher');
+        const { data: permissions } = await supabase
+          .from('staff_permissions')
+          .select('staff_type')
+          .eq('profile_id', session.user.id)
+          .eq('tenant_id', profileData.tenant_id!)
+          .maybeSingle();
+
+        const staffType = permissions?.staff_type || 'general';
+        const portalRoute = getStaffPortalRoute(staffType);
+
+        if (portalRoute) {
+          navigate(portalRoute);
+        } else {
+          navigate('/business');
+        }
         return;
       }
 

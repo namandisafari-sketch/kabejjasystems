@@ -4,6 +4,15 @@ import ECDDashboard from "./ECDDashboard";
 import TeacherDashboard from "./TeacherDashboard";
 import BursarDashboard from "./BursarDashboard";
 import AdminSchoolDashboard from "./AdminSchoolDashboard";
+import WelfareDashboard from "./WelfareDashboard";
+import SupportDashboard from "./SupportDashboard";
+import AdmissionsDashboard from "./AdmissionsDashboard";
+import StoreKeeperDashboard from "./StoreKeeperDashboard";
+import {
+  STAFF_FINANCE_ROLES,
+  STAFF_WELFARE_ROLES,
+  STAFF_SUPPORT_ROLES,
+} from "@/lib/staff-routing";
 
 const SchoolDashboard = () => {
   const { data: tenant } = useTenant();
@@ -17,8 +26,12 @@ const SchoolDashboard = () => {
   }
 
   if (!hasFullAccess) {
-    if (staffType === 'teacher') return <TeacherDashboard />;
-    if (staffType === 'bursar') return <BursarDashboard />;
+    if (staffType === 'teacher' || staffType === 'class_teacher' || staffType === 'subject_teacher') return <TeacherDashboard />;
+    if (STAFF_FINANCE_ROLES.has(staffType)) return <BursarDashboard />;
+    if (STAFF_WELFARE_ROLES.has(staffType)) return <WelfareDashboard />;
+    if (STAFF_SUPPORT_ROLES.has(staffType)) return <SupportDashboard />;
+    if (staffType === 'admissions_officer') return <AdmissionsDashboard />;
+    if (staffType === 'store_keeper' || staffType === 'procurement_officer') return <StoreKeeperDashboard />;
   }
 
   return <AdminSchoolDashboard />;

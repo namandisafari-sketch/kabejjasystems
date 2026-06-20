@@ -13,12 +13,17 @@ export type StaffRoleType =
   | "head_teacher" | "deputy_head_admin" | "deputy_head_academics"
   | "director_of_studies" | "dean_of_students"
   | "senior_man" | "senior_woman"
-  | "head_of_department" | "class_teacher"
+  | "head_of_department" | "class_teacher" | "subject_teacher"
   | "games_master" | "games_mistress"
   | "boarding_master" | "boarding_mistress"
   | "patron" | "matron"
   | "school_nurse" | "librarian" | "lab_technician" | "ict_technician"
-  | "guidance_counselor" | "head_of_section";
+  | "guidance_counselor" | "head_of_section"
+  | "bursar" | "accountant"
+  | "admissions_officer"
+  | "gate_keeper" | "transport_officer" | "kitchen_staff"
+  | "store_keeper" | "procurement_officer"
+  | "discipline_master" | "hostel_warden";
 
 export type InspectionType = "routine" | "follow_up" | "complaint" | "special" | "registration";
 export type InspectionStatus = "pending" | "completed" | "actioned" | "closed";
@@ -141,6 +146,7 @@ export const STAFF_ROLE_LABELS: Record<StaffRoleType, string> = {
   senior_woman: "Senior Woman Teacher",
   head_of_department: "Head of Department (HOD)",
   class_teacher: "Class Teacher",
+  subject_teacher: "Subject Teacher",
   games_master: "Games Master",
   games_mistress: "Games Mistress",
   boarding_master: "Boarding Master",
@@ -153,6 +159,16 @@ export const STAFF_ROLE_LABELS: Record<StaffRoleType, string> = {
   ict_technician: "ICT Technician",
   guidance_counselor: "Guidance & Counselor",
   head_of_section: "Head of Section",
+  bursar: "Bursar",
+  accountant: "Accountant",
+  admissions_officer: "Admissions Officer",
+  gate_keeper: "Gate Keeper / Security",
+  transport_officer: "Transport Officer",
+  kitchen_staff: "Kitchen Staff",
+  store_keeper: "Store Keeper",
+  procurement_officer: "Procurement Officer",
+  discipline_master: "Discipline Master",
+  hostel_warden: "Hostel Warden",
 };
 
 export const MEMBER_ROLE_LABELS: Record<GoverningBodyMemberRole, string> = {
