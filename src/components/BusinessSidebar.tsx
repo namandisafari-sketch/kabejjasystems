@@ -89,6 +89,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 const categoryLabels: Record<string, string> = {
   core: "General",
+  students: "Students",
   school: "School",
   academics: "Academics",
   restaurant: "Restaurant",
@@ -108,7 +109,7 @@ const categoryLabels: Record<string, string> = {
 };
 
 const categoryOrder = [
-  'core', 'school', 'academics', 'restaurant', 'hotel', 'repair',
+  'core', 'students', 'school', 'academics', 'restaurant', 'hotel', 'repair',
   'salon', 'pharmacy', 'property', 'rental', 'finance', 'people',
   'operations', 'communication', 'analytics', 'admin', 'legal',
 ];
