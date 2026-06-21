@@ -129,6 +129,20 @@ const Dashboard = () => {
         }
       }
 
+      // Check if tenant_owner also has staff portal permissions
+      const { data: portalPerms } = await supabase
+        .from('staff_permissions')
+        .select('staff_type')
+        .eq('profile_id', session.user.id)
+        .eq('tenant_id', profileData.tenant_id!)
+        .maybeSingle();
+
+      const portalRoute = portalPerms?.staff_type ? getStaffPortalRoute(portalPerms.staff_type) : null;
+      if (portalRoute) {
+        navigate(portalRoute);
+        return;
+      }
+
       // Active tenants (including trial) go to business portal
       // TEMP: Allow all users regardless of status
       console.log('Tenant status:', tenant?.status);
