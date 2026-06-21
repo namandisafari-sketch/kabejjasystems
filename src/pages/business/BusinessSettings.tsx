@@ -45,11 +45,21 @@ const BusinessSettings = () => {
 
       const { data: tenantData } = await supabase
         .from('tenants')
-        .select('*, packages(name, price, currency, validity_days, branch_limit, user_limit), rental_packages(name, monthly_price, max_properties, max_units, included_users)')
+        .select('*, packages(name, price, currency, validity_days, branch_limit, user_limit)')
         .eq('id', profile.tenant_id)
         .single();
 
-      return tenantData;
+      let rentalPackage = null;
+      if (tenantData?.business_type === 'rental_management') {
+        const { data: rp } = await supabase
+          .from('rental_packages')
+          .select('name, monthly_price, max_properties, max_units, included_users')
+          .eq('id', tenantData.package_id)
+          .maybeSingle();
+        rentalPackage = rp;
+      }
+
+      return { ...tenantData, rental_packages: rentalPackage };
     },
   });
 
