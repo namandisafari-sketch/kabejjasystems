@@ -407,7 +407,7 @@ const App = () => {
 
               {/* Staff & Teacher Portals */}
               <Route path="/teacher" element={
-                <ProtectedStaffRoute allowedRoles={['staff']}>
+                <ProtectedStaffRoute allowedRoles={['staff', 'tenant_owner']}>
                   <TeacherLayout />
                 </ProtectedStaffRoute>
               }>
@@ -443,7 +443,7 @@ const App = () => {
                 <Route path="*" element={<SmartDataView />} />
               </Route>
               <Route path="/dos" element={
-                <ProtectedStaffRoute allowedRoles={['staff']}>
+                <ProtectedStaffRoute allowedRoles={['staff', 'tenant_owner']}>
                   <DOSLayout />
                 </ProtectedStaffRoute>
               }>
@@ -460,7 +460,7 @@ const App = () => {
                 <Route path="*" element={<SmartDataView />} />
               </Route>
               <Route path="/headteacher" element={
-                <ProtectedStaffRoute allowedRoles={['staff']}>
+                <ProtectedStaffRoute allowedRoles={['staff', 'tenant_owner']}>
                   <HeadTeacherLayout />
                 </ProtectedStaffRoute>
               }>
