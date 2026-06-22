@@ -78,7 +78,6 @@ export default function StudentAuthCallback() {
           navigate("/student/login", { replace: true });
           return;
         }
-        }
 
         console.log("Current user ID:", currentUser.id);
 
