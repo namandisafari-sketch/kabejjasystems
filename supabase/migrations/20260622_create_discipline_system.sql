@@ -104,9 +104,10 @@ CREATE POLICY "School admins can view their discipline rules"
   ON public.school_discipline_rules FOR SELECT
   USING (
     auth.uid() IN (
-      SELECT user_id FROM public.staff
+      SELECT user_id FROM public.employees
       WHERE tenant_id = school_discipline_rules.tenant_id
-        AND role = 'admin'
+        AND role IN ('admin', 'disciplinarian', 'head_teacher')
+        AND is_active = true
     )
   );
 
@@ -114,9 +115,10 @@ CREATE POLICY "School admins can create discipline rules"
   ON public.school_discipline_rules FOR INSERT
   WITH CHECK (
     auth.uid() IN (
-      SELECT user_id FROM public.staff
+      SELECT user_id FROM public.employees
       WHERE tenant_id = NEW.tenant_id
-        AND role = 'admin'
+        AND role IN ('admin', 'disciplinarian', 'head_teacher')
+        AND is_active = true
     )
   );
 
@@ -131,8 +133,9 @@ CREATE POLICY "School staff can view discipline cases in their school"
   ON public.student_discipline_cases FOR SELECT
   USING (
     auth.uid() IN (
-      SELECT user_id FROM public.staff
+      SELECT user_id FROM public.employees
       WHERE tenant_id = student_discipline_cases.tenant_id
+        AND is_active = true
     )
   );
 
@@ -140,9 +143,10 @@ CREATE POLICY "School admins can create discipline cases"
   ON public.student_discipline_cases FOR INSERT
   WITH CHECK (
     auth.uid() IN (
-      SELECT user_id FROM public.staff
+      SELECT user_id FROM public.employees
       WHERE tenant_id = NEW.tenant_id
-        AND role IN ('admin', 'disciplinarian')
+        AND role IN ('admin', 'disciplinarian', 'head_teacher')
+        AND is_active = true
     )
   );
 
@@ -157,8 +161,9 @@ CREATE POLICY "School staff can view appeals for their school"
   ON public.student_discipline_appeals FOR SELECT
   USING (
     auth.uid() IN (
-      SELECT user_id FROM public.staff
+      SELECT user_id FROM public.employees
       WHERE tenant_id = student_discipline_appeals.tenant_id
+        AND is_active = true
     )
   );
 
@@ -178,8 +183,9 @@ CREATE POLICY "School staff can update appeal status"
   ON public.student_discipline_appeals FOR UPDATE
   USING (
     auth.uid() IN (
-      SELECT user_id FROM public.staff
+      SELECT user_id FROM public.employees
       WHERE tenant_id = student_discipline_appeals.tenant_id
-        AND role IN ('admin', 'disciplinarian')
+        AND role IN ('admin', 'disciplinarian', 'head_teacher')
+        AND is_active = true
     )
   );

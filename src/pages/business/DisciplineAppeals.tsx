@@ -82,14 +82,15 @@ export default function BusinessDisciplineAppeals() {
     const getTenantId = async () => {
       const { data: userData } = await supabase.auth.getUser();
       if (userData.user?.id) {
-        const { data: staffData } = await supabase
-          .from("staff")
+        const { data: employeeData } = await supabase
+          .from("employees")
           .select("tenant_id")
           .eq("user_id", userData.user.id)
+          .eq("is_active", true)
           .single();
         
-        if (staffData?.tenant_id) {
-          setTenantId(staffData.tenant_id);
+        if (employeeData?.tenant_id) {
+          setTenantId(employeeData.tenant_id);
         }
       }
     };
