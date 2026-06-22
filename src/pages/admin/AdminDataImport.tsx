@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +9,6 @@ import { importUgandaLocationData } from "@/lib/uganda-location-importer";
 
 export function AdminDataImport() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [isImporting, setIsImporting] = useState(false);
   const [status, setStatus] = useState<{
     type: "idle" | "loading" | "success" | "error";
@@ -19,19 +17,7 @@ export function AdminDataImport() {
   }>({
     type: "idle",
     message: "",
-  });
-
-  // Check if user is admin
-  if (!user) {
-    return (
-      <div className="container mx-auto p-4">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>Please log in to access this page</AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
+   });
 
   const handleImportUgandaData = async () => {
     setIsImporting(true);
