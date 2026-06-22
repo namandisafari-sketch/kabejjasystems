@@ -83,6 +83,7 @@ import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminStudentAccounts from "./pages/admin/AdminStudentAccounts";
 import AdminWithdrawal from "./pages/admin/AdminWithdrawal";
 import AdminPartnershipDeed from "./pages/admin/AdminPartnershipDeed";
+import { AdminDataImport } from "./pages/admin/AdminDataImport";
 import SubmitTestimonial from "./pages/SubmitTestimonial";
 import { BusinessLayout } from "./components/BusinessLayout";
 import BusinessDashboard from "./pages/business/BusinessDashboard";
@@ -267,6 +268,7 @@ const App = () => {
                 <Route path="student-accounts" element={<AdminStudentAccounts />} />
                 <Route path="withdrawal" element={<AdminWithdrawal />} />
                 <Route path="partnership-deed" element={<AdminPartnershipDeed />} />
+                <Route path="data-import" element={<AdminDataImport />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
 
