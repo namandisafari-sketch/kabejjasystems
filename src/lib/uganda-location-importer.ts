@@ -104,6 +104,7 @@ async function importConstituencies(
   console.log(`Importing ${constituencies.length} constituencies...`);
 
   const constituencyMap: Record<number, string> = {};
+  let successCount = 0;
 
   // Clear existing data
   await supabase
@@ -111,45 +112,52 @@ async function importConstituencies(
     .delete()
     .neq('id', '00000000-0000-0000-0000-000000000000');
 
-  // Insert constituencies and collect IDs
-  for (const constituency of constituencies) {
-    const districtId = districtMap[constituency.district_code];
+  // Import in batches to avoid API overwhelming
+  const batchSize = 100;
+  for (let i = 0; i < constituencies.length; i += batchSize) {
+    const batch = constituencies.slice(i, i + batchSize);
+    const records = batch
+      .map((constituency) => {
+        const districtId = districtMap[constituency.district_code];
 
-    if (!districtId) {
-      console.warn(
-        `District not found for constituency ${constituency.constituency_name}`
-      );
-      continue;
-    }
+        if (!districtId) {
+          console.warn(
+            `District not found for constituency ${constituency.constituency_name}`
+          );
+          return null;
+        }
 
-    const { data, error } = await supabase
-      .from('uganda_constituencies')
-      .insert([
-        {
+        return {
           constituency_code: constituency.constituency_code,
           constituency_name: constituency.constituency_name,
           district_id: districtId,
           district_code: constituency.district_code,
           district_name: constituency.district_name,
-        },
-      ])
-      .select('id')
-      .single();
+        };
+      })
+      .filter(Boolean);
+
+    if (records.length === 0) continue;
+
+    const { error, data } = await supabase
+      .from('uganda_constituencies')
+      .insert(records as Parameters<typeof supabase.from>[0][])
+      .select('id, constituency_code');
 
     if (error) {
-      console.error(
-        `Error inserting constituency ${constituency.constituency_name}:`,
-        error
-      );
+      console.error(`Error inserting constituency batch ${i / batchSize + 1}:`, error);
       continue;
     }
 
-    constituencyMap[constituency.constituency_code] = data.id;
+    if (data) {
+      data.forEach((row: any) => {
+        constituencyMap[row.constituency_code] = row.id;
+        successCount++;
+      });
+    }
   }
 
-  console.log(
-    `Successfully imported ${Object.keys(constituencyMap).length} constituencies`
-  );
+  console.log(`Successfully imported ${successCount} constituencies`);
   return constituencyMap;
 }
 
