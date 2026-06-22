@@ -2,9 +2,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/i18n";
 
 const PendingApproval = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-muted/30 to-muted/10 flex items-center justify-center p-4">
@@ -13,29 +15,28 @@ const PendingApproval = () => {
           <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-warning/10 flex items-center justify-center">
             <Clock className="h-8 w-8 text-warning" />
           </div>
-          <CardTitle className="text-2xl">Payment Under Review</CardTitle>
+          <CardTitle className="text-2xl">{t.pages.pendingApproval.title}</CardTitle>
           <CardDescription>
-            Your payment proof has been submitted successfully
+            {t.pages.pendingApproval.description}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground">
-            Our admin team will review your payment within <strong>24-72 hours</strong>. 
-            You'll receive a notification once your account is activated.
+            {t.pages.pendingApproval.details}
           </p>
           
           <div className="bg-muted/50 rounded-lg p-4 text-left">
-            <h4 className="font-semibold mb-2">What's Next?</h4>
+            <h4 className="font-semibold mb-2">{t.pages.pendingApproval.whatsNext}</h4>
             <ul className="text-sm space-y-1 text-muted-foreground">
-              <li>✓ Admin reviews your payment proof</li>
-              <li>✓ You receive activation notification</li>
-              <li>✓ Access your full dashboard</li>
-              <li>✓ Start managing your business</li>
+              <li>✓ {t.pages.pendingApproval.steps[0]}</li>
+              <li>✓ {t.pages.pendingApproval.steps[1]}</li>
+              <li>✓ {t.pages.pendingApproval.steps[2]}</li>
+              <li>✓ {t.pages.pendingApproval.steps[3]}</li>
             </ul>
           </div>
           
           <p className="text-sm text-muted-foreground">
-            Need help? Contact us at support@tennahubapps.com
+            {t.pages.pendingApproval.contact}
           </p>
 
           {/* Dev Mode Shortcuts */}

@@ -11,10 +11,12 @@ import {
 } from "lucide-react";
 import type { PortalMenuItem } from "@/components/portal/PortalSidebar";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/i18n";
 
 export default function StudentLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
   const [studentName, setStudentName] = useState("");
 
   useEffect(() => {
@@ -35,23 +37,23 @@ export default function StudentLayout() {
   }, [navigate, location.pathname]);
 
   const menuItems: PortalMenuItem[] = [
-    { title: "Dashboard", url: "/student/dashboard", icon: LayoutDashboard },
-    { title: "ID Card", url: "/student/id-card", icon: IdCard },
-    { title: "Exam Timetable", url: "/student/exams", icon: CalendarClock },
-    { title: "Exam Cards", url: "/student/exam-cards", icon: ScrollText },
-    { title: "Performance", url: "/student/performance", icon: BarChart3 },
-    { title: "Report Cards", url: "/student/report-cards", icon: FileText },
-    { title: "Timetable", url: "/student/timetable", icon: Calendar },
-    { title: "Fees & Receipts", url: "/student/fees", icon: CreditCard },
-    { title: "Events", url: "/student/events", icon: CalendarCheck },
-    { title: "Resources", url: "/student/resources", icon: BookOpen },
-    { title: "Suggestions", url: "/student/suggestions", icon: Lightbulb },
+    { title: t.nav.dashboard, url: "/student/dashboard", icon: LayoutDashboard },
+    { title: t.nav.studentCards, url: "/student/id-card", icon: IdCard },
+    { title: t.nav.timetable, url: "/student/exams", icon: CalendarClock },
+    { title: t.nav.studentCards, url: "/student/exam-cards", icon: ScrollText },
+    { title: t.exams.grade, url: "/student/performance", icon: BarChart3 },
+    { title: t.nav.reportCards, url: "/student/report-cards", icon: FileText },
+    { title: t.nav.timetable, url: "/student/timetable", icon: Calendar },
+    { title: t.nav.fees, url: "/student/fees", icon: CreditCard },
+    { title: t.attendance.today, url: "/student/events", icon: CalendarCheck },
+    { title: t.common.notes, url: "/student/resources", icon: BookOpen },
+    { title: t.navigation.adminSidebarItems.suggestions, url: "/student/suggestions", icon: Lightbulb },
   ];
 
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <PortalSidebar title="Student Portal" menuItems={menuItems} tenantName={studentName} />
+        <PortalSidebar title={t.navigation.studentPortal} menuItems={menuItems} tenantName={studentName} />
         <div className="flex-1 flex flex-col">
           <header className="h-14 border-b border-border flex items-center justify-between px-4 bg-card sticky top-0 z-30">
             <SidebarTrigger />
@@ -60,7 +62,7 @@ export default function StudentLayout() {
               size="sm"
               onClick={() => { clearStudentSession(); supabase.auth.signOut(); navigate("/student/login"); }}
             >
-              <LogOut className="h-4 w-4 mr-1" /> Logout
+              <LogOut className="h-4 w-4 mr-1" /> {t.navigation.logout}
             </Button>
           </header>
           <main className="flex-1 overflow-auto p-6">

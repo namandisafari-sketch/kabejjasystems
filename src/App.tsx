@@ -17,7 +17,6 @@ import TeacherDashboard from "./pages/portal/teacher/Dashboard";
 import MyClasses from "./pages/portal/teacher/MyClasses";
 import TeacherAttendance from "./pages/portal/teacher/Attendance";
 import Marks from "./pages/portal/teacher/Marks";
-import Students from "./pages/portal/teacher/Students";
 import CreateAssignment from "./pages/portal/teacher/CreateAssignment";
 import OnlineMarking from "./pages/portal/teacher/OnlineMarking";
 import SchemeOfWork from "./pages/portal/teacher/SchemeOfWork";
@@ -29,6 +28,7 @@ import ClassRanking from "./pages/portal/teacher/ClassRanking";
 import TeacherProfile from "./pages/portal/teacher/TeacherProfile";
 import TeacherPassword from "./pages/portal/teacher/TeacherPassword";
 import PersonalFinance from "./pages/portal/teacher/PersonalFinance";
+import TeacherStudents from "./pages/portal/teacher/Students";
 import TeacherOnboarding from "./pages/TeacherOnboarding";
 import DOSDashboard from "./pages/portal/dos/Dashboard";
 import SubjectAllocation from "./pages/portal/dos/SubjectAllocation";
@@ -419,7 +419,7 @@ const App = () => {
                 <Route path="lesson-tracker" element={<LessonTracker />} />
                 <Route path="attendance" element={<TeacherAttendance />} />
                 <Route path="marks" element={<Marks />} />
-                <Route path="students" element={<Students />} />
+                <Route path="students" element={<TeacherStudents />} />
                 <Route path="student-profiles" element={<SmartDataView />} />
                 <Route path="progress" element={<SmartDataView />} />
                 <Route path="assignments/create" element={<CreateAssignment />} />

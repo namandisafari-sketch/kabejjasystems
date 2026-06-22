@@ -14,6 +14,7 @@ import {
   Users, Building2, ShoppingBag, Receipt, Banknote, GraduationCap, UserCheck, Clock, Trash2, AlertTriangle, Key, Eye, EyeOff, Copy
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/i18n";
 import {
   Table,
   TableBody,
@@ -35,6 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const AdminTenantDetails = () => {
+  const { t } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();

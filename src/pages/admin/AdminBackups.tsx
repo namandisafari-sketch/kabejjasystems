@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { format as formatDate } from "date-fns";
 import JSZip from "jszip";
 import * as XLSX from "xlsx";
+import { useLanguage } from "@/i18n";
 
 // Tables to backup - organized by category
 const BACKUP_CATEGORIES = {
@@ -58,6 +59,7 @@ interface SystemBackup {
 }
 
 const AdminBackups = () => {
+  const { t } = useLanguage();
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(Object.keys(BACKUP_CATEGORIES));
@@ -329,13 +331,13 @@ const AdminBackups = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold">System Backups</h1>
+          <h1 className="text-3xl font-bold">{t.navigation.adminSidebarItems.backups}</h1>
           <p className="text-muted-foreground">Export and import system-wide data</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => refetchHistory()}>
             <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+            {t.common.refresh}
           </Button>
         </div>
       </div>
@@ -403,11 +405,11 @@ const AdminBackups = () => {
         <TabsList>
           <TabsTrigger value="export" className="gap-2">
             <Download className="h-4 w-4" />
-            Export Backup
+            {t.common.export}
           </TabsTrigger>
           <TabsTrigger value="import" className="gap-2">
             <Upload className="h-4 w-4" />
-            Import Data
+            {t.common.import}
           </TabsTrigger>
           <TabsTrigger value="history" className="gap-2">
             <Clock className="h-4 w-4" />
@@ -453,7 +455,7 @@ const AdminBackups = () => {
                     size="sm"
                     onClick={() => setSelectedCategories(Object.keys(BACKUP_CATEGORIES))}
                   >
-                    Select All
+                    {t.common.all}
                   </Button>
                   <Button
                     variant="outline"
@@ -664,7 +666,7 @@ const AdminBackups = () => {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsImportDialogOpen(false)} disabled={isImporting}>
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button variant="destructive" onClick={handleImport} disabled={isImporting}>
               {isImporting ? (
@@ -675,7 +677,7 @@ const AdminBackups = () => {
               ) : (
                 <>
                   <Upload className="h-4 w-4 mr-2" />
-                  Confirm Import
+                  {t.common.confirm}
                 </>
               )}
             </Button>

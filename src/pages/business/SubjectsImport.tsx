@@ -1,15 +1,13 @@
 import { GeneralImportPage } from "./GeneralImportPage";
+import { useLanguage } from "@/i18n";
 
-/**
- * Subjects Import Page
- * Allows schools to import subject information from Excel
- */
 export default function SubjectsImport() {
+  const { t } = useLanguage();
   return (
     <GeneralImportPage
       module="subjects"
-      title="Import Subjects"
-      description="Import subject information including codes, names, and course details"
+      title={t.nav.subjects}
+      description={t.common.description}
     />
   );
 }

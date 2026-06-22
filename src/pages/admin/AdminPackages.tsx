@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Package, Building2, Pencil, Plus, Loader2, Users, Store } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n";
 
 interface RentalPackage {
   id: string;
@@ -43,6 +44,7 @@ interface BusinessPackage {
 }
 
 const AdminPackages = () => {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [editingPackage, setEditingPackage] = useState<any>(null);
   const [editingRentalPackage, setEditingRentalPackage] = useState<RentalPackage | null>(null);
@@ -304,7 +306,7 @@ const AdminPackages = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Packages</h1>
+          <h1 className="text-3xl font-bold">{t.navigation.adminSidebarItems.packages}</h1>
           <p className="text-muted-foreground">Subscription packages and pricing</p>
         </div>
       </div>

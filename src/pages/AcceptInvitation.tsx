@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle2, XCircle, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/i18n";
 
 interface Invitation {
   id: string;
@@ -23,6 +24,7 @@ interface Invitation {
 }
 
 const AcceptInvitation = () => {
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -83,8 +85,8 @@ const AcceptInvitation = () => {
 
     if (password !== confirmPassword) {
       toast({
-        title: "Password Mismatch",
-        description: "Passwords do not match",
+        title: t.messages.toastTitles[91],
+        description: t.messages.toastDescriptions.passwordsDoNotMatch,
         variant: "destructive",
       });
       return;
@@ -92,7 +94,7 @@ const AcceptInvitation = () => {
 
     if (password.length < 6) {
       toast({
-        title: "Password Too Short",
+        title: t.messages.toastTitles[94],
         description: "Password must be at least 6 characters",
         variant: "destructive",
       });
@@ -153,8 +155,8 @@ const AcceptInvitation = () => {
       if (updateError) throw updateError;
 
       toast({
-        title: "Account Created!",
-        description: "You have successfully joined the team. Redirecting...",
+        title: t.messages.toastTitles[1],
+        description: t.messages.toastDescriptions.joinedTeam,
       });
 
       // Redirect to dashboard
@@ -165,7 +167,7 @@ const AcceptInvitation = () => {
     } catch (err: any) {
       console.error('Acceptance error:', err);
       toast({
-        title: "Error",
+        title: t.common.error,
         description: err.message || "Failed to accept invitation",
         variant: "destructive",
       });
@@ -180,7 +182,7 @@ const AcceptInvitation = () => {
         <Card className="w-full max-w-md">
           <CardContent className="flex flex-col items-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-            <p className="text-muted-foreground">Loading invitation...</p>
+            <p className="text-muted-foreground">{t.common.loading}</p>
           </CardContent>
         </Card>
       </div>
@@ -193,9 +195,9 @@ const AcceptInvitation = () => {
         <Card className="w-full max-w-md">
           <CardContent className="flex flex-col items-center py-12">
             <XCircle className="h-12 w-12 text-destructive mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Invalid Invitation</h2>
+            <h2 className="text-xl font-semibold mb-2">{t.common.error}</h2>
             <p className="text-muted-foreground text-center mb-6">{error}</p>
-            <Button onClick={() => navigate('/login')}>Go to Login</Button>
+            <Button onClick={() => navigate('/login')}>{t.auth.login}</Button>
           </CardContent>
         </Card>
       </div>
@@ -209,29 +211,29 @@ const AcceptInvitation = () => {
           <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
             <Building2 className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle>You're Invited!</CardTitle>
+          <CardTitle>{t.pages.login.title}</CardTitle>
           <CardDescription>
-            You've been invited to join <strong>{invitation?.tenants?.name}</strong>
+            {t.pages.login.subtitle} <strong>{invitation?.tenants?.name}</strong>
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-6 p-4 bg-muted rounded-lg space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Your Name:</span>
+              <span className="text-sm text-muted-foreground">{t.common.name}:</span>
               <span className="font-medium">{invitation?.full_name}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Email:</span>
+              <span className="text-sm text-muted-foreground">{t.auth.email}:</span>
               <span className="font-medium">{invitation?.email}</span>
             </div>
             {invitation?.branches?.name && (
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Branch:</span>
+                <span className="text-sm text-muted-foreground">{t.common.type}:</span>
                 <span className="font-medium">{invitation.branches.name}</span>
               </div>
             )}
             <div className="pt-2">
-              <span className="text-sm text-muted-foreground block mb-2">Access to:</span>
+              <span className="text-sm text-muted-foreground block mb-2">{t.common.category}:</span>
               <div className="flex flex-wrap gap-1">
                 {invitation?.allowed_modules.map((mod) => (
                   <Badge key={mod} variant="secondary" className="text-xs capitalize">
@@ -244,7 +246,7 @@ const AcceptInvitation = () => {
 
           <form onSubmit={handleAccept} className="space-y-4">
             <div>
-              <Label htmlFor="password">Create Password</Label>
+              <Label htmlFor="password">{t.auth.password}</Label>
               <Input
                 id="password"
                 type="password"
@@ -256,7 +258,7 @@ const AcceptInvitation = () => {
               />
             </div>
             <div>
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword">{t.auth.password}</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -270,21 +272,21 @@ const AcceptInvitation = () => {
               {submitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Creating Account...
+                  {t.common.submit}...
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Accept & Create Account
+                  {t.common.submit}
                 </>
               )}
             </Button>
           </form>
 
           <p className="text-xs text-muted-foreground text-center mt-4">
-            Already have an account?{" "}
+            {t.auth.hasAccount}{" "}
             <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/login')}>
-              Sign in instead
+              {t.auth.login}
             </Button>
           </p>
         </CardContent>

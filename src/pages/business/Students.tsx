@@ -68,17 +68,15 @@ export default function Students() {
      }) => {
        const { data: userData } = await supabase.auth.getUser();
        
-       // Auto-generate portal email if not provided
-       let portalEmail = formData.email?.trim();
-       if (!portalEmail) {
-         portalEmail = generatePortalEmail(
-           formData.full_name.split(' ')[0],
-           formData.full_name.split(' ').slice(1).join(' ') || formData.full_name,
-           formData.admission_number
-         );
-       }
+       // Auto-generate portal email from admission number
+       // Format: admissionnumber@ttl.student
+       let portalEmail = generatePortalEmail(
+         formData.full_name.split(' ')[0],
+         formData.full_name.split(' ').slice(1).join(' ') || formData.full_name,
+         formData.admission_number
+       );
        
-       // Create portal account if email is provided
+       // Create portal account
        let portalUserId: string | null = null;
        if (portalEmail) {
          const accountResult = await createStudentPortalAccount(
@@ -107,6 +105,7 @@ export default function Students() {
          admitted_by: userData?.user?.id,
          ...formData,
          email: portalEmail,
+         notification_email: formData.notification_email || null,
          user_id: portalUserId,
          class_id: formData.class_id || null,
          parent_name: formData.guardian_name,
@@ -158,9 +157,8 @@ export default function Students() {
      onSuccess: (student) => {
        queryClient.invalidateQueries({ queryKey: ['students'] });
        queryClient.invalidateQueries({ queryKey: ['student-fees'] });
-       const message = student?.email 
-         ? `Student enrolled successfully. Portal access: ${student.email}`
-         : "Student enrolled successfully";
+       const notificationEmail = student?.notification_email ? ` | Notifications: ${student.notification_email}` : '';
+       const message = `Student enrolled successfully. Portal: ${student?.email}${notificationEmail}`;
        toast({ title: message });
        setIsDialogOpen(false);
        setEditingStudent(null);
@@ -171,101 +169,100 @@ export default function Students() {
      },
    });
 
-   const updateMutation = useMutation({
-     mutationFn: async ({ id, formData, requirements, selectedFees }: { 
-       id: string; 
-       formData: any; 
-       requirements: any[];
-       selectedFees: { fee_id: string; amount: number }[];
-     }) => {
-       // Auto-generate portal email if not provided
-       let portalEmail = formData.email?.trim();
-       if (!portalEmail) {
-         portalEmail = generatePortalEmail(
-           formData.full_name.split(' ')[0],
-           formData.full_name.split(' ').slice(1).join(' ') || formData.full_name,
-           formData.admission_number
-         );
-       }
+    const updateMutation = useMutation({
+      mutationFn: async ({ id, formData, requirements, selectedFees }: { 
+        id: string; 
+        formData: any; 
+        requirements: any[];
+        selectedFees: { fee_id: string; amount: number }[];
+      }) => {
+        // Auto-generate portal email from admission number
+        // Format: admissionnumber@ttl.student
+        const portalEmail = generatePortalEmail(
+          formData.full_name.split(' ')[0],
+          formData.full_name.split(' ').slice(1).join(' ') || formData.full_name,
+          formData.admission_number
+        );
 
-       const { error } = await supabase.from('students').update({
-         ...formData,
-         email: portalEmail,
-         class_id: formData.class_id || null,
-         parent_name: formData.guardian_name,
-         parent_phone: formData.guardian_phone,
-         parent_email: formData.guardian_email,
-       }).eq('id', id);
-       
-       if (error) throw error;
+        const { error } = await supabase.from('students').update({
+          ...formData,
+          email: portalEmail,
+          notification_email: formData.notification_email || null,
+          class_id: formData.class_id || null,
+          parent_name: formData.guardian_name,
+          parent_phone: formData.guardian_phone,
+          parent_email: formData.guardian_email,
+        }).eq('id', id);
+        
+        if (error) throw error;
 
-       // Get current term
-       const { data: currentTerm } = await supabase
-         .from('academic_terms')
-         .select('id')
-         .eq('tenant_id', tenantData!.tenantId)
-         .eq('is_current', true)
-         .single();
+        // Get current term
+        const { data: currentTerm } = await supabase
+          .from('academic_terms')
+          .select('id')
+          .eq('tenant_id', tenantData!.tenantId)
+          .eq('is_current', true)
+          .single();
 
-       // Update requirements
-       if (requirements.length > 0 && currentTerm) {
-         for (const req of requirements) {
-           await supabase.from('student_term_requirements').upsert({
-             tenant_id: tenantData!.tenantId,
-             student_id: id,
-             term_id: currentTerm.id,
-             requirement_id: req.requirement_id,
-             is_fulfilled: req.is_fulfilled,
-             fulfilled_at: req.is_fulfilled ? new Date().toISOString() : null,
-           }, { 
-             onConflict: 'student_id,term_id,requirement_id' 
-           });
-         }
-       }
+        // Update requirements
+        if (requirements.length > 0 && currentTerm) {
+          for (const req of requirements) {
+            await supabase.from('student_term_requirements').upsert({
+              tenant_id: tenantData!.tenantId,
+              student_id: id,
+              term_id: currentTerm.id,
+              requirement_id: req.requirement_id,
+              is_fulfilled: req.is_fulfilled,
+              fulfilled_at: req.is_fulfilled ? new Date().toISOString() : null,
+            }, { 
+              onConflict: 'student_id,term_id,requirement_id' 
+            });
+          }
+        }
 
-       // Update student fees if fees were selected
-       if (selectedFees.length > 0 && currentTerm) {
-         const totalAmount = selectedFees.reduce((sum, fee) => sum + fee.amount, 0);
-         
-         // Check if student_fees record exists for this term
-         const { data: existingFee } = await supabase
-           .from('student_fees')
-           .select('id')
-           .eq('student_id', id)
-           .eq('term_id', currentTerm.id)
-           .maybeSingle();
+        // Update student fees if fees were selected
+        if (selectedFees.length > 0 && currentTerm) {
+          const totalAmount = selectedFees.reduce((sum, fee) => sum + fee.amount, 0);
+          
+          // Check if student_fees record exists for this term
+          const { data: existingFee } = await supabase
+            .from('student_fees')
+            .select('id')
+            .eq('student_id', id)
+            .eq('term_id', currentTerm.id)
+            .maybeSingle();
 
-         if (existingFee) {
-           await supabase.from('student_fees').update({
-             total_amount: totalAmount,
-             amount_paid: 0, // Reset amount paid when updating fees
-           }).eq('id', existingFee.id);
-         } else {
-           await supabase.from('student_fees').insert({
-             tenant_id: tenantData!.tenantId,
-             student_id: id,
-             term_id: currentTerm.id,
-             total_amount: totalAmount,
-             amount_paid: 0,
-             status: 'pending',
-           });
-         }
-       }
-     },
-     onSuccess: () => {
-       queryClient.invalidateQueries({ queryKey: ['students'] });
-       queryClient.invalidateQueries({ queryKey: ['student-fees'] });
-       toast({ 
-         title: isReEnrollment ? "Student re-enrolled successfully" : "Student updated successfully" 
-       });
-       setIsDialogOpen(false);
-       setEditingStudent(null);
-       setIsReEnrollment(false);
-     },
-     onError: (error: any) => {
-       toast({ title: "Error", description: error.message, variant: "destructive" });
-     },
-   });
+          if (existingFee) {
+            await supabase.from('student_fees').update({
+              total_amount: totalAmount,
+              amount_paid: 0, // Reset amount paid when updating fees
+            }).eq('id', existingFee.id);
+          } else {
+            await supabase.from('student_fees').insert({
+              tenant_id: tenantData!.tenantId,
+              student_id: id,
+              term_id: currentTerm.id,
+              total_amount: totalAmount,
+              amount_paid: 0,
+              status: 'pending',
+            });
+          }
+        }
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['students'] });
+        queryClient.invalidateQueries({ queryKey: ['student-fees'] });
+        toast({ 
+          title: isReEnrollment ? "Student re-enrolled successfully" : "Student updated successfully" 
+        });
+        setIsDialogOpen(false);
+        setEditingStudent(null);
+        setIsReEnrollment(false);
+      },
+      onError: (error: any) => {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      },
+    });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -636,37 +633,39 @@ ${body}  <div class="foot">Generated on ${new Date().toLocaleDateString('en-GB',
                 </div>
               </div>
 
-              <div className="border-t pt-4">
-                <h4 className="font-semibold mb-2">Student Portal</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Portal Email</p>
-                    <p className="font-medium">{viewingStudent.email || "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Portal Status</p>
-                    <p className="font-medium">{viewingStudent.user_id ? "Enabled" : "Not configured"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Portal User ID</p>
-                    <p className="font-medium font-mono break-all">{viewingStudent.user_id || "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Password</p>
-                    <p className="font-medium">Reset via email link</p>
-                  </div>
-                </div>
-                {viewingStudent.email && viewingStudent.user_id && (
-                  <div className="pt-4 flex flex-col sm:flex-row gap-2">
-                    <Button variant="outline" onClick={handleResetPassword}>
-                      Reset portal password
-                    </Button>
-                    <p className="text-sm text-muted-foreground sm:flex-1">
-                      Send a reset link to the student portal email so they can choose a new password.
-                    </p>
-                  </div>
-                )}
-              </div>
+               <div className="border-t pt-4">
+                 <h4 className="font-semibold mb-2">Student Portal & Notifications</h4>
+                 <div className="grid grid-cols-2 gap-4">
+                   <div>
+                     <p className="text-sm text-muted-foreground">Portal Email (Login)</p>
+                     <p className="font-medium font-mono">{viewingStudent.email || "-"}</p>
+                     <p className="text-xs text-muted-foreground mt-1">Format: admissionnumber@ttl.student + school code</p>
+                   </div>
+                   <div>
+                     <p className="text-sm text-muted-foreground">Portal Status</p>
+                     <p className="font-medium">{viewingStudent.user_id ? "Enabled" : "Not configured"}</p>
+                   </div>
+                   <div>
+                     <p className="text-sm text-muted-foreground">Notification Email</p>
+                     <p className="font-medium">{viewingStudent.notification_email || "-"}</p>
+                     <p className="text-xs text-muted-foreground mt-1">Receives grades, announcements, updates</p>
+                   </div>
+                   <div>
+                     <p className="text-sm text-muted-foreground">Portal User ID</p>
+                     <p className="font-medium font-mono text-xs break-all">{viewingStudent.user_id || "-"}</p>
+                   </div>
+                 </div>
+                 {viewingStudent.email && viewingStudent.user_id && (
+                   <div className="pt-4 flex flex-col sm:flex-row gap-2">
+                     <Button variant="outline" onClick={handleResetPassword}>
+                       Reset portal password
+                     </Button>
+                     <p className="text-sm text-muted-foreground sm:flex-1">
+                       Send a reset link to the student portal email so they can choose a new password.
+                     </p>
+                   </div>
+                 )}
+               </div>
 
               <div className="border-t pt-4">
                 <h4 className="font-semibold mb-2">Guardian Information</h4>

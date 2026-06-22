@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/i18n";
 import { Plus, Trash2, Edit, Calendar } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 
@@ -24,6 +25,7 @@ interface Holiday {
 
 export default function SchoolHolidays() {
   const { data: tenantData } = useTenant();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);

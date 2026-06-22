@@ -2,6 +2,7 @@
 // MOBILE-FIRST RESPONSIVE DESIGN
 
 import { useState } from "react";
+import { useLanguage } from "@/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -34,6 +35,7 @@ const formatUgandaDate = (date: Date) => {
 };
 
 const BusinessDashboard = () => {
+  const { t } = useLanguage();
   const { data: tenant } = useTenant();
   const isMobile = useIsMobile();
   const [selectedDate, setSelectedDate] = useState<Date>(getUgandaDate());

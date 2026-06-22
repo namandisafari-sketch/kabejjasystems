@@ -8,10 +8,12 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Shield, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useLanguage } from "@/i18n";
 
 const AdminSignup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState(true);
@@ -37,7 +39,7 @@ const AdminSignup = () => {
         const signupEnabled = import.meta.env.VITE_ADMIN_SIGNUP_ENABLED === 'true';
         
         if (!signupEnabled && !token) {
-          setError("Platform admin signup is currently disabled. Please use an invitation link.");
+          setError(t.pages.adminSignup.disabledSignup);
           setIsAuthorized(false);
           return;
         }
@@ -53,7 +55,7 @@ const AdminSignup = () => {
             .single() as any);
           
           if (error || !data) {
-            setError("Invalid, expired, or already-used invitation token.");
+            setError(t.pages.adminSignup.invalidToken);
             setIsAuthorized(false);
             return;
           }
@@ -67,12 +69,12 @@ const AdminSignup = () => {
           // Signup is enabled without token
           setIsAuthorized(true);
         } else {
-          setError("Admin signup requires a valid invitation token.");
+          setError(t.pages.adminSignup.tokenRequired);
           setIsAuthorized(false);
         }
       } catch (err) {
         console.error('Token validation error:', err);
-        setError("Error validating invitation. Please try again.");
+        setError(t.pages.adminSignup.notAuthorized);
         setIsAuthorized(false);
       } finally {
         setValidating(false);
@@ -91,8 +93,8 @@ const AdminSignup = () => {
     
     if (!isAuthorized) {
       toast({
-        title: "Unauthorized",
-        description: "You are not authorized to create an admin account.",
+        title: t.pages.adminSignup.accessDenied,
+        description: t.pages.adminSignup.notAuthorized,
         variant: "destructive",
       });
       return;
@@ -100,8 +102,8 @@ const AdminSignup = () => {
     
     if (formData.password !== formData.confirmPassword) {
       toast({
-        title: "Password Mismatch",
-        description: "Passwords do not match",
+        title: t.messages.toastTitles[82],
+        description: t.messages.toastDescriptions.passwordsDoNotMatch,
         variant: "destructive",
       });
       return;
@@ -109,8 +111,8 @@ const AdminSignup = () => {
     
     if (formData.password.length < 8) {
       toast({
-        title: "Weak Password",
-        description: "Password must be at least 8 characters",
+        title: t.messages.toastTitles[110],
+        description: t.messages.toastTitles[110],
         variant: "destructive",
       });
       return;
@@ -167,8 +169,8 @@ const AdminSignup = () => {
       }
       
       toast({
-        title: "Admin Account Created!",
-        description: "You can now log in as a platform administrator",
+        title: t.messages.toastTitles[5],
+        description: t.messages.toastDescriptions.youCanLogIn,
       });
       
       navigate("/login");
@@ -176,7 +178,7 @@ const AdminSignup = () => {
     } catch (error: any) {
       console.error('Admin signup error:', error);
       toast({
-        title: "Signup Failed",
+        title: t.messages.toastTitles[119],
         description: error.message,
         variant: "destructive",
       });
@@ -192,10 +194,10 @@ const AdminSignup = () => {
         <div className="w-full max-w-md">
           <Card>
             <CardHeader>
-              <CardTitle>Validating Invitation...</CardTitle>
+              <CardTitle>{t.pages.adminSignup.validating}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Please wait while we verify your access...</p>
+              <p className="text-sm text-muted-foreground">{t.pages.adminSignup.pleaseWait}</p>
             </CardContent>
           </Card>
         </div>
@@ -210,18 +212,18 @@ const AdminSignup = () => {
         <div className="w-full max-w-md">
           <Link to="/" className="flex items-center text-sm text-muted-foreground mb-6 hover:text-foreground transition-colors">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to home
+            {t.pages.login.backToHome}
           </Link>
           
           <Card>
             <CardHeader>
-              <CardTitle className="text-3xl">Access Denied</CardTitle>
+              <CardTitle className="text-3xl">{t.pages.adminSignup.accessDenied}</CardTitle>
             </CardHeader>
             
             <CardContent>
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error || "You are not authorized to access this page."}</AlertDescription>
+                <AlertDescription>{error || t.pages.adminSignup.notAuthorized}</AlertDescription>
               </Alert>
               
               <p className="text-sm text-muted-foreground mt-4 mb-4">
@@ -229,7 +231,7 @@ const AdminSignup = () => {
               </p>
               
               <Button onClick={() => navigate("/")} className="w-full">
-                Return Home
+                {t.pages.adminSignup.returnHome}
               </Button>
             </CardContent>
           </Card>
@@ -243,82 +245,82 @@ const AdminSignup = () => {
       <div className="w-full max-w-md">
         <Link to="/" className="flex items-center text-sm text-muted-foreground mb-6 hover:text-foreground transition-colors">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to home
+          {t.pages.login.backToHome}
         </Link>
         
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2 mb-2">
               <Shield className="h-6 w-6 text-accent" />
-              <CardTitle className="text-3xl">Platform Admin</CardTitle>
+              <CardTitle className="text-3xl">{t.pages.adminSignup.platformAdmin}</CardTitle>
             </div>
-            <CardDescription>Create a platform administrator account</CardDescription>
+            <CardDescription>{t.pages.adminSignup.createAccount}</CardDescription>
           </CardHeader>
           
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="fullName">Full Name *</Label>
+                <Label htmlFor="fullName">{t.pages.adminSignup.fullNameLabel}</Label>
                 <Input
                   id="fullName"
                   value={formData.fullName}
                   onChange={(e) => handleChange('fullName', e.target.value)}
-                  placeholder="Admin Name"
+                  placeholder={t.pages.adminSignup.adminNamePlaceholder}
                   required
                 />
               </div>
               
               <div>
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email">{t.pages.adminSignup.emailLabel}</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleChange('email', e.target.value)}
-                  placeholder="admin@example.com"
+                  placeholder={t.pages.adminSignup.emailPlaceholder}
                   required
                 />
               </div>
               
               <div>
-                <Label htmlFor="password">Password *</Label>
+                <Label htmlFor="password">{t.pages.adminSignup.passwordLabel}</Label>
                 <Input
                   id="password"
                   type="password"
                   value={formData.password}
                   onChange={(e) => handleChange('password', e.target.value)}
-                  placeholder="Min. 8 characters"
+                  placeholder={t.pages.adminSignup.passwordPlaceholder}
                   required
                 />
               </div>
               
               <div>
-                <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                <Label htmlFor="confirmPassword">{t.pages.adminSignup.confirmPasswordLabel}</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
                   value={formData.confirmPassword}
                   onChange={(e) => handleChange('confirmPassword', e.target.value)}
-                  placeholder="Re-enter password"
+                  placeholder={t.pages.adminSignup.confirmPlaceholder}
                   required
                 />
               </div>
               
               <Button type="submit" disabled={loading} className="w-full bg-accent hover:bg-accent/90">
-                {loading ? "Creating..." : "Create Admin Account"}
+                {loading ? t.common.loading : t.pages.adminSignup.createButton}
               </Button>
               
               <p className="text-sm text-muted-foreground text-center">
-                Business owner?{" "}
+                {t.pages.adminSignup.businessOwner}{" "}
                 <Link to="/signup" className="text-accent hover:underline">
-                  Sign up here
+                  {t.pages.adminSignup.signUpHere}
                 </Link>
               </p>
               
               <p className="text-sm text-muted-foreground text-center">
-                Already have an account?{" "}
+                {t.pages.adminSignup.alreadyHaveAccount}{" "}
                 <Link to="/login" className="text-accent hover:underline">
-                  Login
+                  {t.pages.adminSignup.login}
                 </Link>
               </p>
             </form>

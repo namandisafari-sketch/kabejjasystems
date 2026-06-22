@@ -3,21 +3,23 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/i18n";
 
 export default function TermsAndConditions() {
+  const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <Button variant="ghost" asChild className="mb-4">
           <Link to="/business">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
+            {t.common.back} {t.nav.dashboard}
           </Link>
         </Button>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl md:text-3xl text-center">Terms of Service</CardTitle>
+            <CardTitle className="text-2xl md:text-3xl text-center">{t.common.notes}</CardTitle>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[70vh] pr-4">

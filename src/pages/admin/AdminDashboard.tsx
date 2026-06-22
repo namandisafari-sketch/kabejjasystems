@@ -8,8 +8,10 @@ import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, XCircle, Clock, Users, Package, TrendingUp, DollarSign, GraduationCap, UserCheck, UserX, School } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useLanguage } from "@/i18n";
 
 const AdminDashboard = () => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedPayment, setSelectedPayment] = useState<any>(null);
@@ -198,7 +200,7 @@ const AdminDashboard = () => {
       <div className="grid md:grid-cols-4 gap-6 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Tenants</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t.common.total} {t.nav.dashboard}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -208,7 +210,7 @@ const AdminDashboard = () => {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Students</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t.dashboard.totalStudents}</CardTitle>
             <GraduationCap className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
@@ -223,7 +225,7 @@ const AdminDashboard = () => {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Pending Reviews</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t.common.pending} {t.common.details}</CardTitle>
             <Clock className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
@@ -233,7 +235,7 @@ const AdminDashboard = () => {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t.dashboard.totalRevenue}</CardTitle>
             <DollarSign className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
@@ -250,7 +252,7 @@ const AdminDashboard = () => {
       <Card className="mb-8">
         <CardHeader>
           <CardTitle>Last 7 Days Summary</CardTitle>
-          <CardDescription>Signups and revenue overview</CardDescription>
+          <CardDescription>{t.dashboard.overview}</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -303,7 +305,7 @@ const AdminDashboard = () => {
       {/* Pending Payments Queue */}
       <Card>
         <CardHeader>
-          <CardTitle>Payment Approval Queue</CardTitle>
+          <CardTitle>{t.fees.paymentHistory}</CardTitle>
           <CardDescription>Review and approve pending payment submissions</CardDescription>
         </CardHeader>
         <CardContent>

@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n";
 import { Bell, MessageSquare, Mail, Smartphone, Save, Send, Loader2 } from "lucide-react";
 
 interface NotificationConfig {
@@ -59,6 +60,7 @@ export default function NotificationSettings() {
   });
 
   const [testSending, setTestSending] = useState<string | null>(null);
+  const { t } = useLanguage();
 
   const hasExistingConfig = !!config;
 
@@ -99,11 +101,11 @@ export default function NotificationSettings() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Notification settings saved");
+      toast.success(t.messages.toastDescriptions.appWillReload);
       queryClient.invalidateQueries({ queryKey: ["notification-config"] });
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to save settings");
+      toast.error(error.message || t.messages.toastTitles[30]);
     },
   });
 
@@ -116,11 +118,11 @@ export default function NotificationSettings() {
       if (error) throw error;
     },
     onSuccess: (_data, channel) => {
-      toast.success(`Test ${channel} sent successfully`);
+      toast.success(t.messages.toastTitles[886]);
       setTestSending(null);
     },
     onError: (error: any) => {
-      toast.error(error.message || "Test send failed");
+      toast.error(error.message || t.messages.toastTitles[30]);
       setTestSending(null);
     },
   });
@@ -151,7 +153,7 @@ export default function NotificationSettings() {
       <div className="flex items-center gap-3 mb-6">
         <Bell className="h-8 w-8" />
         <div>
-          <h1 className="text-3xl font-bold">Notification Settings</h1>
+          <h1 className="text-3xl font-bold">{t.navigation.moduleRoutes.notification_settings}</h1>
           <p className="text-muted-foreground">Configure your Africa&apos;s Talking notification provider</p>
         </div>
       </div>
@@ -159,7 +161,7 @@ export default function NotificationSettings() {
       <div className="grid gap-6 max-w-4xl">
         <Card>
           <CardHeader>
-            <CardTitle>Provider Configuration</CardTitle>
+            <CardTitle>{t.settings.general}</CardTitle>
             <CardDescription>Set up your notification provider credentials</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -232,34 +234,34 @@ export default function NotificationSettings() {
                   checked={form.sms_enabled}
                   onCheckedChange={(v) => updateField("sms_enabled", v)}
                 />
-                <Label className="cursor-pointer">SMS Enabled</Label>
+                  <Label className="cursor-pointer">SMS {t.common.active}</Label>
               </div>
               <div className="flex items-center gap-3">
                 <Switch
                   checked={form.whatsapp_enabled}
                   onCheckedChange={(v) => updateField("whatsapp_enabled", v)}
                 />
-                <Label className="cursor-pointer">WhatsApp Enabled</Label>
+                  <Label className="cursor-pointer">WhatsApp {t.common.active}</Label>
               </div>
               <div className="flex items-center gap-3">
                 <Switch
                   checked={form.email_enabled}
                   onCheckedChange={(v) => updateField("email_enabled", v)}
                 />
-                <Label className="cursor-pointer">Email Enabled</Label>
+                  <Label className="cursor-pointer">Email {t.common.active}</Label>
               </div>
             </div>
 
             <Button onClick={handleSave} disabled={saveMutation.isPending} className="gap-2">
               {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              {hasExistingConfig ? "Update Settings" : "Save Settings"}
+              {hasExistingConfig ? t.common.save : t.common.save}
             </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Test Notifications</CardTitle>
+            <CardTitle>{t.settings.notifications}</CardTitle>
             <CardDescription>Send a test message to verify your configuration</CardDescription>
           </CardHeader>
           <CardContent>

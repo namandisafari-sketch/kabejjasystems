@@ -1,14 +1,12 @@
 import { GeneralImportPage } from "./GeneralImportPage";
+import { useLanguage } from "@/i18n";
 
-/**
- * Fees Import Page
- * Allows schools to import fee records from Excel
- */
 export default function FeesImport() {
+  const { t } = useLanguage();
   return (
     <GeneralImportPage
       module="fees"
-      title="Import Fee Records"
+      title={t.fees.title}
       description="Import student fee information including fee types, amounts, and due dates"
     />
   );

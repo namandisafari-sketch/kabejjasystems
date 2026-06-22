@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLanguage } from "@/i18n";
 import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/hooks/use-tenant';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,6 +41,7 @@ interface LearningArea {
 }
 
 export default function ECDLearningAreas() {
+  const { t } = useLanguage();
   const { data: tenantData } = useTenant();
   const tenantId = tenantData?.tenantId;
   const queryClient = useQueryClient();

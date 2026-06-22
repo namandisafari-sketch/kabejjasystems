@@ -28,8 +28,10 @@ import {
 } from "@/components/ui/tabs";
 import { Bell, Search, MessageSquare, Phone, Mail, CheckCircle2, XCircle, Clock, Building2 } from "lucide-react";
 import { format } from "date-fns";
+import { useLanguage } from "@/i18n";
 
 export default function AdminNotifications() {
+  const { t } = useLanguage();
   const [configSearch, setConfigSearch] = useState("");
   const [logSearch, setLogSearch] = useState("");
   const [channelFilter, setChannelFilter] = useState("all");
@@ -100,7 +102,7 @@ export default function AdminNotifications() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
           <Bell className="h-6 w-6" />
-          Notifications
+          {t.navigation.adminSidebarItems.notifications}
         </h1>
         <p className="text-muted-foreground">Monitor notification configurations and outgoing logs across all schools</p>
       </div>

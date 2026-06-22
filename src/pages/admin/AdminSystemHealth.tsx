@@ -10,6 +10,7 @@ import {
   RefreshCw, CheckCircle, AlertCircle, Clock,
   HardDrive, Zap
 } from "lucide-react";
+import { useLanguage } from "@/i18n";
 
 interface HealthMetric {
   label: string;
@@ -19,6 +20,7 @@ interface HealthMetric {
 }
 
 export default function AdminSystemHealth() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [lastCheck, setLastCheck] = useState<Date | null>(null);
@@ -144,7 +146,7 @@ export default function AdminSystemHealth() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">System Health</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t.navigation.adminSidebarItems.systemHealth}</h1>
           <p className="text-muted-foreground">
             Monitor platform health and performance metrics
           </p>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,7 @@ const ECD_LEVELS = [
 ];
 
 export default function ECDPupils() {
+  const { t } = useLanguage();
   const tenantQuery = useTenant();
   const tenantId = tenantQuery.data?.tenantId;
   const queryClient = useQueryClient();

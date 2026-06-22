@@ -1,0 +1,69 @@
+-- =============================================================
+-- Uganda Administrative Geography — Run this in Supabase SQL Editor
+-- Data source: github.com/Uganda-Open-Data/kalulu (2020 boundaries)
+-- =============================================================
+
+-- Drop existing if re-running
+drop table if exists uganda_subcounties cascade;
+drop table if exists uganda_constituencies cascade;
+drop table if exists uganda_districts cascade;
+
+-- Districts (147)
+create table uganda_districts (
+  district_code integer primary key,
+  district_name text not null,
+  region_code integer not null,
+  region_name text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+-- Constituencies (~353)
+create table uganda_constituencies (
+  constituency_code integer primary key,
+  constituency_name text not null,
+  district_code integer not null references uganda_districts(district_code) on delete cascade,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+create index idx_uganda_constituencies_district on uganda_constituencies(district_code);
+
+-- Subcounties (~2000+)
+create table uganda_subcounties (
+  id uuid default gen_random_uuid() primary key,
+  subcounty_code integer not null,
+  subcounty_name text not null,
+  district_code integer not null references uganda_districts(district_code) on delete cascade,
+  constituency_code integer not null references uganda_constituencies(constituency_code) on delete cascade,
+  created_at timestamp with time zone default timezone('utc'::text, now()),
+  unique(subcounty_code, district_code)
+);
+
+create index idx_uganda_subcounties_district on uganda_subcounties(district_code);
+create index idx_uganda_subcounties_constituency on uganda_subcounties(constituency_code);
+
+-- RLS
+alter table uganda_districts enable row level security;
+alter table uganda_constituencies enable row level security;
+alter table uganda_subcounties enable row level security;
+
+-- Read policies for authenticated users
+create policy "Authenticated users can read uganda_districts"
+  on uganda_districts for select to authenticated using (true);
+create policy "Authenticated users can read uganda_constituencies"
+  on uganda_constituencies for select to authenticated using (true);
+create policy "Authenticated users can read uganda_subcounties"
+  on uganda_subcounties for select to authenticated using (true);
+
+-- Insert policies for service_role (seeding)
+create policy "Only service role can insert uganda_districts"
+  on uganda_districts for insert to service_role with check (true);
+create policy "Only service role can insert uganda_constituencies"
+  on uganda_constituencies for insert to service_role with check (true);
+create policy "Only service role can insert uganda_subcounties"
+  on uganda_subcounties for insert to service_role with check (true);
+
+-- Add columns to students and employees
+ALTER TABLE students ADD COLUMN IF NOT EXISTS constituency TEXT;
+ALTER TABLE students ADD COLUMN IF NOT EXISTS subcounty TEXT;
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS constituency TEXT;
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS subcounty TEXT;

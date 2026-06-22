@@ -10,9 +10,11 @@ import { getStudentSession } from "@/pages/StudentLogin";
 import { CreditCard, Download, Receipt, Printer } from "lucide-react";
 import { format } from "date-fns";
 import { FeeReceiptThermal } from "@/components/fees/FeeReceiptThermal";
+import { useLanguage } from "@/i18n";
 
 export default function StudentFees() {
   const session = getStudentSession()!;
+  const { t } = useLanguage();
   const [selectedPayment, setSelectedPayment] = useState<any>(null);
 
   const { data: feeRecord } = useQuery({
@@ -85,7 +87,7 @@ export default function StudentFees() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <CreditCard className="h-6 w-6" /> Fees & Receipts
+          <CreditCard className="h-6 w-6" /> {t.fees.title} & {t.fees.receipt}s
         </h1>
         <p className="text-muted-foreground">View your fee statements and payment receipts</p>
       </div>
@@ -93,7 +95,7 @@ export default function StudentFees() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Due</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t.common.total} {t.fees.pending}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
@@ -106,7 +108,7 @@ export default function StudentFees() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Paid</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t.fees.paid}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-green-600">
@@ -116,7 +118,7 @@ export default function StudentFees() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Balance</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t.fees.balance}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className={`text-2xl font-bold ${(feeRecord?.balance || 0) > 0 ? "text-red-500" : "text-green-600"}`}>
@@ -124,7 +126,7 @@ export default function StudentFees() {
             </p>
             {feeRecord && (
               <Badge variant={feeRecord.balance > 0 ? "destructive" : "default"} className="mt-1">
-                {feeRecord.balance > 0 ? "Outstanding" : "Cleared"}
+                {feeRecord.balance > 0 ? t.fees.pending : t.fees.paid}
               </Badge>
             )}
           </CardContent>
@@ -134,18 +136,18 @@ export default function StudentFees() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Receipt className="h-5 w-5" /> Payment History
+            <Receipt className="h-5 w-5" /> {t.fees.paymentHistory}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Receipt #</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Method</TableHead>
-                <TableHead>Reference</TableHead>
+                <TableHead>{t.common.date}</TableHead>
+                <TableHead>{t.fees.receipt} #</TableHead>
+                <TableHead>{t.common.amount}</TableHead>
+                <TableHead>{t.fees.paymentMethod}</TableHead>
+                <TableHead>{t.common.type}</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -170,7 +172,7 @@ export default function StudentFees() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
-                    No payment records found
+                    {t.common.noResults}
                   </TableCell>
                 </TableRow>
               )}
@@ -182,7 +184,7 @@ export default function StudentFees() {
       <Dialog open={!!selectedPayment} onOpenChange={(o) => { if (!o) setSelectedPayment(null); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Payment Receipt</DialogTitle>
+            <DialogTitle>{t.fees.receipt}</DialogTitle>
           </DialogHeader>
           <div id="receipt-content">
             {selectedPayment && tenant && (

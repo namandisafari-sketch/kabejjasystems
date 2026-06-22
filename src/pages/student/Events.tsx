@@ -9,9 +9,11 @@ import { getStudentSession } from "@/pages/StudentLogin";
 import { CalendarCheck, MapPin, Clock, Users, Loader2, Ticket } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/i18n";
 
 export default function StudentEvents() {
   const session = getStudentSession()!;
+  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [ticketCounts, setTicketCounts] = useState<Record<string, number>>({});
@@ -63,12 +65,12 @@ export default function StudentEvents() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast({ title: "Event booked successfully" });
+      toast({ title: t.messages.toastTitles[42] });
       queryClient.invalidateQueries({ queryKey: ["student-my-bookings"] });
       queryClient.invalidateQueries({ queryKey: ["student-events"] });
       setTicketCounts({});
     },
-    onError: (err) => toast({ variant: "destructive", title: "Booking failed", description: err.message }),
+    onError: (err) => toast({ variant: "destructive", title: t.messages.toastTitles[10], description: err.message }),
   });
 
   const cancelMutation = useMutation({
@@ -77,7 +79,7 @@ export default function StudentEvents() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast({ title: "Booking cancelled" });
+      toast({ title: t.messages.toastTitles[8] });
       queryClient.invalidateQueries({ queryKey: ["student-my-bookings"] });
     },
   });
@@ -112,7 +114,7 @@ export default function StudentEvents() {
                   </div>
                   {b.status === "confirmed" && (
                     <Button variant="ghost" size="sm" className="mt-2 text-xs h-7" onClick={() => cancelMutation.mutate(b.id)}>
-                      Cancel
+                      {t.common.cancel}
                     </Button>
                   )}
                 </CardContent>
@@ -121,7 +123,7 @@ export default function StudentEvents() {
           </div>
         ) : (
           <Card>
-            <CardContent className="py-4 text-center text-sm text-muted-foreground">No bookings yet</CardContent>
+            <CardContent className="py-4 text-center text-sm text-muted-foreground">{t.common.noResults}</CardContent>
           </Card>
         )}
       </div>
@@ -195,7 +197,7 @@ export default function StudentEvents() {
                         onClick={() => bookMutation.mutate({ eventId: e.id, ticketCount: count, totalPrice: e.ticket_price * count })}
                         disabled={bookMutation.isPending}
                       >
-                        {bookMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Book"}
+                        {bookMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : t.common.add}
                       </Button>
                     </div>
                   )}
@@ -206,7 +208,7 @@ export default function StudentEvents() {
         </div>
         {(!events || events.length === 0) && (
           <Card>
-            <CardContent className="py-8 text-center text-muted-foreground">No upcoming events</CardContent>
+            <CardContent className="py-8 text-center text-muted-foreground">{t.common.noResults}</CardContent>
           </Card>
         )}
       </div>

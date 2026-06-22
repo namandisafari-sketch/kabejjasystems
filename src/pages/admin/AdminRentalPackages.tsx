@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Building2, Plus, Pencil, Trash2, Home, Users } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n";
 
 interface RentalPackage {
     id: string;
@@ -27,6 +28,7 @@ interface RentalPackage {
 }
 
 const AdminRentalPackages = () => {
+    const { t } = useLanguage();
     const queryClient = useQueryClient();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingPackage, setEditingPackage] = useState<RentalPackage | null>(null);
@@ -172,7 +174,7 @@ const AdminRentalPackages = () => {
         <div className="container mx-auto px-4 py-6 safe-bottom">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold">Rental Packages</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold">{t.navigation.adminSidebarItems.rentalPackages}</h1>
                     <p className="text-muted-foreground text-sm sm:text-base">Monthly pricing for rental management</p>
                 </div>
                 <Dialog open={isDialogOpen} onOpenChange={(open) => { if (!open) resetForm(); setIsDialogOpen(open); }}>

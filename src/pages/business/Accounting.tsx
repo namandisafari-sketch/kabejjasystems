@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLanguage } from "@/i18n";
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +10,7 @@ import { FinancialDashboard } from '@/components/accounting/FinancialDashboard';
 import { ChartOfAccountsManager } from '@/components/accounting/ChartOfAccountsManager';
 
 const Accounting = () => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('dashboard');
 
   // Get user profile to get tenant_id

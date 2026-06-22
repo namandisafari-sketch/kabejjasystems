@@ -8,10 +8,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, XCircle, Clock, Users, Package } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/i18n";
 
 const Admin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [selectedPayment, setSelectedPayment] = useState<any>(null);
   const [adminNotes, setAdminNotes] = useState("");
@@ -37,8 +39,8 @@ const Admin = () => {
 
       if (profile?.role !== 'superadmin' && profile?.role !== 'admin') {
         toast({
-          title: "Access Denied",
-          description: "You don't have admin permissions",
+          title: t.messages.toastTitles[0],
+          description: t.messages.toastDescriptions.noAdminPermissions,
           variant: "destructive",
         });
         navigate('/dashboard');
@@ -122,13 +124,13 @@ const Admin = () => {
       setSelectedPayment(null);
       setAdminNotes("");
       toast({
-        title: "Payment Approved",
-        description: "Tenant account has been activated",
+        title: t.messages.toastTitles[96],
+        description: t.messages.toastDescriptions.tenantActivated,
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Approval Failed",
+        title: t.common.error,
         description: error.message,
         variant: "destructive",
       });
@@ -159,13 +161,13 @@ const Admin = () => {
       setSelectedPayment(null);
       setAdminNotes("");
       toast({
-        title: "Payment Rejected",
-        description: "Tenant will be notified to resubmit",
+        title: t.messages.toastTitles[102],
+        description: t.messages.toastDescriptions.adminWillReview,
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Rejection Failed",
+        title: t.messages.toastTitles[120],
         description: error.message,
         variant: "destructive",
       });
@@ -183,11 +185,11 @@ const Admin = () => {
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-            <p className="text-sm text-muted-foreground">TennaHub Technologies</p>
+            <h1 className="text-2xl font-bold">{t.navigation.adminPortal}</h1>
+            <p className="text-sm text-muted-foreground">{t.navigation.company}</p>
           </div>
           <Button variant="outline" onClick={handleLogout}>
-            Logout
+            {t.navigation.logout}
           </Button>
         </div>
       </header>
@@ -199,7 +201,7 @@ const Admin = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Tenants
+                {t.navigation.adminSidebarItems.tenants}
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -211,7 +213,7 @@ const Admin = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Payments
+                {t.navigation.adminSidebarItems.payments}
               </CardTitle>
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -223,7 +225,7 @@ const Admin = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Pending Reviews
+                {t.fees.pending}
               </CardTitle>
               <Clock className="h-4 w-4 text-warning" />
             </CardHeader>
@@ -236,13 +238,13 @@ const Admin = () => {
         {/* Pending Payments Queue */}
         <Card>
           <CardHeader>
-            <CardTitle>Payment Approval Queue</CardTitle>
+            <CardTitle>{t.navigation.adminSidebarItems.payments}</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <p>Loading payments...</p>
+              <p>{t.common.loading}</p>
             ) : pendingPayments?.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No pending payments</p>
+              <p className="text-muted-foreground text-center py-8">{t.common.noResults}</p>
             ) : (
               <div className="space-y-4">
                 {pendingPayments?.map((payment) => (
@@ -257,17 +259,17 @@ const Admin = () => {
                         </div>
                         <Badge variant="secondary" className="bg-warning/10 text-warning">
                           <Clock className="h-3 w-3 mr-1" />
-                          Pending
+                          {t.fees.pending}
                         </Badge>
                       </div>
 
                       <div className="grid md:grid-cols-2 gap-4 mb-4">
                         <div>
-                          <p className="text-sm text-muted-foreground">Package</p>
+                          <p className="text-sm text-muted-foreground">{t.common.category}</p>
                           <p className="font-medium">{payment.packages?.name}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground">Amount</p>
+                          <p className="text-sm text-muted-foreground">{t.common.amount}</p>
                           <p className="font-medium">
                             {new Intl.NumberFormat('en-UG', {
                               style: 'currency',
@@ -277,19 +279,19 @@ const Admin = () => {
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground">Payment Method</p>
+                          <p className="text-sm text-muted-foreground">{t.fees.paymentMethod}</p>
                           <p className="font-medium">{payment.payment_method}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground">Transaction Ref</p>
+                          <p className="text-sm text-muted-foreground">{t.common.notes}</p>
                           <p className="font-medium">{payment.transaction_ref}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground">Contact</p>
+                          <p className="text-sm text-muted-foreground">{t.common.email}</p>
                           <p className="font-medium">{payment.tenants?.email}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground">Submitted</p>
+                          <p className="text-sm text-muted-foreground">{t.common.date}</p>
                           <p className="font-medium">
                             {new Date(payment.created_at).toLocaleDateString()}
                           </p>
@@ -299,7 +301,7 @@ const Admin = () => {
                       {selectedPayment?.id === payment.id ? (
                         <div className="space-y-3">
                           <Textarea
-                            placeholder="Add admin notes (optional)"
+                            placeholder={t.common.notes}
                             value={adminNotes}
                             onChange={(e) => setAdminNotes(e.target.value)}
                             rows={3}
@@ -312,7 +314,7 @@ const Admin = () => {
                                 setAdminNotes("");
                               }}
                             >
-                              Cancel
+                              {t.common.cancel}
                             </Button>
                             <Button
                               variant="destructive"
@@ -320,7 +322,7 @@ const Admin = () => {
                               disabled={rejectPaymentMutation.isPending}
                             >
                               <XCircle className="h-4 w-4 mr-2" />
-                              Reject
+                              {t.common.delete}
                             </Button>
                             <Button
                               className="bg-success hover:bg-success/90"
@@ -333,13 +335,13 @@ const Admin = () => {
                               disabled={approvePaymentMutation.isPending}
                             >
                               <CheckCircle className="h-4 w-4 mr-2" />
-                              Approve & Activate
+                              {t.common.confirm}
                             </Button>
                           </div>
                         </div>
                       ) : (
                         <Button onClick={() => setSelectedPayment(payment)}>
-                          Review Payment
+                          {t.common.view}
                         </Button>
                       )}
                     </CardContent>

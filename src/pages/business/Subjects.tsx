@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLanguage } from "@/i18n";
 import { Plus, Search, Pencil, Trash2, BookOpen, GraduationCap, GripVertical } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SubjectElements } from "@/components/school/SubjectElements";
@@ -37,6 +38,7 @@ const LEVELS = [
 ];
 
 export default function Subjects() {
+  const { t } = useLanguage();
   const { data: tenant } = useTenant();
   const { toast } = useToast();
   const queryClient = useQueryClient();

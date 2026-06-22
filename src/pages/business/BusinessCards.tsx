@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLanguage } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,7 @@ const cardTemplates = [
 ];
 
 export default function BusinessCards() {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const printRef = useRef<HTMLDivElement>(null);
   const [template, setTemplate] = useState("modern");

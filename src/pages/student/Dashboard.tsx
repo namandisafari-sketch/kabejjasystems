@@ -4,9 +4,11 @@ import { getStudentSession } from "@/pages/StudentLogin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, FileText, CreditCard, Calendar, Star, TrendingUp, GraduationCap, Wallet } from "lucide-react";
 import { format } from "date-fns";
+import { useLanguage } from "@/i18n";
 
 export default function StudentDashboard() {
   const session = getStudentSession()!;
+  const { t } = useLanguage();
 
   const { data: grades } = useQuery({
     queryKey: ["student-grades-summary", session.studentId],
@@ -71,7 +73,7 @@ export default function StudentDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Welcome, {session.fullName.split(" ")[0]}</h1>
+        <h1 className="text-2xl font-bold">{t.dashboard.welcome}, {session.fullName.split(" ")[0]}</h1>
         <p className="text-muted-foreground">{session.className} · {session.schoolName}</p>
       </div>
 
@@ -79,7 +81,7 @@ export default function StudentDashboard() {
         {avgScore !== null && (
           <Card>
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Avg Score</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t.exams.average}</CardTitle>
               <TrendingUp className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
@@ -90,7 +92,7 @@ export default function StudentDashboard() {
         {latestReport && (
           <Card>
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Latest Grade</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t.exams.grade}</CardTitle>
               <Star className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
@@ -103,7 +105,7 @@ export default function StudentDashboard() {
         )}
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Fee Balance</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t.fees.title} {t.fees.balance}</CardTitle>
             <Wallet className={`h-4 w-4 ${(fees?.balance || 0) > 0 ? "text-red-500" : "text-green-500"}`} />
           </CardHeader>
           <CardContent>
@@ -112,15 +114,17 @@ export default function StudentDashboard() {
             </p>
             {fees && (
               <p className="text-xs text-muted-foreground">
-                {fees.status === "cleared" ? "Fully Paid" : `${fees.status} · ${new Intl.NumberFormat().format(fees.total_amount)} total`}
+                {fees.status === "cleared" ? t.fees.paid : `${fees.status} · ${new Intl.NumberFormat().format(fees.total_amount)} ${t.common.total}`}
               </p>
             )}
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Upcoming Events</CardTitle>
-            <Calendar className="h-4 w-4 text-blue-500" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Upcoming Events
+              <Calendar className="h-4 w-4 text-blue-500" />
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{events?.length || 0}</p>
@@ -135,7 +139,7 @@ export default function StudentDashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" /> Recent Scores
+              <BarChart3 className="h-5 w-5" /> {t.exams.results}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -145,7 +149,7 @@ export default function StudentDashboard() {
                 return (
                   <div key={i} className="space-y-1">
                     <div className="flex justify-between text-sm">
-                      <span className="font-medium">{(g as any).subjects?.name || "Subject"}</span>
+                      <span className="font-medium">{(g as any).subjects?.name || t.exams.subject}</span>
                       <span>{g.score}/{g.max_score} ({pct}%)</span>
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -166,7 +170,7 @@ export default function StudentDashboard() {
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
             <GraduationCap className="h-12 w-12 mx-auto mb-3 opacity-20" />
-            <p>No data available yet. Check back after your school publishes results.</p>
+            <p>{t.common.noResults}</p>
           </CardContent>
         </Card>
       )}

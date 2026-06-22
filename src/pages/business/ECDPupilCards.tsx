@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLanguage } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/use-tenant";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ const ECD_LEVELS: Record<string, string> = {
 };
 
 export default function ECDPupilCards() {
+  const { t } = useLanguage();
   const { data: tenantData } = useTenant();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPupils, setSelectedPupils] = useState<string[]>([]);

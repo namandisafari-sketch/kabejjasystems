@@ -21,8 +21,10 @@ import {
 } from "@/components/ui/select";
 import { Shield, Activity, Search, Filter } from "lucide-react";
 import { format } from "date-fns";
+import { useLanguage } from "@/i18n";
 
 export default function AdminAuditLogs() {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [actionFilter, setActionFilter] = useState<string>("all");
 
@@ -80,7 +82,7 @@ export default function AdminAuditLogs() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Audit Logs</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t.navigation.adminSidebarItems.auditLogs}</h1>
         <p className="text-muted-foreground">
           View system activity logs for security and accountability
         </p>
@@ -90,7 +92,7 @@ export default function AdminAuditLogs() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Logs</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.common.total} {t.navigation.adminSidebarItems.auditLogs}</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -100,7 +102,7 @@ export default function AdminAuditLogs() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Today's Activity</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.dashboard.recentActivity}</CardTitle>
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -130,7 +132,7 @@ export default function AdminAuditLogs() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search logs..."
+                placeholder={t.common.search}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -138,10 +140,10 @@ export default function AdminAuditLogs() {
             </div>
             <Select value={actionFilter} onValueChange={setActionFilter}>
               <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Filter by action" />
+                <SelectValue placeholder={t.common.filter} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Actions</SelectItem>
+                <SelectItem value="all">{t.common.all} Actions</SelectItem>
                 {uniqueActions.map((action) => (
                   <SelectItem key={action} value={action}>
                     {action}
@@ -152,19 +154,19 @@ export default function AdminAuditLogs() {
           </div>
 
           {isLoading ? (
-            <p className="text-muted-foreground">Loading logs...</p>
+            <p className="text-muted-foreground">{t.common.loading}</p>
           ) : filteredLogs?.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">
-              No audit logs found matching your criteria.
+              {t.common.noResults}
             </p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Timestamp</TableHead>
+                    <TableHead>Timestamp</TableHead>
                   <TableHead>Action</TableHead>
                   <TableHead>Tenant</TableHead>
-                  <TableHead>Details</TableHead>
+                  <TableHead>{t.common.details}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

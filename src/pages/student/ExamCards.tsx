@@ -9,9 +9,11 @@ import { format } from "date-fns";
 import html2canvas from "html2canvas";
 import { useToast } from "@/hooks/use-toast";
 import { useRef } from "react";
+import { useLanguage } from "@/i18n";
 
 export default function StudentExamCards() {
   const session = getStudentSession()!;
+  const { t } = useLanguage();
   const { toast } = useToast();
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -72,16 +74,16 @@ export default function StudentExamCards() {
 
   const handleDownload = async () => {
     if (!cardRef.current) return;
-    toast({ title: "Generating image..." });
+      toast({ title: t.common.loading });
     try {
       const canvas = await html2canvas(cardRef.current, { scale: 3, backgroundColor: "#ffffff", useCORS: true });
       const link = document.createElement("a");
       link.download = `Exam-Card-${session.admissionNumber || session.studentId}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
-      toast({ title: "Exam card downloaded" });
+      toast({ title: t.messages.toastTitles[44] });
     } catch {
-      toast({ variant: "destructive", title: "Failed to generate image" });
+      toast({ variant: "destructive", title: t.common.error });
     }
   };
 
@@ -115,13 +117,13 @@ export default function StudentExamCards() {
           <CardContent className="p-4 flex items-start gap-3">
             <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="font-semibold text-red-700 dark:text-red-400">Outstanding Fee Balance</p>
+              <p className="font-semibold text-red-700 dark:text-red-400">{t.fees.title} {t.fees.balance}</p>
               <p className="text-sm text-red-600 dark:text-red-300 mt-1">
                 Your fee balance of <strong>UGX {new Intl.NumberFormat().format(feeInfo?.balance || 0)}</strong> makes you ineligible to sit for exams. Please clear your balance to unlock your examination card.
               </p>
               {schoolpayUrl && (
                 <a href={schoolpayUrl} target="_blank" rel="noopener noreferrer">
-                  <Button variant="default" className="mt-3 bg-red-600 hover:bg-red-700">
+                    <Button variant="default" className="mt-3 bg-red-600 hover:bg-red-700">
                     <ExternalLink className="h-4 w-4 mr-2" /> Pay via SchoolPay
                   </Button>
                 </a>
@@ -147,19 +149,19 @@ export default function StudentExamCards() {
                     </div>
                     <div className="border-t border-green-200 pt-3 space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">Student</span>
+                        <span className="text-sm text-gray-500">{t.students.title}</span>
                         <span className="text-sm font-semibold">{session.fullName}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">Admission No.</span>
+                        <span className="text-sm text-gray-500">{t.students.admissionNumber}</span>
                         <span className="text-sm font-semibold">{session.admissionNumber}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">Class</span>
+                        <span className="text-sm text-gray-500">{t.classes.title}</span>
                         <span className="text-sm font-semibold">{session.className}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">Card No.</span>
+                        <span className="text-sm text-gray-500">{t.components.common.labels.type} No.</span>
                         <span className="text-sm font-mono">{card.card_number}</span>
                       </div>
                       <div className="flex justify-between">
@@ -172,7 +174,7 @@ export default function StudentExamCards() {
                       </div>
                     </div>
                     <div className="mt-4 pt-3 border-t border-green-200 text-center">
-                      <Badge className="bg-green-500">
+                        <Badge className="bg-green-500">
                         <CheckCircle2 className="h-3 w-3 mr-1" /> Eligible
                       </Badge>
                     </div>
@@ -180,10 +182,10 @@ export default function StudentExamCards() {
                 </div>
                 <div className="flex justify-center gap-2 mt-4">
                   <Button variant="outline" size="sm" onClick={handlePrint}>
-                    <Printer className="h-4 w-4 mr-1" /> Print
+                    <Printer className="h-4 w-4 mr-1" /> {t.common.print}
                   </Button>
                   <Button variant="outline" size="sm" onClick={handleDownload}>
-                    <Download className="h-4 w-4 mr-1" /> Download
+                    <Download className="h-4 w-4 mr-1" /> {t.common.download}
                   </Button>
                 </div>
               </CardContent>
@@ -207,7 +209,7 @@ export default function StudentExamCards() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <XCircle className="h-5 w-5 text-red-500" /> Ineligible Cards
+              <XCircle className="h-5 w-5 text-red-500" /> {t.common.inactive} Cards
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">

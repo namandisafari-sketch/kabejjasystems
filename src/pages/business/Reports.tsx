@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useLanguage } from "@/i18n";
 import { Download, FileText, Filter, TrendingUp, TrendingDown, Menu, DollarSign, Wallet } from "lucide-react";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,6 +31,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Reports = () => {
+  const { t } = useLanguage();
   const isMobile = useIsMobile();
   const { filterBranchId, isBranchRestricted, isLoading: branchLoading } = useBranchFilter();
   const [selectedBranchId, setSelectedBranchId] = useState<string>("all");

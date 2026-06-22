@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, GripVertical, ExternalLink, ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/i18n";
 
 interface Sponsor {
   id: string;
@@ -23,6 +24,7 @@ interface Sponsor {
 }
 
 export default function AdminSponsors() {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -174,7 +176,7 @@ export default function AdminSponsors() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Sponsors & Partners</h1>
+          <h1 className="text-2xl font-bold">{t.navigation.adminSidebarItems.sponsors}</h1>
           <p className="text-muted-foreground">
             Manage the sponsor logos that appear on the landing page marquee
           </p>

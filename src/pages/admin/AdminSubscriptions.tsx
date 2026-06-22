@@ -31,8 +31,10 @@ import {
 } from "@/components/ui/select";
 import { Calendar, Clock, AlertTriangle, CheckCircle, XCircle, RefreshCw, CalendarDays, Edit } from "lucide-react";
 import { format, differenceInDays, addDays } from "date-fns";
+import { useLanguage } from "@/i18n";
 
 export default function AdminSubscriptions() {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedTenant, setSelectedTenant] = useState<any>(null);
@@ -162,7 +164,7 @@ export default function AdminSubscriptions() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Subscriptions</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t.navigation.adminSidebarItems.subscriptions}</h1>
         <p className="text-muted-foreground">
           Manage tenant subscriptions, renewals and expirations
         </p>

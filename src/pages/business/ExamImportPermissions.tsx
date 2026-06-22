@@ -26,6 +26,7 @@ interface StaffMember {
 }
 
 const ExamImportPermissions = () => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);

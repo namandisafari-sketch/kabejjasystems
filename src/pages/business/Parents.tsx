@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n";
 import { Users, UserPlus, Link2, Unlink, Search, Mail, Phone } from "lucide-react";
 
 interface Parent {
@@ -48,6 +49,7 @@ export default function Parents() {
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState("");
   const [relationship, setRelationship] = useState("parent");
+  const { t } = useLanguage();
 
   // Fetch parents with their linked students
   const { data: parents = [], isLoading } = useQuery({
@@ -166,19 +168,19 @@ export default function Parents() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Users className="h-6 w-6" />
-            Parents Management
+            {t.parents.title}
           </h1>
           <p className="text-muted-foreground">
-            View parent accounts and link them to students
+            {t.parents.contactInfo}
           </p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Registered Parents</CardTitle>
+          <CardTitle>{t.parents.title}</CardTitle>
           <CardDescription>
-            Parents who have signed up using your school code. Link students to their accounts.
+            {t.parents.contactInfo}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -186,7 +188,7 @@ export default function Parents() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search parents..."
+                placeholder={t.common.search}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -198,10 +200,10 @@ export default function Parents() {
           </div>
 
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading parents...</div>
+            <div className="text-center py-8 text-muted-foreground">{t.common.loading}</div>
           ) : filteredParents.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              {searchTerm ? "No parents match your search" : "No parents registered yet"}
+              {searchTerm ? t.common.noResults : t.common.noResults}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -226,7 +228,7 @@ export default function Parents() {
                   </div>
                   <div className="mb-3">
                     {parent.students.length === 0 ? (
-                      <span className="text-muted-foreground text-sm">No students linked</span>
+                      <span className="text-muted-foreground text-sm">{t.common.noResults}</span>
                     ) : (
                       <div className="flex flex-wrap gap-1">
                         {parent.students.map((link) => (
@@ -240,7 +242,7 @@ export default function Parents() {
                             <button
                               onClick={() => unlinkStudentMutation.mutate(link.id)}
                               className="ml-1 hover:text-destructive"
-                              title="Unlink student"
+                              title={t.common.delete}
                             >
                               <Unlink className="h-3 w-3" />
                             </button>
@@ -256,23 +258,23 @@ export default function Parents() {
                     <DialogTrigger asChild>
                       <Button variant="outline" size="sm" className="w-full gap-1">
                         <Link2 className="h-4 w-4" />
-                        Link Student
+                        {t.students.title}
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Link Student to {parent.full_name}</DialogTitle>
+                        <DialogTitle>{t.common.add} {t.students.title}</DialogTitle>
                         <DialogDescription>
-                          Select a student to link to this parent's account.
+                          {t.common.description}
                         </DialogDescription>
                       </DialogHeader>
                       
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                          <Label>Student</Label>
+                          <Label>{t.students.title}</Label>
                           <Select value={selectedStudent} onValueChange={setSelectedStudent}>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select a student" />
+                              <SelectValue placeholder={t.common.search} />
                             </SelectTrigger>
                             <SelectContent>
                               {getAvailableStudents(parent).map((student) => (
@@ -286,13 +288,13 @@ export default function Parents() {
                           </Select>
                           {getAvailableStudents(parent).length === 0 && (
                             <p className="text-sm text-muted-foreground">
-                              All students are already linked to this parent.
+                              {t.common.noResults}
                             </p>
                           )}
                         </div>
                         
                         <div className="space-y-2">
-                          <Label>Relationship</Label>
+                          <Label>{t.hr.emergencyRelation}</Label>
                           <Select value={relationship} onValueChange={setRelationship}>
                             <SelectTrigger>
                               <SelectValue />
@@ -310,7 +312,7 @@ export default function Parents() {
                       
                       <DialogFooter>
                         <Button variant="outline" onClick={() => setLinkDialogOpen(false)}>
-                          Cancel
+                          {t.common.cancel}
                         </Button>
                         <Button
                           onClick={() => linkStudentMutation.mutate({
@@ -320,7 +322,7 @@ export default function Parents() {
                           })}
                           disabled={!selectedStudent || linkStudentMutation.isPending}
                         >
-                          {linkStudentMutation.isPending ? "Linking..." : "Link Student"}
+                          {linkStudentMutation.isPending ? t.common.loading : t.common.add}
                         </Button>
                       </DialogFooter>
                     </DialogContent>

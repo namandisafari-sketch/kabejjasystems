@@ -35,6 +35,7 @@ interface StudentFormData {
   
   // Portal Info
   email: string;
+  notification_email: string;
   
   // Medical Info
   blood_group: string;
@@ -145,6 +146,7 @@ export function StudentEnrollmentForm({
     address: "",
     photo_url: "",
     email: "",
+    notification_email: "",
     blood_group: "",
     medical_conditions: "",
     allergies: "",
@@ -406,10 +408,25 @@ export function StudentEnrollmentForm({
                      type="email"
                      value={formData.email}
                      onChange={e => updateField("email", e.target.value)}
-                     placeholder="Will be auto-generated if empty (firstname.lastname.admissionnumber@tennahubapps.com)"
+                     placeholder="Auto-generated format: admissionnumber@ttl.student"
+                     disabled
                    />
                    <p className="text-xs text-muted-foreground mt-1">
-                     Leave empty to auto-generate based on student name and admission number
+                     Auto-generated from admission number. Student logs in with this email and their school code.
+                   </p>
+                 </div>
+
+                 <div>
+                   <Label htmlFor="notification_email">Notification Email (for updates & announcements)</Label>
+                   <Input
+                     id="notification_email"
+                     type="email"
+                     value={formData.notification_email}
+                     onChange={e => updateField("notification_email", e.target.value)}
+                     placeholder="e.g., student@gmail.com"
+                   />
+                   <p className="text-xs text-muted-foreground mt-1">
+                     Student receives grades, announcements, and notifications at this email. Can be personal email (Gmail, Yahoo, etc.)
                    </p>
                  </div>
 

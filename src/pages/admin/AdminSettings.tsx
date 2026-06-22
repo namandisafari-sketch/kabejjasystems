@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { z } from "zod";
+import { useLanguage } from "@/i18n";
 
 // Validation schema for payment instructions
 const paymentInstructionsSchema = z.string()
@@ -19,6 +20,7 @@ const paymentInstructionsSchema = z.string()
   .max(2000, { message: "Payment instructions must be less than 2000 characters" });
 
 const AdminSettings = () => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [paymentInstructions, setPaymentInstructions] = useState("");
@@ -157,7 +159,7 @@ const AdminSettings = () => {
       <div className="flex items-center gap-3 mb-6">
         <Settings className="h-8 w-8" />
         <div>
-          <h1 className="text-3xl font-bold">System Settings</h1>
+          <h1 className="text-3xl font-bold">{t.navigation.adminSidebarItems.settings}</h1>
           <p className="text-muted-foreground">Manage system-wide configuration</p>
         </div>
       </div>

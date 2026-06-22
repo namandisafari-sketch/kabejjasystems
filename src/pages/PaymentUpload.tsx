@@ -9,10 +9,12 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Upload } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useLanguage } from "@/i18n";
 
 const PaymentUpload = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [tenantData, setTenantData] = useState<any>(null);
@@ -68,8 +70,8 @@ const PaymentUpload = () => {
 
       if (!profile?.tenant_id) {
         toast({
-          title: "No Tenant Found",
-          description: "Please complete signup first",
+          title: t.common.error,
+          description: t.auth.signup,
           variant: "destructive",
         });
         navigate('/signup');
@@ -115,8 +117,8 @@ const PaymentUpload = () => {
     
     if (!formData.paymentMethod || !formData.transactionRef) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields",
+        title: t.messages.toastTitles[84],
+        description: t.messages.toastDescriptions.pleaseFillRequired,
         variant: "destructive",
       });
       return;
@@ -157,15 +159,15 @@ const PaymentUpload = () => {
       }
 
       toast({
-        title: "Payment Proof Submitted!",
-        description: "Admin will review within 24-72 hours",
+        title: t.messages.toastTitles[99],
+        description: t.messages.toastDescriptions.adminWillReview,
       });
 
       navigate('/pending-approval');
     } catch (error: any) {
       console.error('Upload error:', error);
       toast({
-        title: "Submission Failed",
+        title: t.messages.toastTitles[160],
         description: error.message,
         variant: "destructive",
       });
@@ -179,7 +181,7 @@ const PaymentUpload = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{t.common.loading}</p>
         </div>
       </div>
     );
@@ -190,8 +192,8 @@ const PaymentUpload = () => {
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6 text-center">
-            <p className="text-muted-foreground mb-4">Unable to load tenant information.</p>
-            <Button onClick={() => navigate('/signup')}>Go to Signup</Button>
+            <p className="text-muted-foreground mb-4">{t.common.error}</p>
+            <Button onClick={() => navigate('/signup')}>{t.auth.signup}</Button>
           </CardContent>
         </Card>
       </div>
@@ -210,9 +212,9 @@ const PaymentUpload = () => {
       <div className="w-full max-w-2xl">
         <Card>
           <CardHeader>
-            <CardTitle className="text-3xl">Complete Your Payment</CardTitle>
+            <CardTitle className="text-3xl">{t.common.submit}</CardTitle>
             <CardDescription>
-              Submit payment proof to activate your {packageName} package
+              {t.pages.pendingApproval.description}
             </CardDescription>
           </CardHeader>
           
@@ -222,18 +224,18 @@ const PaymentUpload = () => {
               <Card className="mb-6 bg-accent/5 border-accent">
                 <CardContent className="pt-6">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium">Package:</span>
+                    <span className="font-medium">{t.common.category}:</span>
                     <span className="text-lg font-bold">{packageName}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="font-medium">Amount:</span>
+                    <span className="font-medium">{t.common.amount}:</span>
                     <span className="text-2xl font-bold text-accent">
                       {packagePrice ? new Intl.NumberFormat('en-UG', { 
                         style: 'currency', 
                         currency: 'UGX', 
                         maximumFractionDigits: 0 
-                      }).format(packagePrice) : 'Contact Admin'}
-                      {isSchoolType && <span className="text-sm font-normal text-muted-foreground">/term</span>}
+                      }).format(packagePrice) : t.common.notes}
+                      {isSchoolType && <span className="text-sm font-normal text-muted-foreground">/{t.common.total}</span>}
                     </span>
                   </div>
                 </CardContent>
@@ -243,7 +245,7 @@ const PaymentUpload = () => {
             {/* Payment Instructions */}
             <Card className="mb-6 bg-muted/50">
               <CardHeader>
-                <CardTitle className="text-lg">Payment Instructions</CardTitle>
+                <CardTitle className="text-lg">{t.fees.paymentMethod}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 <div dangerouslySetInnerHTML={{ __html: paymentInstructions || '' }} />
@@ -252,40 +254,40 @@ const PaymentUpload = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="paymentMethod">Payment Method *</Label>
+                <Label htmlFor="paymentMethod">{t.fees.paymentMethod} *</Label>
                 <Input
                   id="paymentMethod"
                   value={formData.paymentMethod}
                   onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
-                  placeholder="e.g., MTN Mobile Money, Bank Transfer"
+                  placeholder={t.fees.paymentMethod}
                   required
                 />
               </div>
               
               <div>
-                <Label htmlFor="transactionRef">Transaction Reference *</Label>
+                <Label htmlFor="transactionRef">{t.common.notes} *</Label>
                 <Input
                   id="transactionRef"
                   value={formData.transactionRef}
                   onChange={(e) => setFormData(prev => ({ ...prev, transactionRef: e.target.value }))}
-                  placeholder="Transaction ID or receipt number"
+                  placeholder={t.common.notes}
                   required
                 />
               </div>
               
               <div>
-                <Label htmlFor="notes">Additional Notes (Optional)</Label>
+                <Label htmlFor="notes">{t.common.notes}</Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Any additional information..."
+                  placeholder={t.common.notes}
                   rows={3}
                 />
               </div>
               
               <Button type="submit" disabled={loading} className="w-full bg-accent hover:bg-accent/90">
-                {loading ? "Submitting..." : "Submit Payment Proof"}
+                {loading ? `${t.common.submit}...` : t.common.submit}
                 <Upload className="ml-2 h-4 w-4" />
               </Button>
             </form>

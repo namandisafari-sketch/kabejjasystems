@@ -12,6 +12,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { toast } from "sonner";
 import { ArrowLeft, Star, Loader2, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/i18n";
 
 const testimonialSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -26,6 +27,7 @@ type TestimonialForm = z.infer<typeof testimonialSchema>;
 
 const SubmitTestimonial = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -57,7 +59,7 @@ const SubmitTestimonial = () => {
 
   const onSubmit = async (data: TestimonialForm) => {
     if (!user) {
-      toast.error("Please log in to submit a testimonial");
+      toast.error(t.auth.login);
       navigate("/login");
       return;
     }
@@ -77,9 +79,9 @@ const SubmitTestimonial = () => {
       if (error) throw error;
 
       setIsSubmitted(true);
-      toast.success("Thank you! Your testimonial has been submitted for review.");
+      toast.success(t.common.success);
     } catch (error: any) {
-      toast.error(error.message || "Failed to submit testimonial");
+      toast.error(error.message || t.common.error);
     } finally {
       setIsSubmitting(false);
     }
@@ -93,17 +95,17 @@ const SubmitTestimonial = () => {
             <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
               <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
             </div>
-            <CardTitle className="text-2xl">Thank You!</CardTitle>
+            <CardTitle className="text-2xl">{t.common.success}</CardTitle>
             <CardDescription>
-              Your testimonial has been submitted successfully and is pending review by our team.
+              {t.pages.pendingApproval.description}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-6">
-              Once approved, your story will be featured on our website to help other businesses discover TennaHub Technologies.
+              {t.common.description}
             </p>
             <Link to="/">
-              <Button className="w-full">Return to Home</Button>
+              <Button className="w-full">{t.pages.notFound.returnHome}</Button>
             </Link>
           </CardContent>
         </Card>
@@ -116,24 +118,24 @@ const SubmitTestimonial = () => {
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="h-4 w-4" />
-          Back to Home
+          {t.common.back}
         </Link>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Share Your Experience</CardTitle>
+            <CardTitle className="text-2xl">{t.common.description}</CardTitle>
             <CardDescription>
-              Tell us how TennaHub Technologies has helped your business. Your testimonial will be reviewed before being published.
+              {t.pages.pendingApproval.description}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {!user ? (
               <div className="text-center py-8">
                 <p className="text-muted-foreground mb-4">
-                  Please log in to submit a testimonial. This helps us verify that testimonials are from real users.
+                  {t.auth.login}
                 </p>
                 <Link to="/login">
-                  <Button>Log In to Continue</Button>
+                  <Button>{t.auth.login}</Button>
                 </Link>
               </div>
             ) : (
@@ -144,9 +146,9 @@ const SubmitTestimonial = () => {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Your Name *</FormLabel>
+                        <FormLabel>{t.common.name} *</FormLabel>
                         <FormControl>
-                          <Input placeholder="John Doe" {...field} />
+                          <Input placeholder={t.common.name} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -159,9 +161,9 @@ const SubmitTestimonial = () => {
                       name="businessName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Business Name</FormLabel>
+                          <FormLabel>{t.common.name}</FormLabel>
                           <FormControl>
-                            <Input placeholder="Your Business Ltd" {...field} />
+                            <Input placeholder={t.common.name} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -173,9 +175,9 @@ const SubmitTestimonial = () => {
                       name="role"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Your Role</FormLabel>
+                          <FormLabel>{t.staff.role}</FormLabel>
                           <FormControl>
-                            <Input placeholder="Owner, Manager, etc." {...field} />
+                            <Input placeholder={t.staff.role} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -188,7 +190,7 @@ const SubmitTestimonial = () => {
                     name="rating"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Your Rating *</FormLabel>
+                        <FormLabel>{t.common.type} *</FormLabel>
                         <FormControl>
                           <div className="flex gap-2">
                             {[1, 2, 3, 4, 5].map((star) => (
@@ -221,16 +223,16 @@ const SubmitTestimonial = () => {
                     name="content"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Your Testimonial *</FormLabel>
+                        <FormLabel>{t.common.description} *</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Share your experience with TennaHub Technologies. How has it helped your business?"
+                            placeholder={t.common.description}
                             className="min-h-[120px]"
                             {...field}
                           />
                         </FormControl>
                         <FormDescription>
-                          Be specific about features you use and results you have achieved.
+                          {t.common.notes}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -242,16 +244,16 @@ const SubmitTestimonial = () => {
                     name="proofDescription"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>How do you use TennaHub Technologies? *</FormLabel>
+                        <FormLabel>{t.common.description} *</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Describe which features you use (e.g., POS system, inventory management, staff tracking) and for how long you've been using the system."
+                            placeholder={t.common.description}
                             className="min-h-[100px]"
                             {...field}
                           />
                         </FormControl>
                         <FormDescription>
-                          This helps us verify your experience and may be used for custom development inquiries.
+                          {t.common.notes}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -262,10 +264,10 @@ const SubmitTestimonial = () => {
                     {isSubmitting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Submitting...
+                        {t.common.submit}...
                       </>
                     ) : (
-                      "Submit Testimonial"
+                      t.common.submit
                     )}
                   </Button>
                 </form>

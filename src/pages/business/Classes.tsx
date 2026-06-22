@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/use-tenant";
 import { Button } from "@/components/ui/button";
@@ -47,10 +48,12 @@ interface SchoolClass {
   section: string | null;
   capacity: number | null;
   class_teacher_id: string | null;
+  secondary_level?: string | null;
   is_active: boolean;
 }
 
 export default function Classes() {
+  const { t } = useLanguage();
   const { data: tenantData } = useTenant();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -199,25 +202,25 @@ export default function Classes() {
     <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Classes</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t.classes.title}</h1>
           <p className="text-muted-foreground">Manage classes and sections</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => { resetForm(); setIsDialogOpen(true); }}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Class
+              {t.classes.addClass}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>{editingClass ? "Edit Class" : "Add Class"}</DialogTitle>
+              <DialogTitle>{editingClass ? t.common.edit : t.classes.addClass}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               {isSecondarySchool ? (
                 <>
                   <div>
-                    <Label htmlFor="grade">Class *</Label>
+                    <Label htmlFor="grade">{t.classes.className} *</Label>
                     <Select
                       value={formData.grade}
                       onValueChange={value => {
@@ -232,7 +235,7 @@ export default function Classes() {
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select class" />
+                        <SelectValue placeholder={t.common.filter} />
                       </SelectTrigger>
                       <SelectContent>
                         {secondaryClassOptions.map(opt => (
@@ -244,7 +247,7 @@ export default function Classes() {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="section">Stream *</Label>
+                    <Label htmlFor="section">{t.classes.stream} *</Label>
                     <Select
                       value={formData.section}
                       onValueChange={value => {
@@ -257,7 +260,7 @@ export default function Classes() {
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select stream" />
+                        <SelectValue placeholder={t.classes.stream} />
                       </SelectTrigger>
                       <SelectContent>
                         {streamOptions.map(stream => (
@@ -272,23 +275,23 @@ export default function Classes() {
               ) : (
                 <>
                   <div>
-                    <Label htmlFor="name">Class Name *</Label>
+                    <Label htmlFor="name">{t.classes.className} *</Label>
                     <Input
                       id="name"
                       value={formData.name}
                       onChange={e => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="e.g. Primary 1, Baby Class"
+                      placeholder={t.classes.className}
                       required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="level">Level *</Label>
+                    <Label htmlFor="level">{t.classes.section} *</Label>
                     <Select
                       value={formData.level}
                       onValueChange={value => setFormData({ ...formData, level: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select level" />
+                        <SelectValue placeholder={t.common.filter} />
                       </SelectTrigger>
                       <SelectContent>
                         {levelOptions.map(opt => (
@@ -300,7 +303,7 @@ export default function Classes() {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="grade">Grade</Label>
+                    <Label htmlFor="grade">{t.exams.grade}</Label>
                     <Input
                       id="grade"
                       value={formData.grade}
@@ -309,7 +312,7 @@ export default function Classes() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="section">Section</Label>
+                    <Label htmlFor="section">{t.classes.section}</Label>
                     <Input
                       id="section"
                       value={formData.section}
@@ -320,7 +323,7 @@ export default function Classes() {
                 </>
               )}
               <div>
-                <Label htmlFor="capacity">Capacity</Label>
+                <Label htmlFor="capacity">{t.common.quantity}</Label>
                 <Input
                   id="capacity"
                   type="number"
@@ -330,9 +333,9 @@ export default function Classes() {
                 />
               </div>
               <div className="flex gap-2 justify-end">
-                <Button type="button" variant="outline" onClick={resetForm}>Cancel</Button>
+                <Button type="button" variant="outline" onClick={resetForm}>{t.common.cancel}</Button>
                 <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                  {editingClass ? "Update" : "Add"} Class
+                  {editingClass ? t.common.edit : t.classes.addClass}
                 </Button>
               </div>
             </form>
@@ -346,7 +349,7 @@ export default function Classes() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search classes..."
+                placeholder={t.common.search}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -364,8 +367,8 @@ export default function Classes() {
           ) : filteredClasses.length === 0 ? (
             <div className="text-center py-12">
               <GraduationCap className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium">No classes yet</h3>
-              <p className="text-muted-foreground">Add your first class to get started</p>
+              <h3 className="text-lg font-medium">{t.common.noResults}</h3>
+              <p className="text-muted-foreground">{t.classes.addClass}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -377,10 +380,10 @@ export default function Classes() {
                       <p className="text-sm text-muted-foreground capitalize">{cls.level || "-"} {cls.section ? `• ${cls.section}` : ""}</p>
                     </div>
                     <Badge variant={cls.is_active ? "default" : "secondary"}>
-                      {cls.is_active ? "Active" : "Inactive"}
+                      {cls.is_active ? t.common.active : t.common.inactive}
                     </Badge>
                   </div>
-                  {cls.capacity && <p className="text-sm text-muted-foreground">Capacity: {cls.capacity}</p>}
+                  {cls.capacity && <p className="text-sm text-muted-foreground">{t.common.quantity}: {cls.capacity}</p>}
                   <div className="flex justify-end gap-1 mt-3">
                     <Button size="sm" variant="ghost" onClick={() => handleEdit(cls)}>
                       <Pencil className="h-4 w-4" />

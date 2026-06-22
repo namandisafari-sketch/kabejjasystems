@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { GraduationCap, Plus, Pencil, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n";
 
 interface SchoolPackage {
   id: string;
@@ -25,6 +26,7 @@ interface SchoolPackage {
 }
 
 const AdminSchoolPackages = () => {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<SchoolPackage | null>(null);
@@ -165,7 +167,7 @@ const AdminSchoolPackages = () => {
     <div className="container mx-auto px-4 py-6 safe-bottom">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">School Packages</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">{t.navigation.adminSidebarItems.schoolPackages}</h1>
           <p className="text-muted-foreground text-sm sm:text-base">Per-term pricing for schools</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => { if (!open) resetForm(); setIsDialogOpen(open); }}>

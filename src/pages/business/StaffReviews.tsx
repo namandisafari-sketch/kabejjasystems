@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n";
 import { Star, Search, ThumbsUp, ThumbsDown, Clock, Loader2, Monitor, Smartphone, Globe, Fingerprint } from "lucide-react";
 import { format } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
@@ -37,6 +38,7 @@ function StarRating({ rating, size = 16 }: { rating: number; size?: number }) {
 }
 
 export default function StaffReviews() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const { data: tenantData } = useTenant();
   const tenantId = tenantData?.tenantId;

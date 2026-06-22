@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { TennaHubLogo } from "@/components/TennaHubLogo";
 import { GraduationCap, ArrowLeft, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/i18n";
 
 interface StudentSession {
   studentId: string;
@@ -30,6 +31,7 @@ export function clearStudentSession() {
 export default function StudentLogin() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [step, setStep] = useState<"school" | "login">("school");
   const [schoolCode, setSchoolCode] = useState("");
   const [email, setEmail] = useState("");
@@ -53,7 +55,7 @@ export default function StudentLogin() {
       .single();
 
     if (error || !data) {
-      toast({ variant: "destructive", title: "Invalid school code" });
+      toast({ variant: "destructive", title: t.pages.studentLogin.invalidSchoolCode });
       setLoading(false);
       return;
     }
@@ -75,7 +77,7 @@ export default function StudentLogin() {
     });
 
     if (authError || !authData.user) {
-      toast({ variant: "destructive", title: "Invalid email or password" });
+      toast({ variant: "destructive", title: t.pages.studentLogin.invalidCredentials });
       setLoading(false);
       return;
     }
@@ -89,7 +91,7 @@ export default function StudentLogin() {
 
     if (studentError || !student) {
       await supabase.auth.signOut();
-      toast({ variant: "destructive", title: "No student record found for this account" });
+      toast({ variant: "destructive", title: t.pages.studentLogin.noStudentRecord });
       setLoading(false);
       return;
     }
@@ -121,17 +123,17 @@ export default function StudentLogin() {
           </div>
           <div className="flex items-center justify-center gap-2 text-muted-foreground">
             <GraduationCap className="h-5 w-5" />
-            <span className="text-sm font-medium">Student Portal</span>
+            <span className="text-sm font-medium">{t.pages.studentLogin.studentPortal}</span>
           </div>
           {step === "school" ? (
             <>
-              <CardTitle className="text-xl">Welcome</CardTitle>
-              <CardDescription>Enter your school code to continue</CardDescription>
+              <CardTitle className="text-xl">{t.pages.studentLogin.welcome}</CardTitle>
+              <CardDescription>{t.pages.studentLogin.enterSchoolCode}</CardDescription>
             </>
           ) : (
             <>
               <CardTitle className="text-xl">{schoolName}</CardTitle>
-              <CardDescription>Sign in with your student account</CardDescription>
+              <CardDescription>{t.pages.studentLogin.signInWithAccount}</CardDescription>
             </>
           )}
         </CardHeader>
@@ -139,10 +141,10 @@ export default function StudentLogin() {
           {step === "school" ? (
             <>
               <div className="space-y-2">
-                <Label htmlFor="code">School Code</Label>
+                <Label htmlFor="code">{t.pages.studentLogin.schoolCodeLabel}</Label>
                 <Input
                   id="code"
-                  placeholder="e.g. KAB001"
+                  placeholder={t.pages.studentLogin.schoolCodePlaceholder}
                   value={schoolCode}
                   onChange={(e) => setSchoolCode(e.target.value.toUpperCase())}
                   maxLength={10}
@@ -151,38 +153,38 @@ export default function StudentLogin() {
                 />
               </div>
               <Button className="w-full" onClick={handleSchoolCode} disabled={loading || !schoolCode.trim()}>
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue"}
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.pages.studentLogin.continue}
               </Button>
             </>
           ) : (
             <>
               <Button variant="ghost" size="sm" className="px-0" onClick={() => setStep("school")}>
-                <ArrowLeft className="h-4 w-4 mr-1" /> Change school
+                <ArrowLeft className="h-4 w-4 mr-1" /> {t.pages.studentLogin.changeSchool}
               </Button>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t.pages.studentLogin.emailLabel}</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="student@example.com"
+                  placeholder={t.pages.studentLogin.emailPlaceholder}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleLogin()}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t.pages.studentLogin.passwordLabel}</Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder={t.pages.studentLogin.passwordPlaceholder}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleLogin()}
                 />
               </div>
               <Button className="w-full" onClick={handleLogin} disabled={loading || !email || !password}>
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.pages.studentLogin.signIn}
               </Button>
             </>
           )}

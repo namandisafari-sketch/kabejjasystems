@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage } from "@/i18n";
 import { 
   Plus, FileText, Clock, CheckCircle, XCircle, AlertCircle, 
   Loader2, Filter, Search, Settings2 
@@ -32,6 +33,7 @@ const typeLabels: Record<string, string> = {
 };
 
 export default function Requisitions() {
+  const { t } = useLanguage();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [selectedRequisitionId, setSelectedRequisitionId] = useState<string | null>(null);

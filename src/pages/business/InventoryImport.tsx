@@ -1,15 +1,13 @@
 import { GeneralImportPage } from "./GeneralImportPage";
+import { useLanguage } from "@/i18n";
 
-/**
- * Inventory Import Page
- * Allows schools to import inventory items from Excel
- */
 export default function InventoryImport() {
+  const { t } = useLanguage();
   return (
     <GeneralImportPage
       module="inventory"
-      title="Import Inventory Items"
-      description="Import inventory items including item codes, quantities, prices, and supplier information"
+      title={t.nav.inventory}
+      description={t.common.description}
     />
   );
 }

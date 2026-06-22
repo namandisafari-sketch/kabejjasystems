@@ -11,8 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Search, GraduationCap, Plus, Loader2, Key, CheckCircle2, XCircle, UserCheck, UserX } from "lucide-react";
+import { useLanguage } from "@/i18n";
 
 export default function AdminStudentAccounts() {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -100,7 +102,7 @@ export default function AdminStudentAccounts() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <GraduationCap className="h-6 w-6" /> Student Accounts
+            <GraduationCap className="h-6 w-6" /> {t.navigation.adminSidebarItems.studentAccounts}
           </h1>
           <p className="text-muted-foreground">Manage student portal login access</p>
         </div>

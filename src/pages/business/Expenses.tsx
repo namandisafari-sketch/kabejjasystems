@@ -79,6 +79,7 @@ const SCHOOL_EXPENSE_CATEGORIES = [
 ];
 
 export default function Expenses() {
+  const { t } = useLanguage();
   const isMobile = useIsMobile();
   const tenantQuery = useTenant();
   const tenantId = tenantQuery.data?.tenantId;

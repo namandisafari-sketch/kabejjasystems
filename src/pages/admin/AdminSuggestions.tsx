@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Lightbulb, Search, MessageSquare, CheckCircle2, Clock, XCircle, BarChart3 } from "lucide-react";
 import { format } from "date-fns";
+import { useLanguage } from "@/i18n";
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
   pending: { label: "Pending", variant: "outline" },
@@ -30,6 +31,7 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 };
 
 export default function AdminSuggestions() {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -73,7 +75,7 @@ export default function AdminSuggestions() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
           <Lightbulb className="h-6 w-6" />
-          Suggestions
+          {t.navigation.adminSidebarItems.suggestions}
         </h1>
         <p className="text-muted-foreground">View all suggestions submitted across all schools</p>
       </div>

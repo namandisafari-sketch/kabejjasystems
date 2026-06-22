@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { SchoolPayTransactions } from "@/components/fees/SchoolPayTransactions";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/use-tenant";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,7 @@ interface StudentFee {
 const ITEMS_PER_PAGE = 15;
 
 export default function Fees() {
+  const { t } = useLanguage();
   const { data: tenantData } = useTenant();
   const { toast } = useToast();
   const queryClient = useQueryClient();

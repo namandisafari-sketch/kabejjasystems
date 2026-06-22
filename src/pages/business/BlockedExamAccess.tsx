@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -35,6 +36,7 @@ interface BlockedResult {
 }
 
 const BlockedExamAccess = () => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [blocks, setBlocks] = useState<BlockedResult[]>([]);
   const [loading, setLoading] = useState(true);

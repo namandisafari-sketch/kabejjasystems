@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/i18n";
 import { Plus, Trash2, Edit, TrendingUp, Users, Settings, CheckCircle, XCircle, AlertTriangle, ArrowUpRight } from "lucide-react";
 import { format } from "date-fns";
 
@@ -34,6 +35,7 @@ interface PromotionRule {
 
 export default function PromotionRules() {
   const { data: tenantData } = useTenant();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("rules");

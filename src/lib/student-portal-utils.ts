@@ -1,10 +1,24 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Generate a unique portal email based on student name and admission number
- * Format: firstname.lastname.admissionnumber@tennahubapps.com
+ * Generate a unique portal email based on admission number
+ * Format: admissionnumber@ttl.student
+ * 
+ * Students use this email to login to the student portal.
+ * They use their school code as password initially.
  */
 export const generatePortalEmail = (firstName: string, lastName: string, admissionNumber?: string): string => {
+  // Use admission number as the primary identifier for portal email
+  if (admissionNumber) {
+    const sanitized = String(admissionNumber)
+      .toLowerCase()
+      .replace(/\s+/g, '')
+      .replace(/[^a-z0-9]/g, '');
+    
+    return `${sanitized}@ttl.student`;
+  }
+  
+  // Fallback if no admission number (shouldn't happen)
   const sanitized = (text: string) => 
     text
       .toLowerCase()
@@ -13,12 +27,8 @@ export const generatePortalEmail = (firstName: string, lastName: string, admissi
   
   const firstNameSanitized = sanitized(firstName);
   const lastNameSanitized = sanitized(lastName);
-  const admissionPart = admissionNumber ? sanitized(admissionNumber) : '';
   
-  if (admissionPart) {
-    return `${firstNameSanitized}.${lastNameSanitized}.${admissionPart}@tennahubapps.com`;
-  }
-  return `${firstNameSanitized}.${lastNameSanitized}@tennahubapps.com`;
+  return `${firstNameSanitized}.${lastNameSanitized}@ttl.student`;
 };
 
 /**

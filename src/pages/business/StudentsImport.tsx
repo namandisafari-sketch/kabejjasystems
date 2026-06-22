@@ -1,15 +1,13 @@
 import { GeneralImportPage } from "./GeneralImportPage";
+import { useLanguage } from "@/i18n";
 
-/**
- * Students Import Page
- * Allows schools to import student records from Excel
- */
 export default function StudentsImport() {
+  const { t } = useLanguage();
   return (
     <GeneralImportPage
       module="students"
-      title="Import Students"
-      description="Import student records including admission numbers, names, dates of birth, and contact information"
+      title={t.students.title}
+      description={t.common.description}
     />
   );
 }

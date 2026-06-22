@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLanguage } from "@/i18n";
 import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/hooks/use-tenant';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +17,7 @@ import { toast } from 'sonner';
 import { Plus, Award, Users, Star, Trash2, Edit2 } from 'lucide-react';
 
 const ECDRoles = () => {
+  const { t } = useLanguage();
   const tenantQuery = useTenant();
   const tenantId = tenantQuery.data?.tenantId;
   const queryClient = useQueryClient();

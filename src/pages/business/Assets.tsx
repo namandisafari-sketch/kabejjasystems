@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/use-tenant";
 import { 
@@ -103,6 +104,7 @@ const defaultFormData: AssetFormData = {
 };
 
 export default function Assets() {
+  const { t } = useLanguage();
   const { data: tenantData } = useTenant();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");

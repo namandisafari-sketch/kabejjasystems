@@ -14,6 +14,7 @@ import { TennaHubLogo } from "@/components/TennaHubLogo";
 import { SponsorMarquee } from "@/components/SponsorMarquee";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { AnimatedCard } from "@/components/AnimatedCard";
+import { useLanguage } from "@/i18n";
 
 interface PublicServiceCard {
   id: string;
@@ -183,13 +184,14 @@ const categories: CategoryCard[] = [
 export default function PWAHome() {
   const navigate = useNavigate();
   const { needRefresh, updateServiceWorker, checkForUpdates, isChecking } = usePWAUpdate();
+  const { t } = useLanguage();
 
   const handleCheckUpdates = async () => {
     await checkForUpdates();
     if (!needRefresh) {
       toast({
-        title: "You're up to date!",
-        description: "No new updates available.",
+        title: t.messages.toastTitles[195],
+        description: t.messages.toastDescriptions.noUpdatesAvailable,
       });
     }
   };
@@ -197,8 +199,8 @@ export default function PWAHome() {
   const handleUpdate = async () => {
     await updateServiceWorker();
     toast({
-      title: "Updating...",
-      description: "The app will reload with the latest version.",
+        title: t.messages.toastTitles[185],
+        description: t.messages.toastDescriptions.appWillReload,
     });
   };
 
@@ -236,8 +238,8 @@ export default function PWAHome() {
           >
             <TennaHubLogo width={140} height={46} variant="wordmark" />
             <div>
-              <h1 className="text-lg font-bold text-foreground">TennaHub</h1>
-              <p className="text-2xs text-muted-foreground">TennaHub Technologies</p>
+              <h1 className="text-lg font-bold text-foreground">{t.pages.index.title}</h1>
+              <p className="text-2xs text-muted-foreground">{t.pages.index.company}</p>
             </div>
           </motion.div>
           <div className="flex items-center gap-1">
@@ -249,7 +251,7 @@ export default function PWAHome() {
                 className="text-sm gap-1 animate-pulse"
               >
                 <Download className="w-4 h-4" />
-                Update
+                {t.common.refresh}
               </Button>
             ) : (
               <Button 
@@ -258,7 +260,7 @@ export default function PWAHome() {
                 onClick={handleCheckUpdates}
                 disabled={isChecking}
                 className="h-9 w-9"
-                title="Check for updates"
+                title={t.common.refresh}
               >
                 <RefreshCw className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
               </Button>
@@ -270,7 +272,7 @@ export default function PWAHome() {
               className="text-sm"
             >
               <LogIn className="w-4 h-4 mr-1" />
-              Login
+              {t.auth.login}
             </Button>
           </div>
         </div>
@@ -290,7 +292,7 @@ export default function PWAHome() {
           >
             <Sparkles className="w-4 h-4" />
           </motion.div>
-          Made for Uganda
+          {t.welcomeOnboarding.madeForUganda}
         </motion.div>
         <motion.h2 
           className="text-2xl sm:text-3xl font-bold text-foreground mb-3"
@@ -298,7 +300,7 @@ export default function PWAHome() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.4 }}
         >
-          Run Your Business
+          {t.welcomeOnboarding.welcome}
           <motion.span 
             className="block text-gradient"
             animate={{ 
@@ -307,7 +309,7 @@ export default function PWAHome() {
             transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
             style={{ backgroundSize: "200% 200%" }}
           >
-            Like a Pro
+            {t.pages.index.subtitle}
           </motion.span>
         </motion.h2>
         <motion.p 
@@ -316,7 +318,7 @@ export default function PWAHome() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.7, delay: 0.6 }}
         >
-          Select your business category to get started with powerful management tools
+          {t.welcomeOnboarding.businessQuestion}
         </motion.p>
       </section>
 
@@ -340,10 +342,10 @@ export default function PWAHome() {
                     <div className="scale-90 sm:scale-100">{category.icon}</div>
                   </motion.div>
                   <h3 className="font-semibold text-xs sm:text-sm leading-tight mb-0.5">
-                    {category.title}
+                    {t.welcomeOnboarding.businessOptions[category.id as keyof typeof t.welcomeOnboarding.businessOptions].title}
                   </h3>
                   <p className="text-2xs sm:text-xs text-white/80 line-clamp-2 leading-tight">
-                    {category.description}
+                    {t.welcomeOnboarding.businessOptions[category.id as keyof typeof t.welcomeOnboarding.businessOptions].description}
                   </p>
                 </div>
               </CardContent>
@@ -363,10 +365,10 @@ export default function PWAHome() {
             transition={{ duration: 0.5 }}
           >
             <h3 className="text-lg font-semibold text-foreground mb-1">
-              🔓 Public Services
+              {t.nav.gateCheckin}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Access these services without logging in
+              {t.common.noResults}
             </p>
           </motion.div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -414,10 +416,10 @@ export default function PWAHome() {
             transition={{ duration: 0.5 }}
           >
             <h3 className="text-lg font-semibold text-foreground mb-1">
-              Employee & Parent Access
+              {t.nav.staff}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Access your organization's dashboard
+              {t.common.description}
             </p>
           </motion.div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
@@ -437,7 +439,7 @@ export default function PWAHome() {
                       {user.icon}
                     </motion.div>
                     <h4 className="font-medium text-xs sm:text-sm leading-tight mb-0.5">
-                      {user.title}
+                      {user.id === "student" ? t.pages.studentLogin.studentPortal : user.id === "staff" ? t.auth.login : user.id === "parent" ? t.nav.parents : user.id === "teacher" ? t.navigation.portals.teacher : user.title}
                     </h4>
                     <p className="text-2xs text-white/80 hidden sm:block line-clamp-2">
                       {user.description}
@@ -463,10 +465,10 @@ export default function PWAHome() {
             <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
               <div className="flex-1">
                 <h3 className="font-semibold text-foreground mb-1">
-                  Business Owner?
+                  {t.welcomeOnboarding.createOrSignIn}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Sign in to manage your business dashboard
+                  {t.welcomeOnboarding.tagline}
                 </p>
               </div>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -475,7 +477,7 @@ export default function PWAHome() {
                   className="w-full sm:w-auto"
                 >
                   <LogIn className="w-4 h-4 mr-2" />
-                  Sign In
+                  {t.auth.login}
                 </Button>
               </motion.div>
             </div>
@@ -495,7 +497,7 @@ export default function PWAHome() {
           viewport={{ once: true }}
         >
           <p className="text-xs text-muted-foreground">
-            Trusted by 500+ Ugandan businesses
+            {t.welcomeOnboarding.tagline}
           </p>
         </motion.div>
       </section>

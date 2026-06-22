@@ -2,8 +2,10 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getStaffPortalRoute, STAFF_BUSINESS_ROLES } from "@/lib/staff-routing";
+import { useLanguage } from "@/i18n";
 
 const Dashboard = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -163,7 +165,7 @@ const Dashboard = () => {
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground">{t.common.loading}</p>
       </div>
     </div>
   );

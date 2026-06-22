@@ -9,6 +9,7 @@ import {
   HardDrive, ArrowLeft, RefreshCw, FolderOpen, 
   Image, FileText, Film, Music, Archive
 } from "lucide-react";
+import { useLanguage } from "@/i18n";
 
 interface BucketInfo {
   id: string;
@@ -19,6 +20,7 @@ interface BucketInfo {
 }
 
 export default function AdminStorage() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [buckets, setBuckets] = useState<BucketInfo[]>([]);

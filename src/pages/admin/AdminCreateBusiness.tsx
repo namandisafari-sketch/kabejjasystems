@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Building2, User, Mail, Phone, MapPin, Key, Loader2, ArrowLeft } from "lucide-react";
+import { useLanguage } from "@/i18n";
 
 interface Package {
   id: string;
@@ -36,6 +37,7 @@ const businessTypes = [
 ];
 
 export default function AdminCreateBusiness() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -194,7 +196,7 @@ export default function AdminCreateBusiness() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Create Business Account</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t.navigation.adminSidebarItems.createBusiness}</h1>
           <p className="text-muted-foreground">Provision a new tenant with owner account</p>
         </div>
       </div>

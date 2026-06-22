@@ -12,8 +12,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Search, Download, Archive, AlertTriangle, Loader2, Database, FileDown } from "lucide-react";
+import { useLanguage } from "@/i18n";
 
 export default function AdminWithdrawal() {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -106,7 +108,7 @@ export default function AdminWithdrawal() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Archive className="h-6 w-6" /> Student Withdrawal
+          <Archive className="h-6 w-6" /> {t.navigation.adminSidebarItems.withdrawal}
         </h1>
         <p className="text-muted-foreground">Export student data and clear records when a learner withdraws</p>
       </div>

@@ -6,6 +6,7 @@ import { getStudentSession } from "@/pages/StudentLogin";
 import { CalendarClock, Clock, MapPin, Timer } from "lucide-react";
 import { format, differenceInDays, differenceInHours, parseISO } from "date-fns";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/i18n";
 
 function Countdown({ targetDate }: { targetDate: string }) {
   const [now, setNow] = useState(new Date());
@@ -31,6 +32,7 @@ function Countdown({ targetDate }: { targetDate: string }) {
 
 export default function StudentExams() {
   const session = getStudentSession()!;
+  const { t } = useLanguage();
 
   const { data: exams, isLoading } = useQuery({
     queryKey: ["student-exams", session.studentId, session.className],
@@ -76,7 +78,7 @@ export default function StudentExams() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <CalendarClock className="h-6 w-6" /> Exam Timetable
+          <CalendarClock className="h-6 w-6" /> {t.exams.title} {t.nav.timetable}
         </h1>
         <p className="text-muted-foreground">View your scheduled exams and countdown</p>
       </div>

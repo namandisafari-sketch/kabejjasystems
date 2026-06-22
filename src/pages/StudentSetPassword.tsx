@@ -8,9 +8,11 @@ import { Label } from "@/components/ui/label";
 import { TennaHubLogo } from "@/components/TennaHubLogo";
 import { GraduationCap, Loader2, Eye, EyeOff } from "lucide-react";
 import { getStudentSession } from "./StudentLogin";
+import { useLanguage } from "@/i18n";
 
 export default function StudentSetPassword() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -32,9 +34,9 @@ export default function StudentSetPassword() {
 
   const handleSubmit = async () => {
     setError("");
-    if (!newPassword || !confirmPassword) { setError("All fields are required."); return; }
-    if (newPassword.length < 6) { setError("Password must be at least 6 characters."); return; }
-    if (newPassword !== confirmPassword) { setError("Passwords do not match."); return; }
+    if (!newPassword || !confirmPassword) { setError(t.pages.studentSetPassword.allFieldsRequired); return; }
+    if (newPassword.length < 6) { setError(t.pages.studentSetPassword.passwordTooShort); return; }
+    if (newPassword !== confirmPassword) { setError(t.pages.studentSetPassword.passwordsDoNotMatch); return; }
 
     setLoading(true);
     const { error: pwErr } = await supabase.auth.updateUser({
@@ -57,11 +59,11 @@ export default function StudentSetPassword() {
           </div>
           <div className="flex items-center justify-center gap-2 text-muted-foreground">
             <GraduationCap className="h-5 w-5" />
-            <span className="text-sm font-medium">Student Portal</span>
+            <span className="text-sm font-medium">{t.pages.studentSetPassword.studentPortal}</span>
           </div>
-          <CardTitle className="text-xl">Set Your Password</CardTitle>
+          <CardTitle className="text-xl">{t.pages.studentSetPassword.setPassword}</CardTitle>
           <CardDescription>
-            This is your first login. Please choose a new password to continue.
+            {t.pages.studentSetPassword.description}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -71,12 +73,12 @@ export default function StudentSetPassword() {
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="new-password">New Password</Label>
+            <Label htmlFor="new-password">{t.pages.studentSetPassword.newPasswordLabel}</Label>
             <div className="relative">
               <Input
                 id="new-password"
                 type={showPw ? "text" : "password"}
-                placeholder="Enter new password"
+                placeholder={t.pages.studentSetPassword.newPasswordPlaceholder}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
@@ -93,11 +95,11 @@ export default function StudentSetPassword() {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirm-password">Confirm Password</Label>
+            <Label htmlFor="confirm-password">{t.pages.studentSetPassword.confirmPasswordLabel}</Label>
             <Input
               id="confirm-password"
               type="password"
-              placeholder="Confirm new password"
+              placeholder={t.pages.studentSetPassword.confirmPasswordPlaceholder}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
@@ -108,7 +110,7 @@ export default function StudentSetPassword() {
             onClick={handleSubmit}
             disabled={loading || !newPassword || !confirmPassword}
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Set Password"}
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.pages.studentSetPassword.setPasswordButton}
           </Button>
         </CardContent>
       </Card>

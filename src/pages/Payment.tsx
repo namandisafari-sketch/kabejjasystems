@@ -9,12 +9,14 @@ import { ArrowLeft, Loader2, CheckCircle, Send } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useLanguage } from "@/i18n";
 
 type PaymentStep = 'select-package' | 'billing-info' | 'submitted';
 
 export default function PaymentPage() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const { t } = useLanguage();
 
     const [step, setStep] = useState<PaymentStep>('select-package');
     const [selectedPackage, setSelectedPackage] = useState<NormalizedPackage | null>(null);
@@ -92,12 +94,12 @@ export default function PaymentPage() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['subscription-requests'] });
-            toast.success('Subscription request submitted!');
+            toast.success(t.common.success);
             setStep('submitted');
         },
         onError: (error) => {
             console.error('Failed to submit request:', error);
-            toast.error('Failed to submit request. Please try again.');
+            toast.error(t.common.error);
         },
     });
 
@@ -135,11 +137,11 @@ export default function PaymentPage() {
                         </Button>
                     )}
                     <div>
-                        <h1 className="text-3xl font-bold">Upgrade Your Subscription</h1>
+                        <h1 className="text-3xl font-bold">{t.pages.subscriptionExpired.upgradeNow}</h1>
                         <p className="text-muted-foreground">
-                            {step === 'select-package' && 'Choose a plan that fits your business'}
-                            {step === 'billing-info' && 'Enter your billing information'}
-                            {step === 'submitted' && 'Your request has been submitted'}
+                            {step === 'select-package' && t.pages.pendingApproval.description}
+                            {step === 'billing-info' && t.common.description}
+                            {step === 'submitted' && t.common.success}
                         </p>
                     </div>
                 </div>
@@ -168,16 +170,16 @@ export default function PaymentPage() {
                 {step === 'billing-info' && selectedPackage && (
                     <Card className="max-w-2xl mx-auto">
                         <CardHeader>
-                            <CardTitle>Billing Information</CardTitle>
+                            <CardTitle>{t.settings.billing}</CardTitle>
                             <CardDescription>
-                                Submit your request for {selectedPackage.name} ({selectedPackage.priceLabel.replace('/', '')})
+                                {t.common.submit} {selectedPackage.name} ({selectedPackage.priceLabel.replace('/', '')})
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <form onSubmit={handleSubmitBilling} className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="firstName">First Name *</Label>
+                                        <Label htmlFor="firstName">{t.students.fullName} *</Label>
                                         <Input
                                             id="firstName"
                                             value={billingInfo.firstName}
@@ -186,7 +188,7 @@ export default function PaymentPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="lastName">Last Name *</Label>
+                                        <Label htmlFor="lastName">{t.students.fullName} *</Label>
                                         <Input
                                             id="lastName"
                                             value={billingInfo.lastName}
@@ -197,7 +199,7 @@ export default function PaymentPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="email">Email Address *</Label>
+                                    <Label htmlFor="email">{t.common.email} *</Label>
                                     <Input
                                         id="email"
                                         type="email"
@@ -208,23 +210,23 @@ export default function PaymentPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="phone">Phone Number *</Label>
+                                    <Label htmlFor="phone">{t.common.phone} *</Label>
                                     <Input
                                         id="phone"
                                         type="tel"
-                                        placeholder="+256 700 000 000"
+                                        placeholder={t.common.phone}
                                         value={billingInfo.phone}
                                         onChange={(e) => setBillingInfo({ ...billingInfo, phone: e.target.value })}
                                         required
                                     />
                                     <p className="text-sm text-muted-foreground">
-                                        Admin will contact you on this number for payment details
+                                        {t.pages.pendingApproval.details}
                                     </p>
                                 </div>
 
                                 <div className="pt-4 space-y-3">
                                     <div className="flex justify-between items-center text-lg font-semibold">
-                                        <span>Total Amount:</span>
+                                        <span>{t.common.amount}:</span>
                                         <span>
                                             {new Intl.NumberFormat('en-UG', {
                                                 style: 'currency',
@@ -241,12 +243,12 @@ export default function PaymentPage() {
                                         {submitRequest.isPending ? (
                                             <>
                                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                                Submitting...
+                                                {t.common.submit}...
                                             </>
                                         ) : (
                                             <>
                                                 <Send className="h-4 w-4 mr-2" />
-                                                Submit Request for Approval
+                                                {t.common.submit}
                                             </>
                                         )}
                                     </Button>
@@ -263,28 +265,28 @@ export default function PaymentPage() {
                                 <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
                             </div>
                             <div className="space-y-2">
-                                <h2 className="text-2xl font-bold">Request Submitted!</h2>
+                                <h2 className="text-2xl font-bold">{t.common.success}</h2>
                                 <p className="text-muted-foreground">
-                                    Your subscription request has been sent to the admin for approval.
+                                    {t.pages.pendingApproval.description}
                                 </p>
                             </div>
                             <div className="bg-muted/50 rounded-lg p-4 text-sm text-left space-y-2">
-                                <p><strong>Package:</strong> {selectedPackage?.name}</p>
-                                <p><strong>Amount:</strong> {selectedPackage && new Intl.NumberFormat('en-UG', {
+                                <p><strong>{t.common.category}:</strong> {selectedPackage?.name}</p>
+                                <p><strong>{t.common.amount}:</strong> {selectedPackage && new Intl.NumberFormat('en-UG', {
                                     style: 'currency',
                                     currency: 'UGX',
                                     minimumFractionDigits: 0,
                                 }).format(selectedPackage.price)} {selectedPackage?.priceLabel}</p>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                                The admin will review your request and contact you within <strong>24-48 hours</strong> with payment instructions.
+                                {t.pages.pendingApproval.details}
                             </p>
                             <div className="flex gap-3 justify-center pt-4">
                                 <Button variant="outline" onClick={() => navigate('/dashboard')}>
-                                    Go to Dashboard
+                                    {t.nav.dashboard}
                                 </Button>
                                 <Button onClick={() => navigate('/pending-approval')}>
-                                    View Status
+                                    {t.common.view}
                                 </Button>
                             </div>
                         </CardContent>

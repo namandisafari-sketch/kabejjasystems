@@ -1,15 +1,13 @@
 import { GeneralImportPage } from "./GeneralImportPage";
+import { useLanguage } from "@/i18n";
 
-/**
- * Parents Import Page
- * Allows schools to import parent/guardian information from Excel
- */
 export default function ParentsImport() {
+  const { t } = useLanguage();
   return (
     <GeneralImportPage
       module="parents"
-      title="Import Parents/Guardians"
-      description="Import parent and guardian contact information linked to students"
+      title={t.parents.title}
+      description={t.common.description}
     />
   );
 }

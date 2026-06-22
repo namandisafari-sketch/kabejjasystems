@@ -9,9 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/i18n";
 import { Plus, HeartPulse, Search, Edit, Trash2, User, Phone, Calendar, FileText, Pill, Clock, CheckCircle, XCircle, Eye, Camera } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
@@ -37,6 +37,7 @@ interface Prescription {
 }
 
 const Patients = () => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
@@ -108,10 +109,10 @@ const Patients = () => {
       setIsDialogOpen(false);
       setEditingPatient(null);
       resetForm();
-      toast({ title: editingPatient ? "Patient Updated" : "Patient Added", description: "Patient record saved successfully" });
+      toast({ title: editingPatient ? t.messages.toastTitles[820] : t.messages.toastTitles[820], description: t.messages.toastDescriptions.patientSaved });
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: t.common.error, description: error.message, variant: "destructive" });
     },
   });
 
@@ -122,7 +123,7 @@ const Patients = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
-      toast({ title: "Patient Deleted" });
+      toast({ title: t.messages.toastTitles[820] });
     },
   });
 
@@ -162,9 +163,9 @@ const Patients = () => {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'pending': return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
+      case 'pending': return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />{t.fees.pending}</Badge>;
       case 'dispensed': return <Badge variant="default"><CheckCircle className="h-3 w-3 mr-1" />Dispensed</Badge>;
-      case 'cancelled': return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Cancelled</Badge>;
+      case 'cancelled': return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />{t.common.cancel}</Badge>;
       default: return <Badge>{status}</Badge>;
     }
   };
@@ -173,17 +174,17 @@ const Patients = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Patients</h1>
-          <p className="text-muted-foreground">Manage patient records and medical history</p>
+          <h1 className="text-3xl font-bold">{t.navigation.moduleRoutes.patients}</h1>
+          <p className="text-muted-foreground">{t.common.description}</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) { setEditingPatient(null); resetForm(); } }}>
           <DialogTrigger asChild>
-            <Button><Plus className="h-4 w-4 mr-2" />Add Patient</Button>
+            <Button><Plus className="h-4 w-4 mr-2" />{t.common.add}</Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{editingPatient ? "Edit Patient" : "Add New Patient"}</DialogTitle>
-              <DialogDescription>Enter patient details and medical information</DialogDescription>
+              <DialogTitle>{editingPatient ? t.common.edit : t.common.add}</DialogTitle>
+              <DialogDescription>{t.common.description}</DialogDescription>
             </DialogHeader>
             <form onSubmit={(e) => { e.preventDefault(); savePatientMutation.mutate(formData); }} className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
@@ -226,7 +227,7 @@ const Patients = () => {
 
       {/* Summary */}
       <div className="grid md:grid-cols-3 gap-4 mb-6">
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Patients</CardTitle></CardHeader><CardContent><div className="flex items-center gap-2"><HeartPulse className="h-5 w-5 text-primary" /><span className="text-2xl font-bold">{patients?.length || 0}</span></div></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">{t.common.total}</CardTitle></CardHeader><CardContent><div className="flex items-center gap-2"><HeartPulse className="h-5 w-5 text-primary" /><span className="text-2xl font-bold">{patients?.length || 0}</span></div></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">With Allergies</CardTitle></CardHeader><CardContent><span className="text-2xl font-bold text-amber-600">{patients?.filter((p: any) => p.allergies).length || 0}</span></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Insured</CardTitle></CardHeader><CardContent><span className="text-2xl font-bold text-green-600">{patients?.filter((p: any) => p.insurance_provider).length || 0}</span></CardContent></Card>
       </div>
@@ -234,19 +235,19 @@ const Patients = () => {
       {/* Search */}
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search patients..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 max-w-sm" />
+        <Input placeholder={t.common.search} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 max-w-sm" />
       </div>
 
       {/* Table */}
       <Card>
-        <CardHeader><CardTitle>Patient Records</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t.navigation.moduleRoutes.patients}</CardTitle></CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-center py-8 text-muted-foreground">Loading...</p>
+            <p className="text-center py-8 text-muted-foreground">{t.common.loading}</p>
           ) : !filteredPatients?.length ? (
             <div className="text-center py-8">
               <HeartPulse className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No patients found</p>
+              <p className="text-muted-foreground">{t.common.noResults}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -269,7 +270,7 @@ const Patients = () => {
                   </div>
                   <div className="flex justify-end gap-1 mt-3">
                     <Button size="sm" variant="ghost" onClick={() => setViewingHistoryPatient(patient)}>
-                      <FileText className="h-4 w-4 mr-1" />History
+                      <FileText className="h-4 w-4 mr-1" />{t.common.details}
                     </Button>
                     <Button size="icon" variant="ghost" onClick={() => handleEdit(patient)}><Edit className="h-4 w-4" /></Button>
                     <Button size="icon" variant="ghost" className="text-destructive" onClick={() => deletePatientMutation.mutate(patient.id)}><Trash2 className="h-4 w-4" /></Button>
@@ -289,13 +290,13 @@ const Patients = () => {
               <FileText className="h-5 w-5" />
               {viewingHistoryPatient?.full_name}
             </DialogTitle>
-            <DialogDescription>Patient medical records</DialogDescription>
+            <DialogDescription>{t.common.details}</DialogDescription>
           </DialogHeader>
           <Tabs defaultValue="history">
             <TabsList className="w-full">
-              <TabsTrigger value="history" className="flex-1">Prescription History</TabsTrigger>
+              <TabsTrigger value="history" className="flex-1">{t.exams.title}</TabsTrigger>
               <TabsTrigger value="upload" className="flex-1">
-                <Camera className="h-4 w-4 mr-1" />Upload RX
+                <Camera className="h-4 w-4 mr-1" />{t.common.upload}
               </TabsTrigger>
             </TabsList>
             <TabsContent value="history">
@@ -341,13 +342,13 @@ const PrescriptionHistory = ({ patientId, tenantId, formatCurrency, getStatusBad
 
   const [expandedRx, setExpandedRx] = useState<string | null>(null);
 
-  if (isLoading) return <p className="text-center py-8 text-muted-foreground">Loading...</p>;
+  if (isLoading) return <p className="text-center py-8 text-muted-foreground">{t.common.loading}</p>;
 
   if (!prescriptions?.length) {
     return (
       <div className="text-center py-8">
         <Pill className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-        <p className="text-muted-foreground">No prescriptions found for this patient</p>
+        <p className="text-muted-foreground">{t.common.noResults}</p>
       </div>
     );
   }

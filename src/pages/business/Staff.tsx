@@ -2,10 +2,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useLanguage } from "@/i18n";
 import { UserCircle, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const Staff = () => {
+  const { t } = useLanguage();
   const { data: profile } = useQuery({
     queryKey: ['user-profile'],
     queryFn: async () => {

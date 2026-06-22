@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n";
 import { Bell, Search, Loader2, CheckCheck, X, Mail, Phone, MessageSquare } from "lucide-react";
 
 interface ParentPreference {
@@ -33,6 +34,7 @@ export default function ParentNotificationPreferences() {
   const tenantId = tenantData?.tenantId;
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
+  const { t } = useLanguage();
 
   const { data: parents = [], isLoading } = useQuery({
     queryKey: ["parent-notification-preferences", tenantId],
@@ -137,7 +139,7 @@ export default function ParentNotificationPreferences() {
       <div className="flex items-center gap-3 mb-6">
         <Bell className="h-8 w-8" />
         <div>
-          <h1 className="text-3xl font-bold">Parent Notification Preferences</h1>
+          <h1 className="text-3xl font-bold">{t.navigation.moduleRoutes.parent_notification_preferences}</h1>
           <p className="text-muted-foreground">Manage how parents receive notifications</p>
         </div>
       </div>
@@ -145,11 +147,11 @@ export default function ParentNotificationPreferences() {
       <Card>
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <CardTitle>Parent Preferences</CardTitle>
+            <CardTitle>{t.parents.title}</CardTitle>
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search parents..."
+                placeholder={t.common.search}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -159,7 +161,7 @@ export default function ParentNotificationPreferences() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2 mb-6">
-            <span className="text-sm text-muted-foreground mr-2 self-center">Batch actions:</span>
+            <span className="text-sm text-muted-foreground mr-2 self-center">{t.common.actions}:</span>
             {[
               { field: "whatsapp_enabled" as const, label: "WhatsApp", icon: <MessageSquare className="h-4 w-4" /> },
               { field: "email_enabled" as const, label: "Email", icon: <Mail className="h-4 w-4" /> },
@@ -198,22 +200,22 @@ export default function ParentNotificationPreferences() {
           ) : filteredParents.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>{searchTerm ? "No parents match your search" : "No parents found"}</p>
+              <p>{searchTerm ? t.common.noResults : t.common.noResults}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-2 font-medium">Parent Name</th>
-                    <th className="text-left py-3 px-2 font-medium">Email</th>
-                    <th className="text-left py-3 px-2 font-medium">Phone</th>
+                    <th className="text-left py-3 px-2 font-medium">{t.parents.parentName}</th>
+                    <th className="text-left py-3 px-2 font-medium">{t.common.email}</th>
+                    <th className="text-left py-3 px-2 font-medium">{t.common.phone}</th>
                     <th className="text-center py-3 px-2 font-medium">WhatsApp</th>
-                    <th className="text-center py-3 px-2 font-medium">Email</th>
+                    <th className="text-center py-3 px-2 font-medium">{t.common.email}</th>
                     <th className="text-center py-3 px-2 font-medium">SMS</th>
                     <th className="text-center py-3 px-2 font-medium">Gate</th>
-                    <th className="text-center py-3 px-2 font-medium">Attendance</th>
-                    <th className="text-center py-3 px-2 font-medium">Timetable</th>
+                    <th className="text-center py-3 px-2 font-medium">{t.attendance.title}</th>
+                    <th className="text-center py-3 px-2 font-medium">{t.timetable.title}</th>
                   </tr>
                 </thead>
                 <tbody>

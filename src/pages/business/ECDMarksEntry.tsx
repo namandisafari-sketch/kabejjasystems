@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/use-tenant";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ interface MarksData {
 }
 
 const ECDMarksEntry = () => {
+  const { t } = useLanguage();
   const { data: tenantData } = useTenant();
   const tenantId = tenantData?.tenantId;
   const queryClient = useQueryClient();

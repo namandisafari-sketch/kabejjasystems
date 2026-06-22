@@ -6,12 +6,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/use-tenant";
 import { QRCodeSVG } from "qrcode.react";
+import { useLanguage } from "@/i18n";
 import { QrCode, Download, Printer, ExternalLink, Bug, TableIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
 const QRCodes = () => {
+  const { t } = useLanguage();
   const { data: tenant } = useTenant();
   const [selectedTableId, setSelectedTableId] = useState<string>("");
   const qrRef = useRef<HTMLDivElement>(null);

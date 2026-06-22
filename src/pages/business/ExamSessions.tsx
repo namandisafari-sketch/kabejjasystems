@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/use-tenant";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ interface ExamSession {
 const EXAM_LEVELS = ["UCE (S.4)", "UACE (S.6)", "PLE (P.7)"];
 
 export default function ExamSessions() {
+  const { t } = useLanguage();
   const { data: tenantData } = useTenant();
   const { toast } = useToast();
   const queryClient = useQueryClient();

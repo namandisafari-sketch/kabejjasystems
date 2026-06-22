@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useLanguage } from "@/i18n";
 import { Bell, MessageSquare, Mail, Smartphone, CheckCircle2, XCircle, Clock, Search, Loader2 } from "lucide-react";
 
 interface NotificationLogEntry {
@@ -43,6 +44,7 @@ export default function NotificationLog() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(0);
+  const { t } = useLanguage();
 
   const { data, isLoading } = useQuery({
     queryKey: ["notification-log", tenantId, channelFilter, statusFilter, searchTerm, page],
@@ -86,21 +88,21 @@ export default function NotificationLog() {
       <div className="flex items-center gap-3 mb-6">
         <Bell className="h-8 w-8" />
         <div>
-          <h1 className="text-3xl font-bold">Notification Log</h1>
-          <p className="text-muted-foreground">View outgoing notification history</p>
+          <h1 className="text-3xl font-bold">{t.navigation.moduleRoutes.notification_log}</h1>
+          <p className="text-muted-foreground">{t.common.description}</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Outgoing Notifications</CardTitle>
+          <CardTitle>{t.navigation.moduleRoutes.notification_log}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by recipient..."
+                placeholder={t.common.search}
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -117,10 +119,10 @@ export default function NotificationLog() {
               }}
             >
               <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="All Channels" />
+                <SelectValue placeholder={t.common.all + " Channels"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Channels</SelectItem>
+                <SelectItem value="all">{t.common.all + " Channels"}</SelectItem>
                 <SelectItem value="sms">SMS</SelectItem>
                 <SelectItem value="whatsapp">WhatsApp</SelectItem>
                 <SelectItem value="email">Email</SelectItem>
@@ -134,10 +136,10 @@ export default function NotificationLog() {
               }}
             >
               <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="All Statuses" />
+                <SelectValue placeholder={t.common.all + " Statuses"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="all">{t.common.all + " Statuses"}</SelectItem>
                 <SelectItem value="sent">Sent</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="failed">Failed</SelectItem>
@@ -152,7 +154,7 @@ export default function NotificationLog() {
           ) : entries.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No notifications found</p>
+               <p>{t.common.noResults}</p>
             </div>
           ) : (
             <>
@@ -164,8 +166,8 @@ export default function NotificationLog() {
                       <th className="text-left py-3 px-2 font-medium">Channel</th>
                       <th className="text-left py-3 px-2 font-medium">Recipient</th>
                       <th className="text-left py-3 px-2 font-medium">Subject</th>
-                      <th className="text-left py-3 px-2 font-medium">Status</th>
-                      <th className="text-left py-3 px-2 font-medium">Error</th>
+                      <th className="text-left py-3 px-2 font-medium">{t.common.status}</th>
+                      <th className="text-left py-3 px-2 font-medium">{t.common.error}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -227,7 +229,7 @@ export default function NotificationLog() {
                     disabled={page === 0}
                     onClick={() => setPage((p) => p - 1)}
                   >
-                    Previous
+                    {t.common.back}
                   </Button>
                   <Button
                     variant="outline"
@@ -235,7 +237,7 @@ export default function NotificationLog() {
                     disabled={page >= totalPages - 1}
                     onClick={() => setPage((p) => p + 1)}
                   >
-                    Next
+                    {t.common.next}
                   </Button>
                 </div>
               </div>

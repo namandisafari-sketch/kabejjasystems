@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLanguage } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/use-tenant";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -27,6 +28,7 @@ const getGrade = (score: number) => {
 };
 
 export default function AcademicAnalytics() {
+  const { t } = useLanguage();
   const { data: tenantData } = useTenant();
   const [selectedTerm, setSelectedTerm] = useState<string>("");
   const [selectedClass, setSelectedClass] = useState<string>("all");
@@ -214,12 +216,12 @@ export default function AcademicAnalytics() {
     <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Academic Analytics</h1>
-          <p className="text-muted-foreground">Performance statistics, score sheets & automated remarks</p>
+          <h1 className="text-2xl font-bold text-foreground">{t.nav.academicAnalytics}</h1>
+          <p className="text-muted-foreground">{t.dashboard.overview}</p>
         </div>
         <Button onClick={handlePrint} disabled={reportCards.length === 0}>
           <Printer className="h-4 w-4 mr-2" />
-          Print Score Sheet
+          {t.common.print}
         </Button>
       </div>
 
@@ -229,7 +231,7 @@ export default function AcademicAnalytics() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Select value={selectedTerm} onValueChange={setSelectedTerm}>
               <SelectTrigger>
-                <SelectValue placeholder="Select term" />
+                <SelectValue placeholder={t.common.filter} />
               </SelectTrigger>
               <SelectContent>
                 {terms.map(t => (
@@ -239,10 +241,10 @@ export default function AcademicAnalytics() {
             </Select>
             <Select value={selectedClass} onValueChange={setSelectedClass}>
               <SelectTrigger>
-                <SelectValue placeholder="All classes" />
+                <SelectValue placeholder={t.common.all} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All classes</SelectItem>
+                <SelectItem value="all">{t.classes.title}</SelectItem>
                 {classes.map(c => (
                   <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                 ))}
@@ -258,14 +260,14 @@ export default function AcademicAnalytics() {
           <CardContent className="pt-6 text-center">
             <Users className="h-8 w-8 mx-auto text-primary mb-2" />
             <p className="text-2xl font-bold">{totalStudents}</p>
-            <p className="text-xs text-muted-foreground">Total Learners</p>
+            <p className="text-xs text-muted-foreground">{t.students.totalStudents}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6 text-center">
             <BarChart3 className="h-8 w-8 mx-auto text-blue-500 mb-2" />
             <p className="text-2xl font-bold">{overallAvg.toFixed(1)}%</p>
-            <p className="text-xs text-muted-foreground">Overall Average</p>
+            <p className="text-xs text-muted-foreground">{t.exams.average}</p>
           </CardContent>
         </Card>
         <Card>
@@ -279,16 +281,16 @@ export default function AcademicAnalytics() {
           <CardContent className="pt-6 text-center">
             <Trophy className="h-8 w-8 mx-auto text-yellow-500 mb-2" />
             <p className="text-2xl font-bold">{subjectRankings.length}</p>
-            <p className="text-xs text-muted-foreground">Subjects Analyzed</p>
+            <p className="text-xs text-muted-foreground">{t.exams.subject}</p>
           </CardContent>
         </Card>
       </div>
 
       <Tabs defaultValue="rankings" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="rankings">Student Rankings</TabsTrigger>
-          <TabsTrigger value="subjects">Subject Analysis</TabsTrigger>
-          <TabsTrigger value="remarks">Auto Remarks</TabsTrigger>
+          <TabsTrigger value="rankings">{t.students.title}</TabsTrigger>
+          <TabsTrigger value="subjects">{t.exams.subject}</TabsTrigger>
+          <TabsTrigger value="remarks">{t.common.notes}</TabsTrigger>
         </TabsList>
 
         {/* Student Rankings */}
@@ -296,8 +298,8 @@ export default function AcademicAnalytics() {
           {Object.entries(studentRankings).map(([className, students]) => (
             <Card key={className}>
               <CardHeader>
-                <CardTitle className="text-lg">{className} — Student Rankings</CardTitle>
-                <CardDescription>{students.length} learners</CardDescription>
+                <CardTitle className="text-lg">{className} — {t.students.title}</CardTitle>
+                <CardDescription>{students.length} {t.common.members}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -313,7 +315,7 @@ export default function AcademicAnalytics() {
                       <p className="font-semibold text-sm truncate">{s.name}</p>
                       <p className="text-xs text-muted-foreground">{s.admNo}</p>
                       <div className="flex justify-between mt-2 text-xs">
-                        <span>Avg: <strong>{s.avg.toFixed(1)}%</strong></span>
+                        <span>{t.exams.average}: <strong>{s.avg.toFixed(1)}%</strong></span>
                         <span className="text-muted-foreground">{s.grade.descriptor}</span>
                       </div>
                     </div>
@@ -326,7 +328,7 @@ export default function AcademicAnalytics() {
             <Card>
               <CardContent className="py-12 text-center text-muted-foreground">
                 <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No report card data available for this term</p>
+                <p>{t.common.noResults}</p>
               </CardContent>
             </Card>
           )}
@@ -355,20 +357,20 @@ export default function AcademicAnalytics() {
                     <div className="grid grid-cols-3 gap-2 text-center text-xs mb-3">
                       <div className="p-2 rounded bg-muted">
                         <p className="font-bold text-base">{sub.avg.toFixed(1)}%</p>
-                        <p className="text-muted-foreground">Average</p>
+                        <p className="text-muted-foreground">{t.exams.average}</p>
                       </div>
                       <div className="p-2 rounded bg-muted">
                         <p className="font-bold text-base text-green-600">{sub.highest.toFixed(0)}%</p>
-                        <p className="text-muted-foreground">Highest</p>
+                        <p className="text-muted-foreground">{t.exams.totalMarks}</p>
                       </div>
                       <div className="p-2 rounded bg-muted">
                         <p className="font-bold text-base text-red-600">{sub.lowest.toFixed(0)}%</p>
-                        <p className="text-muted-foreground">Lowest</p>
+                        <p className="text-muted-foreground">{t.common.amount}</p>
                       </div>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span>Pass rate: <strong>{sub.passRate.toFixed(0)}%</strong></span>
-                      <span className="text-muted-foreground">{sub.totalStudents} students</span>
+                      <span>{t.exams.passMark}: <strong>{sub.passRate.toFixed(0)}%</strong></span>
+                      <span className="text-muted-foreground">{sub.totalStudents} {t.common.members}</span>
                     </div>
                     {/* Grade distribution */}
                     <div className="flex gap-1 mt-2">
@@ -389,7 +391,7 @@ export default function AcademicAnalytics() {
             <Card>
               <CardContent className="py-12 text-center text-muted-foreground">
                 <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No subject scores available</p>
+                <p>{t.common.noResults}</p>
               </CardContent>
             </Card>
           )}
@@ -401,10 +403,10 @@ export default function AcademicAnalytics() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
-                Automated Report Remarks Preview
+                {t.reports.title}
               </CardTitle>
               <CardDescription>
-                Based on Uganda's new curriculum grading descriptors. These remarks auto-populate when saving report cards.
+                {t.reports.academicReport}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -423,9 +425,9 @@ export default function AcademicAnalytics() {
                         <Badge className={`${grade.color} text-white`}>{grade.grade}</Badge>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-xs"><strong>Class Teacher:</strong></p>
+                        <p className="text-xs"><strong>{t.classes.classTeacher}:</strong></p>
                         <p className="text-xs text-muted-foreground italic">{generateClassTeacherRemark(avg, name)}</p>
-                        <p className="text-xs mt-1"><strong>Head Teacher:</strong></p>
+                        <p className="text-xs mt-1"><strong>{t.staff.role}:</strong></p>
                         <p className="text-xs text-muted-foreground italic">{generateHeadTeacherRemark(avg, name)}</p>
                       </div>
                     </div>
@@ -435,7 +437,7 @@ export default function AcademicAnalytics() {
               {reportCards.length === 0 && (
                 <div className="py-12 text-center text-muted-foreground">
                   <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No report cards to generate remarks for</p>
+                  <p>{t.common.noResults}</p>
                 </div>
               )}
             </CardContent>
@@ -446,23 +448,23 @@ export default function AcademicAnalytics() {
       {/* Hidden printable score sheet */}
       <div className="hidden">
         <div ref={printRef}>
-          <h1>School Academic Score Sheet</h1>
+          <h1>{t.exams.title}</h1>
           <p style={{ textAlign: 'center', marginBottom: '8px' }}>
-            Academic Score Sheet — {termLabel?.name} {termLabel?.year}
+            {t.exams.title} — {termLabel?.name} {termLabel?.year}
           </p>
 
           {Object.entries(studentRankings).map(([className, students]) => (
             <div key={className}>
-              <h2>{className} — Student Performance</h2>
+              <h2>{className} — {t.dashboard.overview}</h2>
               <table>
                 <thead>
                   <tr>
-                    <th style={{ width: '40px' }}>Rank</th>
-                    <th>Student Name</th>
-                    <th>Adm No.</th>
-                    <th className="text-center" style={{ width: '60px' }}>Average</th>
-                    <th className="text-center" style={{ width: '50px' }}>Grade</th>
-                    <th className="text-center" style={{ width: '80px' }}>Descriptor</th>
+                    <th style={{ width: '40px' }}>{t.common.type}</th>
+                    <th>{t.students.fullName}</th>
+                    <th>{t.students.admissionNumber}</th>
+                    <th className="text-center" style={{ width: '60px' }}>{t.exams.average}</th>
+                    <th className="text-center" style={{ width: '50px' }}>{t.exams.grade}</th>
+                    <th className="text-center" style={{ width: '80px' }}>{t.common.status}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -481,18 +483,18 @@ export default function AcademicAnalytics() {
             </div>
           ))}
 
-          <h2>Subject Performance Summary</h2>
+          <h2>{t.exams.title}</h2>
           <table>
             <thead>
               <tr>
-                <th style={{ width: '40px' }}>Rank</th>
-                <th>Subject</th>
-                <th>Code</th>
-                <th className="text-center">Students</th>
-                <th className="text-center">Average</th>
-                <th className="text-center">Highest</th>
-                <th className="text-center">Lowest</th>
-                <th className="text-center">Pass Rate</th>
+                <th style={{ width: '40px' }}>{t.common.type}</th>
+                <th>{t.exams.subject}</th>
+                <th>{t.common.type}</th>
+                <th className="text-center">{t.students.title}</th>
+                <th className="text-center">{t.exams.average}</th>
+                <th className="text-center">{t.exams.totalMarks}</th>
+                <th className="text-center">{t.common.amount}</th>
+                <th className="text-center">{t.exams.passMark}</th>
               </tr>
             </thead>
             <tbody>

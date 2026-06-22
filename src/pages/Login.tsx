@@ -10,10 +10,12 @@ import { Eye, EyeOff, Building2, AlertCircle, GraduationCap, Shield, Clock } fro
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { getStaffPortalRoute } from "@/lib/staff-routing";
+import { useLanguage } from "@/i18n";
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -65,8 +67,8 @@ const Login = () => {
       // Check if user is admin/superadmin - they don't need business code or subscription check
       if (profile?.role === 'superadmin' || profile?.role === 'admin') {
         toast({
-          title: "Welcome back!",
-          description: "You've successfully logged in as admin",
+          title: t.pages.login.welcomeBack,
+          description: t.pages.login.loggedInAsAdmin,
         });
         navigate('/admin');
         return;
@@ -82,8 +84,8 @@ const Login = () => {
 
         if (!tenantSubError && tenantSub && isTenantExpired(tenantSub)) {
           toast({
-            title: "Access Denied",
-            description: "Your school subscription has expired. Please renew to continue.",
+            title: t.pages.login.accessDenied,
+            description: t.pages.login.subscriptionExpired,
             variant: "destructive",
           });
           navigate('/subscription-expired');
@@ -94,8 +96,8 @@ const Login = () => {
       // Check if user is tenant owner - they don't need business code
       if (profile?.role === 'tenant_owner') {
         toast({
-          title: "Welcome back!",
-          description: "You've successfully logged in",
+          title: t.pages.login.welcomeBack,
+          description: t.pages.login.loggedIn,
         });
         navigate('/dashboard');
         return;
@@ -107,7 +109,7 @@ const Login = () => {
         if (!businessCode.trim()) {
           // Show business code field
           setShowBusinessCode(true);
-          setBusinessCodeError("Staff members must enter their school/business code to login");
+          setBusinessCodeError(t.pages.login.schoolCodeHint);
           await supabase.auth.signOut();
           setLoading(false);
           return;
@@ -126,7 +128,7 @@ const Login = () => {
 
         // Check if business code matches
         if (tenant.business_code?.toLowerCase() !== businessCode.trim().toLowerCase()) {
-          setBusinessCodeError(`Invalid school code. Please check with your administrator.`);
+          setBusinessCodeError(t.pages.login.accessDenied);
           await supabase.auth.signOut();
           setLoading(false);
           return;
@@ -134,7 +136,7 @@ const Login = () => {
 
         // Success - staff logged in with correct business code
         toast({
-          title: "Welcome back!",
+          title: t.pages.login.welcomeBack,
           description: `Logged in to ${tenant.name}`,
         });
 
@@ -154,15 +156,15 @@ const Login = () => {
 
       // Fallback for users without tenant - redirect to dashboard
       toast({
-        title: "Welcome back!",
-        description: "You've successfully logged in",
+        title: t.pages.login.welcomeBack,
+        description: t.pages.login.loggedIn,
       });
       navigate('/dashboard');
 
     } catch (error: any) {
       console.error('Login error:', error);
       toast({
-        title: "Login Failed",
+        title: t.pages.login.loginFailed,
         description: error.message,
         variant: "destructive",
       });
@@ -173,26 +175,26 @@ const Login = () => {
 
   return (
     <AuthLayout
-      title="Welcome Back"
-      subtitle="Sign in to manage your school, track students, and stay on top of everything."
-      backTo={{ label: "Back to home", to: "/" }}
+      title={t.pages.login.title}
+      subtitle={t.pages.login.subtitle}
+      backTo={{ label: t.pages.login.backToHome, to: "/" }}
     >
       <Card className="border-0 shadow-none bg-transparent">
         <CardHeader className="text-center pb-4 pt-0 px-0">
-          <CardTitle className="text-2xl">Sign In</CardTitle>
-          <CardDescription>Enter your credentials to continue</CardDescription>
+          <CardTitle className="text-2xl">{t.pages.login.signIn}</CardTitle>
+          <CardDescription>{t.pages.login.signInDescription}</CardDescription>
         </CardHeader>
 
         <CardContent className="px-0 pb-0">
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+              <Label htmlFor="email" className="text-sm font-medium">{t.pages.login.emailLabel}</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
+                placeholder={t.pages.login.emailPlaceholder}
                 required
                 autoComplete="email"
                 className="h-12 touch-target"
@@ -200,14 +202,14 @@ const Login = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+              <Label htmlFor="password" className="text-sm font-medium">{t.pages.login.passwordLabel}</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder={t.pages.login.passwordPlaceholder}
                   required
                   autoComplete="current-password"
                   className="h-12 touch-target pr-12"
@@ -227,7 +229,7 @@ const Login = () => {
               <div className="space-y-2">
                 <Label htmlFor="businessCode" className="text-sm font-medium flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
-                  School/Business Code
+                  {t.pages.login.schoolCodeLabel}
                 </Label>
                 <Input
                   id="businessCode"
@@ -237,12 +239,12 @@ const Login = () => {
                     setBusinessCode(e.target.value.toUpperCase());
                     setBusinessCodeError("");
                   }}
-                  placeholder="e.g. STMARYS or ABC123"
+                  placeholder={t.pages.login.schoolCodePlaceholder}
                   autoComplete="organization"
                   className={`h-12 touch-target uppercase ${businessCodeError ? 'border-destructive' : ''}`}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Enter your school/business code to continue.
+                  {t.pages.login.schoolCodeHint}
                 </p>
               </div>
             )}
@@ -264,7 +266,7 @@ const Login = () => {
                 className="w-full text-sm text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-2"
               >
                 <Building2 className="h-4 w-4" />
-                Staff Portal Login
+                {t.pages.login.staffPortalLogin}
               </button>
             )}
 
@@ -273,15 +275,15 @@ const Login = () => {
               disabled={loading}
               className="w-full h-12 touch-target btn-press text-base font-medium"
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? t.pages.login.signingIn : t.pages.login.signIn}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
+              {t.pages.login.noAccount}{" "}
               <Link to="/signup" className="text-primary font-medium hover:underline">
-                Sign up
+                {t.pages.login.signUp}
               </Link>
             </p>
           </div>

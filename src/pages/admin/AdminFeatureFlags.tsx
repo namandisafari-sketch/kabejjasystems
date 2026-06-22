@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Flag, Save, RefreshCw, Info, Users, Building2 } from "lucide-react";
+import { useLanguage } from "@/i18n";
 
 interface FeatureFlag {
   id: string;
@@ -91,6 +92,7 @@ const defaultFeatures: FeatureFlag[] = [
 ];
 
 export default function AdminFeatureFlags() {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [features, setFeatures] = useState<FeatureFlag[]>(defaultFeatures);
   const [hasChanges, setHasChanges] = useState(false);
@@ -137,7 +139,7 @@ export default function AdminFeatureFlags() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Feature Flags</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t.navigation.adminSidebarItems.featureFlags}</h1>
           <p className="text-muted-foreground">
             Toggle features on or off across the platform
           </p>

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/i18n";
 import { Plus, DollarSign, Users, TrendingDown, Banknote, CheckCircle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,6 +23,7 @@ import {
 import { format } from "date-fns";
 
 const Payroll = () => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("payroll");
@@ -169,17 +171,17 @@ const Payroll = () => {
       <div className="p-4 border-b bg-background sticky top-0 z-10">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold">Payroll</h1>
-            <p className="text-xs text-muted-foreground">Manage salaries & advances</p>
+            <h1 className="text-xl font-bold">{t.nav.payroll}</h1>
+            <p className="text-xs text-muted-foreground">{t.common.description}</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setIsAdvanceDrawerOpen(true)}>
               <Banknote className="h-4 w-4 mr-1" />
-              Advance
+              {t.staff.payroll}
             </Button>
             <Button size="sm" onClick={() => setIsPayrollDrawerOpen(true)}>
               <Plus className="h-4 w-4 mr-1" />
-              Payroll
+              {t.nav.payroll}
             </Button>
           </div>
         </div>
@@ -191,7 +193,7 @@ const Payroll = () => {
           <div className="flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-primary" />
             <div>
-              <p className="text-xs text-muted-foreground">Monthly</p>
+              <p className="text-xs text-muted-foreground">{t.attendance.thisMonth}</p>
               <p className="text-sm font-bold">{(totalPayrollThisMonth / 1000000).toFixed(1)}M</p>
             </div>
           </div>
@@ -200,7 +202,7 @@ const Payroll = () => {
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-yellow-500" />
             <div>
-              <p className="text-xs text-muted-foreground">Pending</p>
+              <p className="text-xs text-muted-foreground">{t.fees.pending}</p>
               <p className="text-sm font-bold">{pendingPayroll}</p>
             </div>
           </div>
@@ -209,7 +211,7 @@ const Payroll = () => {
           <div className="flex items-center gap-2">
             <TrendingDown className="h-4 w-4 text-destructive" />
             <div>
-              <p className="text-xs text-muted-foreground">Advances</p>
+              <p className="text-xs text-muted-foreground">{t.staff.payroll}</p>
               <p className="text-sm font-bold">{(totalAdvances / 1000).toFixed(0)}K</p>
             </div>
           </div>
@@ -220,8 +222,8 @@ const Payroll = () => {
       <div className="px-4">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="payroll">Payroll</TabsTrigger>
-            <TabsTrigger value="advances">Advances</TabsTrigger>
+            <TabsTrigger value="payroll">{t.nav.payroll}</TabsTrigger>
+            <TabsTrigger value="advances">{t.staff.payroll}</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -236,7 +238,7 @@ const Payroll = () => {
           ) : !payrollRecords.length ? (
             <div className="text-center py-12">
               <DollarSign className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">No payroll records</p>
+              <p className="text-muted-foreground">{t.common.noResults}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -258,7 +260,7 @@ const Payroll = () => {
                   </div>
                   {record.status === 'pending' && (
                     <Button size="sm" variant="outline" className="w-full mt-2" onClick={() => markAsPaidMutation.mutate(record.id)}>
-                      <CheckCircle className="h-4 w-4 mr-1" /> Mark Paid
+                      <CheckCircle className="h-4 w-4 mr-1" /> {t.common.submit}
                     </Button>
                   )}
                 </Card>
@@ -269,7 +271,7 @@ const Payroll = () => {
           !advances.length ? (
             <div className="text-center py-12">
               <Banknote className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">No advances</p>
+              <p className="text-muted-foreground">{t.common.noResults}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -299,14 +301,14 @@ const Payroll = () => {
       <Drawer open={isPayrollDrawerOpen} onOpenChange={setIsPayrollDrawerOpen}>
         <DrawerContent className="max-h-[90vh]">
           <DrawerHeader>
-            <DrawerTitle>Create Payroll</DrawerTitle>
+            <DrawerTitle>{t.common.add} {t.nav.payroll}</DrawerTitle>
           </DrawerHeader>
           <ScrollArea className="flex-1 px-4 max-h-[60vh]">
             <form id="payroll-form" onSubmit={(e) => { e.preventDefault(); createPayrollMutation.mutate(payrollForm); }} className="space-y-4 pb-4">
               <div>
-                <Label>Employee *</Label>
+                <Label>{t.staff.title} *</Label>
                 <Select value={payrollForm.employee_id} onValueChange={handleEmployeeSelect}>
-                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t.common.search} /></SelectTrigger>
                   <SelectContent>
                     {employees.map(emp => <SelectItem key={emp.id} value={emp.id}>{emp.full_name}</SelectItem>)}
                   </SelectContent>
@@ -314,11 +316,11 @@ const Payroll = () => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>Period Start</Label>
+                  <Label>{t.timetable.period}</Label>
                   <Input type="date" value={payrollForm.pay_period_start} onChange={(e) => setPayrollForm(p => ({ ...p, pay_period_start: e.target.value }))} required />
                 </div>
                 <div>
-                  <Label>Period End</Label>
+                  <Label>{t.timetable.period}</Label>
                   <Input type="date" value={payrollForm.pay_period_end} onChange={(e) => setPayrollForm(p => ({ ...p, pay_period_end: e.target.value }))} required />
                 </div>
               </div>
@@ -344,13 +346,13 @@ const Payroll = () => {
                 </div>
               )}
               <div>
-                <Label>Payment Method</Label>
+                <Label>{t.fees.paymentMethod}</Label>
                 <Select value={payrollForm.payment_method} onValueChange={(v) => setPayrollForm(p => ({ ...p, payment_method: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="mobile_money">Mobile Money</SelectItem>
+                    <SelectItem value="cash">{t.fees.cash}</SelectItem>
+                    <SelectItem value="bank_transfer">{t.fees.bankTransfer}</SelectItem>
+                    <SelectItem value="mobile_money">{t.fees.mobileMoney}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -369,7 +371,7 @@ const Payroll = () => {
       <Drawer open={isAdvanceDrawerOpen} onOpenChange={setIsAdvanceDrawerOpen}>
         <DrawerContent className="max-h-[90vh]">
           <DrawerHeader>
-            <DrawerTitle>Record Advance</DrawerTitle>
+            <DrawerTitle>{t.common.add} {t.staff.payroll}</DrawerTitle>
           </DrawerHeader>
           <ScrollArea className="flex-1 px-4 max-h-[60vh]">
             <form id="advance-form" onSubmit={(e) => { e.preventDefault(); createAdvanceMutation.mutate(advanceForm); }} className="space-y-4 pb-4">

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/use-tenant";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ interface AdmissionConfirmation {
 }
 
 export default function AdmissionConfirmations() {
+  const { t } = useLanguage();
   const { data: tenant, isLoading: tenantLoading } = useTenant();
   const queryClient = useQueryClient();
   const [searchCode, setSearchCode] = useState("");

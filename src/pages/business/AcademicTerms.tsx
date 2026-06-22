@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/use-tenant";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ interface AcademicTerm {
 }
 
 export default function AcademicTerms() {
+  const { t } = useLanguage();
   const { data: tenantData } = useTenant();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -172,23 +174,23 @@ export default function AcademicTerms() {
     <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Academic Terms</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t.nav.termCalendar}</h1>
           <p className="text-muted-foreground">Manage academic terms and sessions</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => { resetForm(); setIsDialogOpen(true); }}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Term
+              {t.common.add}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>{editingTerm ? "Edit Term" : "Add Term"}</DialogTitle>
+              <DialogTitle>{editingTerm ? t.common.edit : t.common.add}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="name">Term Name *</Label>
+                <Label htmlFor="name">{t.common.name} *</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -199,7 +201,7 @@ export default function AcademicTerms() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="term_number">Term Number *</Label>
+                  <Label htmlFor="term_number">{t.common.type} *</Label>
                   <Input
                     id="term_number"
                     type="number"
@@ -211,7 +213,7 @@ export default function AcademicTerms() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="year">Year *</Label>
+                  <Label htmlFor="year">{t.common.date} *</Label>
                   <Input
                     id="year"
                     type="number"
@@ -225,7 +227,7 @@ export default function AcademicTerms() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="start_date">Start Date *</Label>
+                  <Label htmlFor="start_date">{t.common.date} *</Label>
                   <Input
                     id="start_date"
                     type="date"
@@ -235,7 +237,7 @@ export default function AcademicTerms() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="end_date">End Date *</Label>
+                  <Label htmlFor="end_date">{t.common.date} *</Label>
                   <Input
                     id="end_date"
                     type="date"
@@ -246,9 +248,9 @@ export default function AcademicTerms() {
                 </div>
               </div>
               <div className="flex gap-2 justify-end">
-                <Button type="button" variant="outline" onClick={resetForm}>Cancel</Button>
+                <Button type="button" variant="outline" onClick={resetForm}>{t.common.cancel}</Button>
                 <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                  {editingTerm ? "Update" : "Add"} Term
+                  {editingTerm ? t.common.edit : t.common.add}
                 </Button>
               </div>
             </form>
@@ -258,7 +260,7 @@ export default function AcademicTerms() {
 
       <Card>
         <CardHeader>
-          <CardTitle>All Terms</CardTitle>
+          <CardTitle>{t.common.all}</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -270,8 +272,8 @@ export default function AcademicTerms() {
           ) : terms.length === 0 ? (
             <div className="text-center py-12">
               <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium">No terms yet</h3>
-              <p className="text-muted-foreground">Add your first academic term to get started</p>
+              <h3 className="text-lg font-medium">{t.common.noResults}</h3>
+              <p className="text-muted-foreground">{t.common.add}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -280,10 +282,10 @@ export default function AcademicTerms() {
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <p className="font-medium">{term.name}</p>
-                      <p className="text-sm text-muted-foreground">Term {term.term_number} • {term.year}</p>
+                      <p className="text-sm text-muted-foreground">{t.common.type} {term.term_number} • {term.year}</p>
                     </div>
                     {term.is_current ? (
-                      <Badge className="bg-green-500">Current</Badge>
+                      <Badge className="bg-green-500">{t.common.active}</Badge>
                     ) : (
                       <Button 
                         size="sm" 
@@ -292,7 +294,7 @@ export default function AcademicTerms() {
                         disabled={setCurrentMutation.isPending}
                       >
                         <Check className="h-3 w-3 mr-1" />
-                        Set Current
+                        {t.common.submit}
                       </Button>
                     )}
                   </div>

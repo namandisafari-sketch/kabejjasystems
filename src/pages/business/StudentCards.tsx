@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useLanguage } from "@/i18n";
 import { Search, Printer, CreditCard, Users, Download, FileArchive, ArrowUpDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import StudentIDCard from "@/components/students/StudentIDCard";
@@ -32,6 +33,7 @@ interface SchoolClass {
 }
 
 export default function StudentCards() {
+  const { t } = useLanguage();
   const { data: tenantData } = useTenant();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);

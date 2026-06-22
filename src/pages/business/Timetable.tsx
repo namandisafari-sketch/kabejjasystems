@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/use-tenant";
+import { useLanguage } from "@/i18n";
 import { 
   CalendarDays, Plus, Clock, Settings, Trash2, Edit, BookOpen, 
   User, Coffee, AlertCircle, Download, Printer
@@ -36,6 +37,7 @@ const PERIOD_TYPES = [
 ];
 
 export default function Timetable() {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: tenantData } = useTenant();

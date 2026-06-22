@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/i18n";
 import { Plus, FileText, Search, Eye, Edit, Printer, Download, BookOpen, LayoutTemplate, Send } from "lucide-react";
 import { ReportCardTemplates } from "@/components/school/ReportCardTemplates";
 import { ReportDelivery } from "@/components/school/ReportDelivery";
@@ -35,6 +36,7 @@ const isALevel = (className?: string, level?: string) => {
 export default function ReportCards() {
   const { data: tenantData } = useTenant();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");

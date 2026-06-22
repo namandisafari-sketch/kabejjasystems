@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,6 +79,7 @@ const ECD_LEVELS = [
 ];
 
 const Attendance = () => {
+  const { t } = useLanguage();
   const { data: tenant } = useTenant();
   const { toast } = useToast();
   const queryClient = useQueryClient();

@@ -90,26 +90,26 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   BadgeCheck,
 };
 
-const categoryLabels: Record<string, string> = {
-  core: "General",
-  students: "Students",
-  school: "School",
-  academics: "Academics",
-  restaurant: "Restaurant",
-  hotel: "Hotel",
-  repair: "Repair",
-  salon: "Salon",
-  pharmacy: "Pharmacy",
-  property: "Properties",
-  rental: "Rental",
-  finance: "Finance",
-  people: "People",
-  operations: "Operations",
-  communication: "Communication",
-  analytics: "Analytics",
-  admin: "Admin",
-  legal: "Legal",
-  hr: "HR",
+const categoryLabels: Record<string, keyof typeof t.navigation.businessSidebarCategories> = {
+  core: "core",
+  students: "students",
+  school: "school",
+  academics: "academics",
+  restaurant: "restaurant",
+  hotel: "hotel",
+  repair: "repair",
+  salon: "salon",
+  pharmacy: "pharmacy",
+  property: "property",
+  rental: "rental",
+  finance: "finance",
+  people: "people",
+  operations: "operations",
+  communication: "communication",
+  analytics: "analytics",
+  admin: "admin",
+  legal: "legal",
+  hr: "hr",
 };
 
 const categoryOrder = [
@@ -287,7 +287,7 @@ export function BusinessSidebar({ businessName, businessType, devMode }: { busin
                   <SidebarGroupLabel asChild>
                     <CollapsibleTrigger className="flex w-full items-center gap-2 cursor-pointer select-none">
                       <span className={isCollapsed ? "sr-only" : ""}>
-                        {categoryLabels[category] || category}
+                        {t.navigation.businessSidebarCategories[categoryLabels[category]] || category}
                       </span>
                       {!isCollapsed && (
                         <ChevronRight className="ml-auto h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />

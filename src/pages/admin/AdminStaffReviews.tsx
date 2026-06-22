@@ -29,6 +29,7 @@ import {
 import { Star, Search, Shield, Monitor, Globe, Smartphone, Fingerprint, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { Database } from "@/integrations/supabase/types";
+import { useLanguage } from "@/i18n";
 
 type StaffReview = Database["public"]["Tables"]["staff_reviews"]["Row"] & {
   tenants?: { name: string; business_code: string } | null;
@@ -41,6 +42,7 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 };
 
 export default function AdminStaffReviews() {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [ratingFilter, setRatingFilter] = useState("all");
@@ -88,7 +90,7 @@ export default function AdminStaffReviews() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
           <Star className="h-6 w-6" />
-          Staff Reviews
+          {t.navigation.adminSidebarItems.staffReviews}
         </h1>
         <p className="text-muted-foreground">Monitor staff reviews across all schools</p>
       </div>

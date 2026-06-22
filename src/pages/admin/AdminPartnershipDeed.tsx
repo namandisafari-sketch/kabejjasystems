@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { FileText, Download, Search, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/i18n";
 import { PartnershipDeed } from "@/components/partnership/PartnershipDeed";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
@@ -23,6 +24,7 @@ interface Tenant {
 }
 
 export default function AdminPartnershipDeed() {
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Tenant | null>(null);
   const deedRef = useRef<HTMLDivElement>(null);
@@ -117,7 +119,7 @@ export default function AdminPartnershipDeed() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Partnership Deed Generator</h1>
+        <h1 className="text-2xl font-bold">{t.navigation.adminSidebarItems.partnershipDeed}</h1>
         <p className="text-muted-foreground">
           Generate a formal Partnership Deed & Service Agreement for a school
         </p>

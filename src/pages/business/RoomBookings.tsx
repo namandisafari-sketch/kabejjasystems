@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/i18n";
 import { Plus, Loader2, CalendarDays, Users, DollarSign } from "lucide-react";
 import {
   Dialog,
@@ -34,6 +35,7 @@ import {
 import { format, differenceInDays } from "date-fns";
 
 export default function RoomBookings() {
+  const { t } = useLanguage();
   const tenantQuery = useTenant();
   const tenantId = tenantQuery.data?.tenantId;
   const { toast } = useToast();

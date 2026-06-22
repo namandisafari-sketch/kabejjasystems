@@ -4,9 +4,11 @@ import { AlertTriangle, Phone, Mail, RefreshCw, Clock, CreditCard } from "lucide
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useLanguage } from "@/i18n";
 
 export default function SubscriptionExpired() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   // Get tenant info to check if it's a trial
   const { data: tenantInfo } = useQuery({
@@ -60,37 +62,37 @@ export default function SubscriptionExpired() {
             )}
           </div>
           <CardTitle className="text-2xl">
-            {isTrial ? "Free Trial Ended" : "Subscription Expired"}
+            {isTrial ? t.pages.subscriptionExpired.trialEnded : t.pages.subscriptionExpired.subscriptionExpired}
           </CardTitle>
           <CardDescription className="text-base">
             {isTrial
-              ? "Your 14-day free trial has ended. Upgrade now to continue using all features!"
-              : "Your business subscription has reached its cycle limit. Please contact the administrator to renew your subscription."
+              ? t.pages.subscriptionExpired.trialMessage
+              : t.pages.subscriptionExpired.expiredMessage
             }
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {isTrial ? (
             <div className="bg-primary/10 rounded-lg p-4 space-y-3">
-              <h4 className="font-semibold text-primary">Ready to Continue?</h4>
+              <h4 className="font-semibold text-primary">{t.pages.subscriptionExpired.readyToContinue}</h4>
               <p className="text-sm text-muted-foreground">
-                Upgrade to a paid plan to keep all your data and continue managing your business.
+                {t.pages.subscriptionExpired.upgradeMessage}
               </p>
               <Button onClick={handleUpgrade} className="w-full">
                 <CreditCard className="h-4 w-4 mr-2" />
-                Upgrade Now
+                {t.pages.subscriptionExpired.upgradeNow}
               </Button>
             </div>
           ) : (
             <div className="bg-muted/50 rounded-lg p-4 space-y-3">
               <p className="text-sm text-muted-foreground text-center">
-                All users linked to this business cannot access the system until the subscription is renewed.
+                {t.pages.subscriptionExpired.accessDenied}
               </p>
             </div>
           )}
 
           <div className="space-y-3">
-            <p className="text-sm font-medium text-center">Contact Support:</p>
+            <p className="text-sm font-medium text-center">{t.pages.subscriptionExpired.contactSupport}</p>
             <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
               <a href="tel:+256700000000" className="flex items-center gap-1 hover:text-primary">
                 <Phone className="h-4 w-4" />
@@ -98,7 +100,7 @@ export default function SubscriptionExpired() {
               </a>
               <a href="mailto:support@tennahubapps.com" className="flex items-center gap-1 hover:text-primary">
                 <Mail className="h-4 w-4" />
-                Email Support
+                {t.pages.subscriptionExpired.emailSupport}
               </a>
             </div>
           </div>
@@ -106,10 +108,10 @@ export default function SubscriptionExpired() {
           <div className="flex gap-3">
             <Button variant="outline" className="flex-1" onClick={handleRefresh}>
               <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
+              {t.pages.subscriptionExpired.refresh}
             </Button>
             <Button variant="destructive" className="flex-1" onClick={handleLogout}>
-              Log Out
+              {t.pages.subscriptionExpired.logOut}
             </Button>
           </div>
         </CardContent>
