@@ -23,10 +23,10 @@ interface StudentFormData {
   gender: string;
   nationality: string;
   place_of_birth: string;
-  home_district: string;
-  constituency: string;
-  subcounty: string;
-  village: string;
+  district_name: string;
+  constituency_name: string;
+  subcounty_name: string;
+  village_name: string;
   religion: string;
   talent: string;
   student_national_id: string;
@@ -137,10 +137,10 @@ export function StudentEnrollmentForm({
     gender: "",
     nationality: "Ugandan",
     place_of_birth: "",
-    home_district: "",
-    constituency: "",
-    subcounty: "",
-    village: "",
+    district_name: "",
+    constituency_name: "",
+    subcounty_name: "",
+    village_name: "",
     religion: "",
     talent: "",
     student_national_id: "",
@@ -477,14 +477,14 @@ export function StudentEnrollmentForm({
                   </div>
                   <div className="space-y-4">
                     <UgandaAddressSelect
-                      districtValue={formData.home_district}
-                      onDistrictChange={v => updateField("home_district", v)}
-                      constituencyValue={formData.constituency}
-                      onConstituencyChange={v => updateField("constituency", v)}
-                      subcountyValue={formData.subcounty}
-                      onSubcountyChange={v => updateField("subcounty", v)}
-                      villageValue={formData.village}
-                      onVillageChange={v => updateField("village", v)}
+                      districtValue={formData.district_name}
+                      onDistrictChange={v => updateField("district_name", v)}
+                      constituencyValue={formData.constituency_name}
+                      onConstituencyChange={v => updateField("constituency_name", v)}
+                      subcountyValue={formData.subcounty_name}
+                      onSubcountyChange={v => updateField("subcounty_name", v)}
+                      villageValue={formData.village_name}
+                      onVillageChange={v => updateField("village_name", v)}
                       showSubcounty={true}
                       showVillage={true}
                     />
