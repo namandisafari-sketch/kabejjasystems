@@ -34,10 +34,11 @@ export default function StudentLogin() {
   const { t } = useLanguage();
    const [step, setStep] = useState<"school" | "login" | "link-sent">("school");
    const [schoolCode, setSchoolCode] = useState("");
-   const [admissionNumber, setAdmissionNumber] = useState("");
+   const [input, setInput] = useState(""); // Can be admission number or email
    const [loading, setLoading] = useState(false);
    const [schoolName, setSchoolName] = useState("");
    const [tenantId, setTenantId] = useState("");
+   const [sentToEmail, setSentToEmail] = useState("");
 
   useEffect(() => {
     const existing = getStudentSession();
@@ -68,34 +69,60 @@ export default function StudentLogin() {
    };
 
    const handleLogin = async () => {
-     if (!admissionNumber.trim()) return;
+     if (!input.trim()) return;
      setLoading(true);
 
      try {
-       // Verify student exists
-       const { data: student, error: studentError } = await supabase
-         .from("students")
-         .select("id, full_name, admission_number")
-         .eq("admission_number", admissionNumber.trim())
-         .eq("tenant_id", tenantId)
-         .single();
+       let emailToUse = input.trim();
+       
+       // Check if input is an admission number (digits only) or email
+       const isAdmissionNumber = /^\d+$/.test(input.trim());
 
-       if (studentError || !student) {
+       if (isAdmissionNumber) {
+         // Look up student by admission number to get email
+         const { data: student, error: studentError } = await supabase
+           .from("students")
+           .select("id, full_name, admission_number, parent_email")
+           .eq("admission_number", input.trim())
+           .eq("tenant_id", tenantId)
+           .single();
+
+         if (studentError || !student) {
+           toast({ 
+             variant: "destructive", 
+             title: "Student not found", 
+             description: `No student with admission number ${input.trim()} found` 
+           });
+           setLoading(false);
+           return;
+         }
+
+         // Use parent email or generate portal email
+         if (student.parent_email) {
+           emailToUse = student.parent_email;
+         } else {
+           // If no parent email, show error
+           toast({ 
+             variant: "destructive", 
+             title: "No email on file", 
+             description: `Student ${student.full_name} has no parent email registered` 
+           });
+           setLoading(false);
+           return;
+         }
+       } else if (!emailToUse.includes("@")) {
          toast({ 
            variant: "destructive", 
-           title: "Student not found", 
-           description: `No student with admission number ${admissionNumber} found` 
+           title: "Invalid input", 
+           description: "Enter either an admission number or a valid email address" 
          });
          setLoading(false);
          return;
        }
 
-       // Generate student portal email
-       const portalEmail = `${admissionNumber.trim()}@ttl.student`;
-
-       // Send magic link to portal email
+       // Send magic link
        const { error } = await supabase.auth.signInWithOtp({
-         email: portalEmail,
+         email: emailToUse,
          options: {
            emailRedirectTo: `${window.location.origin}/student/auth-callback`,
          },
@@ -108,6 +135,7 @@ export default function StudentLogin() {
        }
 
        // Show success message
+       setSentToEmail(emailToUse);
        setStep("link-sent");
        setLoading(false);
      } catch (err: any) {
@@ -167,7 +195,7 @@ export default function StudentLogin() {
                    <p className="text-sm text-muted-foreground">
                      We've sent a secure login link to:
                    </p>
-                   <p className="font-mono text-sm bg-muted px-3 py-2 rounded">{admissionNumber}@ttl.student</p>
+                   <p className="font-mono text-sm bg-muted px-3 py-2 rounded">{sentToEmail}</p>
                    <p className="text-xs text-muted-foreground">
                      Check your email and click the link to login. The link expires in 24 hours.
                    </p>
@@ -178,10 +206,11 @@ export default function StudentLogin() {
                  className="w-full" 
                  onClick={() => {
                    setStep("login");
-                   setAdmissionNumber("");
+                   setInput("");
+                   setSentToEmail("");
                  }}
                >
-                 <ArrowLeft className="h-4 w-4 mr-2" /> Try another admission number
+                 <ArrowLeft className="h-4 w-4 mr-2" /> Try another account
                </Button>
              </>
            ) : (
@@ -190,19 +219,19 @@ export default function StudentLogin() {
                  <ArrowLeft className="h-4 w-4 mr-1" /> {t.pages.studentLogin.changeSchool}
                </Button>
                <div className="space-y-2">
-                 <Label htmlFor="admission">Student Admission Number</Label>
+                 <Label htmlFor="input">Admission Number or Email</Label>
                  <Input
-                   id="admission"
-                   placeholder="e.g., 670033"
-                   value={admissionNumber}
-                   onChange={(e) => setAdmissionNumber(e.target.value.trim())}
+                   id="input"
+                   placeholder="e.g., 670033 or parent@email.com"
+                   value={input}
+                   onChange={(e) => setInput(e.target.value)}
                    onKeyDown={(e) => e.key === "Enter" && handleLogin()}
                  />
                  <p className="text-xs text-muted-foreground">
-                   Enter your admission number to receive a secure login link
+                   Enter your admission number or a valid email address to receive a secure login link
                  </p>
                </div>
-               <Button className="w-full" onClick={handleLogin} disabled={loading || !admissionNumber}>
+               <Button className="w-full" onClick={handleLogin} disabled={loading || !input}>
                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
                  {loading ? "Sending..." : "Send Login Link"}
                </Button>
