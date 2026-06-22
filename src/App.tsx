@@ -201,6 +201,8 @@ import StudentFees from "./pages/student/Fees";
 import StudentEvents from "./pages/student/Events";
 import StudentResources from "./pages/student/Resources";
 import StudentSuggestions from "./pages/student/Suggestions";
+import DisciplineBlocked from "./pages/student/DisciplineBlocked";
+import AppealDisciplineCase from "./pages/student/AppealDisciplineCase";
 import PublicStaffReviews from "./pages/public/StaffReviews";
 import ParentPortal from "./pages/ParentPortal";
 import ParentDashboard from "./pages/ParentDashboard";
@@ -390,6 +392,7 @@ const App = () => {
                <Route path="/student/login" element={<StudentLogin />} />
                <Route path="/student/auth-callback" element={<StudentAuthCallback />} />
                <Route path="/student/set-password" element={<StudentSetPassword />} />
+               <Route path="/appeal-discipline/:caseId" element={<AppealDisciplineCase />} />
               <Route path="/student" element={<StudentLayout />}>
                 <Route index element={<StudentDashboard />} />
                 <Route path="dashboard" element={<StudentDashboard />} />

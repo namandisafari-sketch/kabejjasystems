@@ -5,12 +5,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { TennaHubLogo } from "@/components/TennaHubLogo";
 import { useToast } from "@/hooks/use-toast";
-import { getStudentSession } from "./StudentLogin";
+import DisciplineBlocked from "./DisciplineBlocked";
+import { getStudentSession } from "../StudentLogin";
+
+interface ActiveDisciplineCase {
+  id: string;
+  case_number: string;
+  offense_type: string;
+  severity: string;
+  description: string;
+  incident_date: string;
+  status: string;
+  student_id: string;
+}
 
 export default function StudentAuthCallback() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [blockedCase, setBlockedCase] = useState<ActiveDisciplineCase | null>(null);
+  const [schoolName, setSchoolName] = useState("");
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -32,6 +46,9 @@ export default function StudentAuthCallback() {
           return;
         }
 
+        const schoolNameStored = sessionStorage.getItem("studentSchoolName") || "";
+        setSchoolName(schoolNameStored);
+
         const { data: student, error: studentError } = await supabase
           .from("students")
           .select("id, full_name, admission_number, school_classes(name)")
@@ -46,14 +63,47 @@ export default function StudentAuthCallback() {
           return;
         }
 
-        // Create session
+        // CHECK FOR ACTIVE DISCIPLINE CASES THAT BLOCK PORTAL ACCESS
+        const { data: disciplineCases, error: disciplineError } = await supabase
+          .from("student_discipline_cases")
+          .select("*")
+          .eq("student_id", student.id)
+          .eq("tenant_id", tenantId)
+          .eq("is_active", true)
+          .in("severity", ["high", "critical"]);
+
+        if (disciplineError) {
+          console.error("Error checking discipline cases:", disciplineError);
+        }
+
+        // Check if any discipline rules block portal access for these cases
+        if (disciplineCases && disciplineCases.length > 0) {
+          for (const disciplineCase of disciplineCases) {
+            const { data: rules } = await supabase
+              .from("school_discipline_rules")
+              .select("blocks_portal_login")
+              .eq("tenant_id", tenantId)
+              .eq("severity", disciplineCase.severity)
+              .eq("blocks_portal_login", true)
+              .maybeSingle();
+
+            if (rules) {
+              // Student has an active blocking discipline case
+              setBlockedCase(disciplineCase);
+              setLoading(false);
+              return;
+            }
+          }
+        }
+
+        // Create session - no blocking cases found
         const session = {
           studentId: student.id,
           tenantId: tenantId,
           fullName: student.full_name,
           admissionNumber: student.admission_number,
           className: (student as any).school_classes?.name || "",
-          schoolName: sessionStorage.getItem("studentSchoolName") || "",
+          schoolName: schoolNameStored,
         };
 
         sessionStorage.setItem("studentSession", JSON.stringify(session));
@@ -69,8 +119,48 @@ export default function StudentAuthCallback() {
     handleCallback();
   }, [navigate, toast]);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <Card className="w-full max-w-md shadow-xl">
+          <CardHeader className="text-center space-y-3 pb-4">
+            <div className="flex justify-center">
+              <TennaHubLogo width={120} height={36} />
+            </div>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center space-y-4 py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <div className="text-center">
+              <p className="font-semibold">Logging you in...</p>
+              <p className="text-sm text-muted-foreground">Please wait</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show discipline blocked page if case exists
+  if (blockedCase) {
+    return (
+      <DisciplineBlocked
+        caseData={{
+          caseId: blockedCase.id,
+          caseNumber: blockedCase.case_number,
+          offenseType: blockedCase.offense_type,
+          severity: blockedCase.severity,
+          description: blockedCase.description,
+          incidentDate: blockedCase.incident_date,
+          status: blockedCase.status,
+          studentId: blockedCase.student_id,
+          schoolName: schoolName,
+        }}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center space-y-3 pb-4">
           <div className="flex justify-center">
@@ -80,7 +170,7 @@ export default function StudentAuthCallback() {
         <CardContent className="flex flex-col items-center justify-center space-y-4 py-8">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
           <div className="text-center">
-            <p className="font-semibold">Logging you in...</p>
+            <p className="font-semibold">Setting up your session...</p>
             <p className="text-sm text-muted-foreground">Please wait</p>
           </div>
         </CardContent>
