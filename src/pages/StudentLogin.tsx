@@ -78,38 +78,39 @@ export default function StudentLogin() {
        // Check if input is an admission number (digits only) or email
        const isAdmissionNumber = /^\d+$/.test(input.trim());
 
-       if (isAdmissionNumber) {
-         // Look up student by admission number to get email
-         const { data: student, error: studentError } = await supabase
-           .from("students")
-           .select("id, full_name, admission_number, parent_email")
-           .eq("admission_number", input.trim())
-           .eq("tenant_id", tenantId)
-           .single();
+        if (isAdmissionNumber) {
+          // Look up student by admission number to get email
+          const { data: student, error: studentError } = await supabase
+            .from("students")
+            .select("id, full_name, admission_number, notification_email, parent_email")
+            .eq("admission_number", input.trim())
+            .eq("tenant_id", tenantId)
+            .single();
 
-         if (studentError || !student) {
-           toast({ 
-             variant: "destructive", 
-             title: "Student not found", 
-             description: `No student with admission number ${input.trim()} found` 
-           });
-           setLoading(false);
-           return;
-         }
+          if (studentError || !student) {
+            toast({ 
+              variant: "destructive", 
+              title: "Student not found", 
+              description: `No student with admission number ${input.trim()} found` 
+            });
+            setLoading(false);
+            return;
+          }
 
-         // Use parent email or generate portal email
-         if (student.parent_email) {
-           emailToUse = student.parent_email;
-         } else {
-           // If no parent email, show error
-           toast({ 
-             variant: "destructive", 
-             title: "No email on file", 
-             description: `Student ${student.full_name} has no parent email registered` 
-           });
-           setLoading(false);
-           return;
-         }
+          // Prefer notification_email (student's personal email), fallback to parent_email
+          if (student.notification_email) {
+            emailToUse = student.notification_email;
+          } else if (student.parent_email) {
+            emailToUse = student.parent_email;
+          } else {
+            toast({ 
+              variant: "destructive", 
+              title: "No email on file", 
+              description: `Student ${student.full_name} has no email address registered` 
+            });
+            setLoading(false);
+            return;
+          }
        } else if (!emailToUse.includes("@")) {
          toast({ 
            variant: "destructive", 
@@ -218,19 +219,19 @@ export default function StudentLogin() {
                <Button variant="ghost" size="sm" className="px-0" onClick={() => setStep("school")}>
                  <ArrowLeft className="h-4 w-4 mr-1" /> {t.pages.studentLogin.changeSchool}
                </Button>
-               <div className="space-y-2">
-                 <Label htmlFor="input">Admission Number or Email</Label>
-                 <Input
-                   id="input"
-                   placeholder="e.g., 670033 or parent@email.com"
-                   value={input}
-                   onChange={(e) => setInput(e.target.value)}
-                   onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                 />
-                 <p className="text-xs text-muted-foreground">
-                   Enter your admission number or a valid email address to receive a secure login link
-                 </p>
-               </div>
+                <div className="space-y-2">
+                  <Label htmlFor="input">Admission Number or Email</Label>
+                  <Input
+                    id="input"
+                    placeholder="e.g., 670033 or namandisafari@gmail.com"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Enter your admission number to get a magic link sent to your registered email
+                  </p>
+                </div>
                <Button className="w-full" onClick={handleLogin} disabled={loading || !input}>
                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
                  {loading ? "Sending..." : "Send Login Link"}
