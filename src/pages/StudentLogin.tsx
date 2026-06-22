@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { TennaHubLogo } from "@/components/TennaHubLogo";
-import { GraduationCap, ArrowLeft, Loader2, Mail, CheckCircle } from "lucide-react";
+import { GraduationCap, ArrowLeft, Loader2, Mail, CheckCircle, Lock, KeyRound } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n";
 import { sendStudentLoginEmail } from "@/lib/email-service";
@@ -34,12 +34,14 @@ export default function StudentLogin() {
   const { toast } = useToast();
   const { t } = useLanguage();
    const [step, setStep] = useState<"school" | "login" | "link-sent">("school");
-   const [schoolCode, setSchoolCode] = useState("");
-   const [input, setInput] = useState(""); // Can be admission number or email
-   const [loading, setLoading] = useState(false);
-   const [schoolName, setSchoolName] = useState("");
-   const [tenantId, setTenantId] = useState("");
-   const [sentToEmail, setSentToEmail] = useState("");
+    const [schoolCode, setSchoolCode] = useState("");
+    const [input, setInput] = useState(""); // Can be admission number or email
+    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [schoolName, setSchoolName] = useState("");
+    const [tenantId, setTenantId] = useState("");
+    const [sentToEmail, setSentToEmail] = useState("");
+    const [loginMethod, setLoginMethod] = useState<"password" | "magic_link">("magic_link");
 
   useEffect(() => {
     const existing = getStudentSession();
@@ -71,6 +73,7 @@ export default function StudentLogin() {
 
    const handleLogin = async () => {
       if (!input.trim()) return;
+      if (loginMethod === "password" && !password.trim()) return;
       setLoading(true);
 
       try {
@@ -125,42 +128,97 @@ export default function StudentLogin() {
           return;
         }
 
-        // Send magic link via Supabase Auth
-        // Include tenant as URL param so it persists through email click
-         const { error } = await supabase.auth.signInWithOtp({
-           email: emailToUse,
-           options: {
-             emailRedirectTo: `${window.location.origin}/student/auth-callback?tenant=${encodeURIComponent(tenantId)}&school=${encodeURIComponent(schoolName)}`,
-             data: {
-               tenantId: tenantId,
-               schoolName: schoolName,
-             }
-           },
-         });
-
-        if (error) {
-          toast({ variant: "destructive", title: "Failed to send login link", description: error.message });
-          setLoading(false);
-          return;
-        }
-
-        // Send branded email via Resend (fire and forget, don't block on this)
-        if (studentName) {
-          sendStudentLoginEmail(
-            emailToUse,
-            studentName,
-            schoolName,
-            `${window.location.origin}/student/auth-callback?tenant=${encodeURIComponent(tenantId)}&school=${encodeURIComponent(schoolName)}`
-          ).catch((err) => {
-            console.error("Failed to send branded email via Resend:", err);
-            // Don't show error to user - OTP was already sent
+        if (loginMethod === "password") {
+          // === PASSWORD LOGIN ===
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: emailToUse,
+            password: password.trim(),
           });
-        }
 
-        // Show success message
-        setSentToEmail(emailToUse);
-        setStep("link-sent");
-        setLoading(false);
+          if (error) {
+            toast({
+              variant: "destructive",
+              title: "Login failed",
+              description: error.message === "Invalid login credentials"
+                ? "Wrong password. Try again or use 'Send Login Link' for email login."
+                : error.message,
+            });
+            setLoading(false);
+            return;
+          }
+
+          // Success - get session data
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            toast({ variant: "destructive", title: "Login failed", description: "Could not create session" });
+            setLoading(false);
+            return;
+          }
+
+          // Look up student by user_id and tenant_id
+          const { data: studentRecord, error: lookupError } = await supabase
+            .from("students")
+            .select("id, full_name, admission_number, school_classes(name)")
+            .eq("user_id", session.user.id)
+            .eq("tenant_id", tenantId)
+            .single();
+
+          if (lookupError || !studentRecord) {
+            toast({ variant: "destructive", title: "Student record not found" });
+            setLoading(false);
+            return;
+          }
+
+          // Create session and redirect
+          const sessionData = {
+            studentId: studentRecord.id,
+            tenantId: tenantId,
+            fullName: studentRecord.full_name,
+            admissionNumber: studentRecord.admission_number,
+            className: (studentRecord as any).school_classes?.name || "",
+            schoolName: schoolName,
+          };
+
+          sessionStorage.setItem("studentSession", JSON.stringify(sessionData));
+          navigate("/student/dashboard", { replace: true });
+          setLoading(false);
+
+        } else {
+          // === MAGIC LINK LOGIN (existing flow) ===
+          const { error } = await supabase.auth.signInWithOtp({
+            email: emailToUse,
+            options: {
+              emailRedirectTo: `${window.location.origin}/student/auth-callback?tenant=${encodeURIComponent(tenantId)}&school=${encodeURIComponent(schoolName)}`,
+              data: {
+                tenantId: tenantId,
+                schoolName: schoolName,
+              }
+            },
+          });
+
+          if (error) {
+            toast({ variant: "destructive", title: "Failed to send login link", description: error.message });
+            setLoading(false);
+            return;
+          }
+
+          // Send branded email via Resend (fire and forget, don't block on this)
+          if (studentName) {
+            sendStudentLoginEmail(
+              emailToUse,
+              studentName,
+              schoolName,
+              `${window.location.origin}/student/auth-callback?tenant=${encodeURIComponent(tenantId)}&school=${encodeURIComponent(schoolName)}`
+            ).catch((err) => {
+              console.error("Failed to send branded email via Resend:", err);
+            });
+          }
+
+          // Show success message
+          setSentToEmail(emailToUse);
+          setStep("link-sent");
+          setLoading(false);
+        }
       } catch (err: any) {
         toast({ variant: "destructive", title: "Error", description: err.message });
         setLoading(false);
@@ -224,42 +282,103 @@ export default function StudentLogin() {
                    </p>
                  </div>
                </div>
-               <Button 
-                 variant="outline" 
-                 className="w-full" 
-                 onClick={() => {
-                   setStep("login");
-                   setInput("");
-                   setSentToEmail("");
-                 }}
-               >
-                 <ArrowLeft className="h-4 w-4 mr-2" /> Try another account
-               </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  onClick={() => {
+                    setStep("login");
+                    setInput("");
+                    setPassword("");
+                    setSentToEmail("");
+                  }}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" /> Try another account
+                </Button>
              </>
-           ) : (
-             <>
-               <Button variant="ghost" size="sm" className="px-0" onClick={() => setStep("school")}>
-                 <ArrowLeft className="h-4 w-4 mr-1" /> {t.pages.studentLogin.changeSchool}
-               </Button>
-                <div className="space-y-2">
-                  <Label htmlFor="input">Admission Number or Email</Label>
-                  <Input
-                    id="input"
-                    placeholder="e.g., 670033 or namandisafari@gmail.com"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Enter your admission number to get a magic link sent to your registered email
-                  </p>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" className="px-0" onClick={() => setStep("school")}>
+                  <ArrowLeft className="h-4 w-4 mr-1" /> {t.pages.studentLogin.changeSchool}
+                </Button>
+
+                {/* Login Method Toggle */}
+                <div className="flex rounded-lg border p-1 bg-muted/50">
+                  <button
+                    type="button"
+                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                      loginMethod === "magic_link"
+                        ? "bg-white shadow-sm text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                    onClick={() => setLoginMethod("magic_link")}
+                  >
+                    <Mail className="h-4 w-4 inline mr-1.5" />
+                    Magic Link
+                  </button>
+                  <button
+                    type="button"
+                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                      loginMethod === "password"
+                        ? "bg-white shadow-sm text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                    onClick={() => setLoginMethod("password")}
+                  >
+                    <KeyRound className="h-4 w-4 inline mr-1.5" />
+                    Password
+                  </button>
                 </div>
-               <Button className="w-full" onClick={handleLogin} disabled={loading || !input}>
-                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
-                 {loading ? "Sending..." : "Send Login Link"}
-               </Button>
-             </>
-           )}
+
+                 <div className="space-y-2">
+                   <Label htmlFor="input">Admission Number or Email</Label>
+                   <Input
+                     id="input"
+                     placeholder="e.g., 670033"
+                     value={input}
+                     onChange={(e) => setInput(e.target.value)}
+                     onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                   />
+                 </div>
+
+                {loginMethod === "password" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                    />
+                  </div>
+                )}
+
+                {loginMethod === "magic_link" && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    A secure login link will be sent to your registered email. No password needed.
+                  </p>
+                )}
+
+                {loginMethod === "password" ? (
+                  <Button className="w-full" onClick={handleLogin} disabled={loading || !input || !password}>
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4 mr-2" />}
+                    {loading ? "Logging in..." : "Login with Password"}
+                  </Button>
+                ) : (
+                  <Button className="w-full" onClick={handleLogin} disabled={loading || !input}>
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
+                    {loading ? "Sending..." : "Send Login Link"}
+                  </Button>
+                )}
+
+                {loginMethod === "password" && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    First time? Use "Magic Link" tab to login via email, then set a password in your profile.
+                  </p>
+                )}
+              </>
+            )}
          </CardContent>
        </Card>
      </div>
