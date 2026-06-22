@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { User, Users, GraduationCap, Heart, FileText, CheckSquare, AlertCircle, CreditCard, BookOpen } from "lucide-react";
 import { UNEBCandidateSection, UNEBFormData } from "./UNEBCandidateSection";
+import { UgandaAddressSelect } from "@/components/location/UgandaAddressSelect";
 
 interface StudentFormData {
   // Basic Info
@@ -23,12 +24,17 @@ interface StudentFormData {
   nationality: string;
   place_of_birth: string;
   home_district: string;
+  constituency: string;
+  subcounty: string;
   religion: string;
   talent: string;
   student_national_id: string;
   birth_certificate_number: string;
   address: string;
   photo_url: string;
+  
+  // Portal Info
+  email: string;
   
   // Medical Info
   blood_group: string;
@@ -130,12 +136,15 @@ export function StudentEnrollmentForm({
     nationality: "Ugandan",
     place_of_birth: "",
     home_district: "",
+    constituency: "",
+    subcounty: "",
     religion: "",
     talent: "",
     student_national_id: "",
     birth_certificate_number: "",
     address: "",
     photo_url: "",
+    email: "",
     blood_group: "",
     medical_conditions: "",
     allergies: "",
@@ -369,26 +378,40 @@ export function StudentEnrollmentForm({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="full_name">Full Name *</Label>
-                    <Input
-                      id="full_name"
-                      value={formData.full_name}
-                      onChange={e => updateField("full_name", e.target.value)}
-                      required
-                      placeholder="Enter student's full name"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="admission_number">Admission Number</Label>
-                    <Input
-                      id="admission_number"
-                      value={formData.admission_number}
-                      onChange={e => updateField("admission_number", e.target.value)}
-                      placeholder="Auto-generated if empty"
-                    />
-                  </div>
-                </div>
+                   <div>
+                     <Label htmlFor="full_name">Full Name *</Label>
+                     <Input
+                       id="full_name"
+                       value={formData.full_name}
+                       onChange={e => updateField("full_name", e.target.value)}
+                       required
+                       placeholder="Enter student's full name"
+                     />
+                   </div>
+                   <div>
+                     <Label htmlFor="admission_number">Admission Number</Label>
+                     <Input
+                       id="admission_number"
+                       value={formData.admission_number}
+                       onChange={e => updateField("admission_number", e.target.value)}
+                       placeholder="Auto-generated if empty"
+                     />
+                   </div>
+                 </div>
+
+                 <div>
+                   <Label htmlFor="email">Portal Email (Student Login)</Label>
+                   <Input
+                     id="email"
+                     type="email"
+                     value={formData.email}
+                     onChange={e => updateField("email", e.target.value)}
+                     placeholder="Will be auto-generated if empty (firstname.lastname.admissionnumber@tennahubapps.com)"
+                   />
+                   <p className="text-xs text-muted-foreground mt-1">
+                     Leave empty to auto-generate based on student name and admission number
+                   </p>
+                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
                   <div>
@@ -433,12 +456,15 @@ export function StudentEnrollmentForm({
                       onChange={e => updateField("place_of_birth", e.target.value)}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="home_district">Home District</Label>
-                    <Input
-                      id="home_district"
-                      value={formData.home_district}
-                      onChange={e => updateField("home_district", e.target.value)}
+                  <div className="space-y-4">
+                    <UgandaAddressSelect
+                      districtValue={formData.home_district}
+                      onDistrictChange={v => updateField("home_district", v)}
+                      constituencyValue={formData.constituency}
+                      onConstituencyChange={v => updateField("constituency", v)}
+                      subcountyValue={formData.subcounty}
+                      onSubcountyChange={v => updateField("subcounty", v)}
+                      showSubcounty={false}
                     />
                   </div>
                 </div>
@@ -469,12 +495,12 @@ export function StudentEnrollmentForm({
                 </div>
 
                 <div>
-                  <Label htmlFor="address">Home Address</Label>
+                  <Label htmlFor="address">Home Address (Village, Parish, Landmark)</Label>
                   <Textarea
                     id="address"
                     value={formData.address}
                     onChange={e => updateField("address", e.target.value)}
-                    placeholder="Enter full home address"
+                    placeholder="Enter village, parish, landmark, or full address"
                     rows={2}
                   />
                 </div>
