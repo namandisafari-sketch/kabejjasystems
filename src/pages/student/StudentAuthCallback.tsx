@@ -29,11 +29,24 @@ export default function StudentAuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
+        // Wait a moment for Supabase to process the URL tokens
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         // Get the session from URL hash
         const { data, error } = await supabase.auth.getSession();
 
-        if (error || !data.session) {
-          toast({ variant: "destructive", title: "Authentication failed" });
+        console.log("Session data:", { data, error });
+
+        if (error) {
+          console.error("Session error:", error);
+          toast({ variant: "destructive", title: "Authentication failed", description: error.message });
+          navigate("/student/login", { replace: true });
+          return;
+        }
+
+        if (!data.session) {
+          console.error("No session found");
+          toast({ variant: "destructive", title: "Authentication failed", description: "No active session" });
           navigate("/student/login", { replace: true });
           return;
         }
@@ -59,6 +72,7 @@ export default function StudentAuthCallback() {
           .single();
 
         if (studentError || !student) {
+          console.error("Student lookup error:", studentError);
           await supabase.auth.signOut();
           toast({ variant: "destructive", title: "Student record not found" });
           navigate("/student/login", { replace: true });
@@ -111,6 +125,7 @@ export default function StudentAuthCallback() {
         sessionStorage.setItem("studentSession", JSON.stringify(session));
         navigate("/student/dashboard", { replace: true });
       } catch (error: any) {
+        console.error("Callback error:", error);
         toast({ variant: "destructive", title: "Error", description: error.message });
         navigate("/student/login", { replace: true });
       } finally {
