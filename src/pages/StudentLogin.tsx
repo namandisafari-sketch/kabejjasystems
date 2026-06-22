@@ -122,12 +122,16 @@ export default function StudentLogin() {
        }
 
        // Send magic link
-       const { error } = await supabase.auth.signInWithOtp({
-         email: emailToUse,
-         options: {
-           emailRedirectTo: `${window.location.origin}/student/auth-callback`,
-         },
-       });
+        const { error } = await supabase.auth.signInWithOtp({
+          email: emailToUse,
+          options: {
+            emailRedirectTo: `${window.location.origin}/student/auth-callback?tenant=${tenantId}`,
+            data: {
+              tenantId: tenantId,
+              schoolName: schoolName,
+            }
+          },
+        });
 
        if (error) {
          toast({ variant: "destructive", title: "Failed to send login link", description: error.message });

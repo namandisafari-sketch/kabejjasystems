@@ -38,16 +38,18 @@ export default function StudentAuthCallback() {
           return;
         }
 
-        // Get student record
-        const tenantId = sessionStorage.getItem("studentTenantId");
+        // Get tenant ID from URL query param or sessionStorage
+        const urlParams = new URLSearchParams(window.location.search);
+        let tenantId = urlParams.get('tenant') || sessionStorage.getItem("studentTenantId");
+        let schoolName = sessionStorage.getItem("studentSchoolName") || "";
+
         if (!tenantId) {
           toast({ variant: "destructive", title: "School not verified" });
           navigate("/student/login", { replace: true });
           return;
         }
 
-        const schoolNameStored = sessionStorage.getItem("studentSchoolName") || "";
-        setSchoolName(schoolNameStored);
+        setSchoolName(schoolName);
 
         const { data: student, error: studentError } = await supabase
           .from("students")
@@ -103,7 +105,7 @@ export default function StudentAuthCallback() {
           fullName: student.full_name,
           admissionNumber: student.admission_number,
           className: (student as any).school_classes?.name || "",
-          schoolName: schoolNameStored,
+          schoolName: schoolName,
         };
 
         sessionStorage.setItem("studentSession", JSON.stringify(session));
