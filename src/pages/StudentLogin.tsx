@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { TennaHubLogo } from "@/components/TennaHubLogo";
-import { GraduationCap, ArrowLeft, Loader2 } from "lucide-react";
+import { GraduationCap, ArrowLeft, Loader2, Mail, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n";
 
@@ -32,10 +32,9 @@ export default function StudentLogin() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
-  const [step, setStep] = useState<"school" | "login">("school");
+  const [step, setStep] = useState<"school" | "login" | "link-sent">("school");
   const [schoolCode, setSchoolCode] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [schoolName, setSchoolName] = useState("");
 
@@ -67,50 +66,31 @@ export default function StudentLogin() {
   };
 
   const handleLogin = async () => {
-    if (!email || !password) return;
+    if (!email) return;
     setLoading(true);
     const tenantId = sessionStorage.getItem("studentTenantId");
 
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
+    try {
+      // Send magic link
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: {
+          emailRedirectTo: `${window.location.origin}/student/auth-callback`,
+        },
+      });
 
-    if (authError || !authData.user) {
-      toast({ variant: "destructive", title: t.pages.studentLogin.invalidCredentials });
+      if (error) {
+        toast({ variant: "destructive", title: "Failed to send login link", description: error.message });
+        setLoading(false);
+        return;
+      }
+
+      // Show success message
+      setStep("link-sent");
       setLoading(false);
-      return;
-    }
-
-    const { data: student, error: studentError } = await supabase
-      .from("students")
-      .select("id, full_name, admission_number, school_classes(name)")
-      .eq("user_id", authData.user.id)
-      .eq("tenant_id", tenantId)
-      .single();
-
-    if (studentError || !student) {
-      await supabase.auth.signOut();
-      toast({ variant: "destructive", title: t.pages.studentLogin.noStudentRecord });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Error", description: err.message });
       setLoading(false);
-      return;
-    }
-
-    const session: StudentSession = {
-      studentId: student.id,
-      tenantId: tenantId!,
-      fullName: student.full_name,
-      admissionNumber: student.admission_number,
-      className: (student as any).school_classes?.name || "",
-      schoolName: sessionStorage.getItem("studentSchoolName") || "",
-    };
-    sessionStorage.setItem("studentSession", JSON.stringify(session));
-    setLoading(false);
-
-    if (authData.user.user_metadata?.must_reset_password) {
-      navigate("/student/set-password", { replace: true });
-    } else {
-      navigate("/student/dashboard", { replace: true });
     }
   };
 
@@ -156,6 +136,32 @@ export default function StudentLogin() {
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.pages.studentLogin.continue}
               </Button>
             </>
+          ) : step === "link-sent" ? (
+            <>
+              <div className="text-center space-y-4">
+                <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-lg">Login link sent!</h3>
+                  <p className="text-sm text-muted-foreground">
+                    We've sent a secure login link to:
+                  </p>
+                  <p className="font-mono text-sm bg-muted px-3 py-2 rounded">{email}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Check your email and click the link to login. The link expires in 24 hours.
+                  </p>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={() => {
+                  setStep("login");
+                  setEmail("");
+                }}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" /> Try another email
+              </Button>
+            </>
           ) : (
             <>
               <Button variant="ghost" size="sm" className="px-0" onClick={() => setStep("school")}>
@@ -166,25 +172,18 @@ export default function StudentLogin() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder={t.pages.studentLogin.emailPlaceholder}
+                  placeholder="e.g., 670033@ttl.student"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleLogin()}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Enter your student email address to receive a secure login link
+                </p>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">{t.pages.studentLogin.passwordLabel}</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder={t.pages.studentLogin.passwordPlaceholder}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                />
-              </div>
-              <Button className="w-full" onClick={handleLogin} disabled={loading || !email || !password}>
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.pages.studentLogin.signIn}
+              <Button className="w-full" onClick={handleLogin} disabled={loading || !email}>
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
+                {loading ? "Sending..." : "Send Login Link"}
               </Button>
             </>
           )}

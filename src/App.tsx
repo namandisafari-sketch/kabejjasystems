@@ -187,6 +187,7 @@ import JobStatus from "./pages/public/JobStatus";
 import SelfAdmission from "./pages/public/SelfAdmission";
 import SuggestionBox from "./pages/public/SuggestionBox";
 import StudentLogin from "./pages/StudentLogin";
+import StudentAuthCallback from "./pages/student/StudentAuthCallback";
 import StudentSetPassword from "./pages/StudentSetPassword";
 import StudentLayout from "./pages/StudentLayout";
 import StudentIDCard from "./pages/student/IDCard";
@@ -385,9 +386,10 @@ const App = () => {
               <Route path="/ecd-parent" element={<ECDParentPortal />} />
               <Route path="/ecd-parent/dashboard" element={<ECDParentDashboard />} />
 
-              {/* Student Portal Routes */}
-              <Route path="/student/login" element={<StudentLogin />} />
-              <Route path="/student/set-password" element={<StudentSetPassword />} />
+               {/* Student Portal Routes */}
+               <Route path="/student/login" element={<StudentLogin />} />
+               <Route path="/student/auth-callback" element={<StudentAuthCallback />} />
+               <Route path="/student/set-password" element={<StudentSetPassword />} />
               <Route path="/student" element={<StudentLayout />}>
                 <Route index element={<StudentDashboard />} />
                 <Route path="dashboard" element={<StudentDashboard />} />
