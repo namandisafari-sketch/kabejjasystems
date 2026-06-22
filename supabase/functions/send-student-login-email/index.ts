@@ -28,8 +28,11 @@ serve(async (req) => {
       (await req.json()) as SendStudentLoginEmailRequest;
 
     // Send email via Resend
+    const fromDomain = "onboarding@resend.dev";
+    const fromName = "TennaHub Student Portal";
+
     const response = await resend.emails.send({
-      from: "TennaHub Student Portal <noreply@tennahubapps.com>",
+      from: `${fromName} <${fromDomain}>`,
       to: email,
       subject: `Your Secure Login Link - ${schoolName}`,
       html: generateEmailHTML(studentName, schoolName, magicLinkUrl, expiresInMinutes),

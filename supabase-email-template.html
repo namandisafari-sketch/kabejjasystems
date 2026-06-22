@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:'Montserrat','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:20px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background:white;border-radius:0 0 12px 12px;overflow:hidden;">
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#005bc4 0%,#003d8a 100%);padding:40px 20px;text-align:center;">
+              <h1 style="margin:0;font-size:28px;font-weight:800;color:white;letter-spacing:-1px;">TennaHub</h1>
+              <p style="margin:8px 0 0;font-size:16px;color:rgba(255,255,255,0.9);font-weight:300;">Student Portal</p>
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td style="padding:40px 30px;">
+              <p style="margin:0 0 20px;font-size:15px;color:#4b5563;line-height:1.8;">Hi there,</p>
+              <p style="margin:0 0 20px;font-size:15px;color:#4b5563;line-height:1.8;">Click the button below to securely log in to your student portal.</p>
+              <!-- CTA Button -->
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:30px auto;">
+                <tr>
+                  <td style="border-radius:8px;background:linear-gradient(135deg,#005bc4 0%,#003d8a 100%);padding:16px 40px;">
+                    <a href="{{ .ConfirmationURL }}" 
+                       style="font-size:16px;font-weight:800;color:white;text-decoration:none;letter-spacing:-0.5px;display:inline-block;">
+                      Secure Login
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:20px 0 0;font-size:12px;color:#9ca3af;text-align:center;">Or copy this link into your browser:</p>
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:12px 0;">
+                <tr>
+                  <td style="padding:12px;background:#f0f4f9;border-radius:6px;border-left:3px solid #005bc4;font-size:12px;color:#6b7280;word-break:break-all;font-family:'Courier New',monospace;">
+                    {{ .ConfirmationURL }}
+                  </td>
+                </tr>
+              </table>
+              <!-- Security Notice -->
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0 0;padding:16px;background:#fffbea;border-radius:6px;border-left:4px solid #f59e0b;">
+                <tr>
+                  <td style="font-size:12px;color:#92400e;">
+                    <strong>Security Note:</strong> This link expires in 24 hours. Never share this link with anyone. TennaHub will never ask for your password via email.
+                  </td>
+                </tr>
+              </table>
+              <!-- Footer -->
+              <hr style="border:none;border-top:1px solid #e5e7eb;margin:32px 0 20px;">
+              <p style="margin:0 0 8px;font-size:12px;color:#9ca3af;text-align:center;">Questions? Contact your school administrator</p>
+              <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">&copy; 2026 TennaHub Technologies. All rights reserved.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
