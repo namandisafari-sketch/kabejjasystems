@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
  * Format: admissionnumber@ttl.student
  * 
  * Students use this email to login to the student portal.
- * They use their school code as password initially.
+ * Default password for all accounts: alwaystry!
  */
 export const generatePortalEmail = (firstName: string, lastName: string, admissionNumber?: string): string => {
   // Use admission number as the primary identifier for portal email
@@ -32,21 +32,17 @@ export const generatePortalEmail = (firstName: string, lastName: string, admissi
 };
 
 /**
- * Generate a random temporary password
+ * Get the default student portal password
+ * All student accounts use this default password initially
  */
-export const generateTemporaryPassword = (): string => {
-  const length = 12;
-  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
-  let password = '';
-  for (let i = 0; i < length; i++) {
-    password += charset.charAt(Math.floor(Math.random() * charset.length));
-  }
-  return password;
+export const getDefaultStudentPassword = (): string => {
+  return 'alwaystry!';
 };
 
 /**
  * Create a student portal account automatically
  * Returns the user_id if successful, or null if failed
+ * Default password: alwaystry!
  */
 export const createStudentPortalAccount = async (
   firstName: string,
@@ -59,13 +55,13 @@ export const createStudentPortalAccount = async (
     // Generate portal email
     const portalEmail = generatePortalEmail(firstName, lastName, admissionNumber);
     
-    // Generate temporary password
-    const tempPassword = generateTemporaryPassword();
+    // Use default password for all student accounts
+    const password = getDefaultStudentPassword();
     
     // Create auth account in Supabase
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: portalEmail,
-      password: tempPassword,
+      password: password,
       options: {
         data: {
           role: 'student',
