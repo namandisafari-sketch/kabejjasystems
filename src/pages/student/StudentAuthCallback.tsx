@@ -47,47 +47,67 @@ export default function StudentAuthCallback() {
         // Wait for Supabase to process the OTP token from URL
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // Try to get session - may still not be ready
-        let session = null;
-        let attempts = 0;
-        while (!session && attempts < 5) {
-          const { data } = await supabase.auth.getSession();
-          if (data?.session) {
-            session = data.session;
-            console.log("Got session on attempt", attempts + 1);
-            break;
+        // First try to get the current user (works with OTP tokens in URL)
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+        console.log("User check - user:", user, "error:", userError);
+
+        if (userError || !user) {
+          console.error("Could not get user:", userError);
+          
+          // Try getting session as fallback
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (!session) {
+            console.error("No session or user found");
+            toast({ variant: "destructive", title: "Authentication failed", description: "Could not establish session" });
+            navigate("/student/login", { replace: true });
+            return;
           }
-          attempts++;
-          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Use session user if available
+          console.log("Using session user:", session.user.id);
         }
 
-        if (!session) {
-          console.error("Could not get session after retries");
-          toast({ variant: "destructive", title: "Authentication failed", description: "Could not establish session" });
+        const currentUser = user || (await supabase.auth.getSession()).data.session?.user;
+
+        if (!currentUser) {
+          console.error("Could not retrieve user from session or token");
+          toast({ variant: "destructive", title: "Authentication failed", description: "No user information available" });
           navigate("/student/login", { replace: true });
           return;
         }
 
-        console.log("Session user ID:", session.user.id);
+        console.log("Current user ID:", currentUser.id);
 
         // Look up student by user_id and tenant_id
         const { data: student, error: studentError } = await supabase
           .from("students")
           .select("id, full_name, admission_number, school_classes(name)")
-          .eq("user_id", session.user.id)
+          .eq("user_id", currentUser.id)
           .eq("tenant_id", tenantId)
           .single();
 
         if (studentError) {
           console.error("Student lookup error:", studentError);
+          
+          // Check if student exists with this user_id at all (maybe different tenant?)
+          const { data: allStudents } = await supabase
+            .from("students")
+            .select("id, tenant_id, full_name")
+            .eq("user_id", currentUser.id)
+            .limit(5);
+          
+          console.log("Student records for this user:", allStudents);
+          
           await supabase.auth.signOut();
-          toast({ variant: "destructive", title: "Student record not found", description: studentError.message });
+          toast({ variant: "destructive", title: "Student record not found", description: "No student found for this account" });
           navigate("/student/login", { replace: true });
           return;
         }
 
         if (!student) {
-          console.error("No student found for this user");
+          console.error("No student found for this user and tenant");
           await supabase.auth.signOut();
           toast({ variant: "destructive", title: "Student record not found" });
           navigate("/student/login", { replace: true });
