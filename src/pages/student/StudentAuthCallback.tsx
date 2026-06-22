@@ -29,55 +29,72 @@ export default function StudentAuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Wait a moment for Supabase to process the URL tokens
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Get the session from URL hash
-        const { data, error } = await supabase.auth.getSession();
-
-        console.log("Session data:", { data, error });
-
-        if (error) {
-          console.error("Session error:", error);
-          toast({ variant: "destructive", title: "Authentication failed", description: error.message });
-          navigate("/student/login", { replace: true });
-          return;
-        }
-
-        if (!data.session) {
-          console.error("No session found");
-          toast({ variant: "destructive", title: "Authentication failed", description: "No active session" });
-          navigate("/student/login", { replace: true });
-          return;
-        }
-
-        // Get tenant ID from URL query param or sessionStorage
+        // Get tenant ID from URL query param FIRST (before waiting for session)
         const urlParams = new URLSearchParams(window.location.search);
         let tenantId = urlParams.get('tenant') || sessionStorage.getItem("studentTenantId");
         let schoolName = sessionStorage.getItem("studentSchoolName") || "";
 
         if (!tenantId) {
+          console.error("No tenant ID found");
           toast({ variant: "destructive", title: "School not verified" });
           navigate("/student/login", { replace: true });
           return;
         }
 
+        console.log("Tenant ID from URL:", tenantId);
         setSchoolName(schoolName);
 
+        // Wait for Supabase to process the OTP token from URL
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Try to get session - may still not be ready
+        let session = null;
+        let attempts = 0;
+        while (!session && attempts < 5) {
+          const { data } = await supabase.auth.getSession();
+          if (data?.session) {
+            session = data.session;
+            console.log("Got session on attempt", attempts + 1);
+            break;
+          }
+          attempts++;
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        if (!session) {
+          console.error("Could not get session after retries");
+          toast({ variant: "destructive", title: "Authentication failed", description: "Could not establish session" });
+          navigate("/student/login", { replace: true });
+          return;
+        }
+
+        console.log("Session user ID:", session.user.id);
+
+        // Look up student by user_id and tenant_id
         const { data: student, error: studentError } = await supabase
           .from("students")
           .select("id, full_name, admission_number, school_classes(name)")
-          .eq("user_id", data.session.user.id)
+          .eq("user_id", session.user.id)
           .eq("tenant_id", tenantId)
           .single();
 
-        if (studentError || !student) {
+        if (studentError) {
           console.error("Student lookup error:", studentError);
+          await supabase.auth.signOut();
+          toast({ variant: "destructive", title: "Student record not found", description: studentError.message });
+          navigate("/student/login", { replace: true });
+          return;
+        }
+
+        if (!student) {
+          console.error("No student found for this user");
           await supabase.auth.signOut();
           toast({ variant: "destructive", title: "Student record not found" });
           navigate("/student/login", { replace: true });
           return;
         }
+
+        console.log("Student found:", student.full_name);
 
         // CHECK FOR ACTIVE DISCIPLINE CASES THAT BLOCK PORTAL ACCESS
         const { data: disciplineCases, error: disciplineError } = await supabase
@@ -105,6 +122,7 @@ export default function StudentAuthCallback() {
 
             if (rules) {
               // Student has an active blocking discipline case
+              console.log("Student has blocking discipline case");
               setBlockedCase(disciplineCase);
               setLoading(false);
               return;
@@ -113,7 +131,7 @@ export default function StudentAuthCallback() {
         }
 
         // Create session - no blocking cases found
-        const session = {
+        const sessionData = {
           studentId: student.id,
           tenantId: tenantId,
           fullName: student.full_name,
@@ -122,7 +140,8 @@ export default function StudentAuthCallback() {
           schoolName: schoolName,
         };
 
-        sessionStorage.setItem("studentSession", JSON.stringify(session));
+        console.log("Creating student session:", sessionData);
+        sessionStorage.setItem("studentSession", JSON.stringify(sessionData));
         navigate("/student/dashboard", { replace: true });
       } catch (error: any) {
         console.error("Callback error:", error);
