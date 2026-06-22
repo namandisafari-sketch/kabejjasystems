@@ -32,67 +32,89 @@ export default function StudentLogin() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
-  const [step, setStep] = useState<"school" | "login" | "link-sent">("school");
-  const [schoolCode, setSchoolCode] = useState("");
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [schoolName, setSchoolName] = useState("");
+   const [step, setStep] = useState<"school" | "login" | "link-sent">("school");
+   const [schoolCode, setSchoolCode] = useState("");
+   const [admissionNumber, setAdmissionNumber] = useState("");
+   const [loading, setLoading] = useState(false);
+   const [schoolName, setSchoolName] = useState("");
+   const [tenantId, setTenantId] = useState("");
 
   useEffect(() => {
     const existing = getStudentSession();
     if (existing) navigate("/student/dashboard", { replace: true });
   }, [navigate]);
 
-  const handleSchoolCode = async () => {
-    if (!schoolCode.trim()) return;
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("tenants")
-      .select("id, name")
-      .eq("business_code", schoolCode.trim().toUpperCase())
-      .eq("status", "active")
-      .single();
+   const handleSchoolCode = async () => {
+     if (!schoolCode.trim()) return;
+     setLoading(true);
+     const { data, error } = await supabase
+       .from("tenants")
+       .select("id, name")
+       .eq("business_code", schoolCode.trim().toUpperCase())
+       .eq("status", "active")
+       .single();
 
-    if (error || !data) {
-      toast({ variant: "destructive", title: t.pages.studentLogin.invalidSchoolCode });
-      setLoading(false);
-      return;
-    }
-    setSchoolName(data.name);
-    sessionStorage.setItem("studentTenantId", data.id);
-    sessionStorage.setItem("studentSchoolName", data.name);
-    setStep("login");
-    setLoading(false);
-  };
+     if (error || !data) {
+       toast({ variant: "destructive", title: t.pages.studentLogin.invalidSchoolCode });
+       setLoading(false);
+       return;
+     }
+     setSchoolName(data.name);
+     setTenantId(data.id);
+     sessionStorage.setItem("studentTenantId", data.id);
+     sessionStorage.setItem("studentSchoolName", data.name);
+     setStep("login");
+     setLoading(false);
+   };
 
-  const handleLogin = async () => {
-    if (!email) return;
-    setLoading(true);
-    const tenantId = sessionStorage.getItem("studentTenantId");
+   const handleLogin = async () => {
+     if (!admissionNumber.trim()) return;
+     setLoading(true);
 
-    try {
-      // Send magic link
-      const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: {
-          emailRedirectTo: `${window.location.origin}/student/auth-callback`,
-        },
-      });
+     try {
+       // Verify student exists
+       const { data: student, error: studentError } = await supabase
+         .from("students")
+         .select("id, full_name, admission_number")
+         .eq("admission_number", admissionNumber.trim())
+         .eq("tenant_id", tenantId)
+         .single();
 
-      if (error) {
-        toast({ variant: "destructive", title: "Failed to send login link", description: error.message });
-        setLoading(false);
-        return;
-      }
+       if (studentError || !student) {
+         toast({ 
+           variant: "destructive", 
+           title: "Student not found", 
+           description: `No student with admission number ${admissionNumber} found` 
+         });
+         setLoading(false);
+         return;
+       }
 
-      // Show success message
-      setStep("link-sent");
-      setLoading(false);
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "Error", description: err.message });
-      setLoading(false);
-    }
-  };
+       // Generate student portal email
+       const portalEmail = `${admissionNumber.trim()}@ttl.student`;
+
+       // Send magic link to portal email
+       const { error } = await supabase.auth.signInWithOtp({
+         email: portalEmail,
+         options: {
+           emailRedirectTo: `${window.location.origin}/student/auth-callback`,
+         },
+       });
+
+       if (error) {
+         toast({ variant: "destructive", title: "Failed to send login link", description: error.message });
+         setLoading(false);
+         return;
+       }
+
+       // Show success message
+       setStep("link-sent");
+       setLoading(false);
+     } catch (err: any) {
+       toast({ variant: "destructive", title: "Error", description: err.message });
+       setLoading(false);
+     }
+   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
@@ -136,59 +158,58 @@ export default function StudentLogin() {
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.pages.studentLogin.continue}
               </Button>
             </>
-          ) : step === "link-sent" ? (
-            <>
-              <div className="text-center space-y-4">
-                <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-lg">Login link sent!</h3>
-                  <p className="text-sm text-muted-foreground">
-                    We've sent a secure login link to:
-                  </p>
-                  <p className="font-mono text-sm bg-muted px-3 py-2 rounded">{email}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Check your email and click the link to login. The link expires in 24 hours.
-                  </p>
-                </div>
-              </div>
-              <Button 
-                variant="outline" 
-                className="w-full" 
-                onClick={() => {
-                  setStep("login");
-                  setEmail("");
-                }}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" /> Try another email
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button variant="ghost" size="sm" className="px-0" onClick={() => setStep("school")}>
-                <ArrowLeft className="h-4 w-4 mr-1" /> {t.pages.studentLogin.changeSchool}
-              </Button>
-              <div className="space-y-2">
-                <Label htmlFor="email">{t.pages.studentLogin.emailLabel}</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="e.g., 670033@ttl.student"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Enter your student email address to receive a secure login link
-                </p>
-              </div>
-              <Button className="w-full" onClick={handleLogin} disabled={loading || !email}>
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
-                {loading ? "Sending..." : "Send Login Link"}
-              </Button>
-            </>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+           ) : step === "link-sent" ? (
+             <>
+               <div className="text-center space-y-4">
+                 <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+                 <div className="space-y-2">
+                   <h3 className="font-semibold text-lg">Login link sent!</h3>
+                   <p className="text-sm text-muted-foreground">
+                     We've sent a secure login link to:
+                   </p>
+                   <p className="font-mono text-sm bg-muted px-3 py-2 rounded">{admissionNumber}@ttl.student</p>
+                   <p className="text-xs text-muted-foreground">
+                     Check your email and click the link to login. The link expires in 24 hours.
+                   </p>
+                 </div>
+               </div>
+               <Button 
+                 variant="outline" 
+                 className="w-full" 
+                 onClick={() => {
+                   setStep("login");
+                   setAdmissionNumber("");
+                 }}
+               >
+                 <ArrowLeft className="h-4 w-4 mr-2" /> Try another admission number
+               </Button>
+             </>
+           ) : (
+             <>
+               <Button variant="ghost" size="sm" className="px-0" onClick={() => setStep("school")}>
+                 <ArrowLeft className="h-4 w-4 mr-1" /> {t.pages.studentLogin.changeSchool}
+               </Button>
+               <div className="space-y-2">
+                 <Label htmlFor="admission">Student Admission Number</Label>
+                 <Input
+                   id="admission"
+                   placeholder="e.g., 670033"
+                   value={admissionNumber}
+                   onChange={(e) => setAdmissionNumber(e.target.value.trim())}
+                   onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                 />
+                 <p className="text-xs text-muted-foreground">
+                   Enter your admission number to receive a secure login link
+                 </p>
+               </div>
+               <Button className="w-full" onClick={handleLogin} disabled={loading || !admissionNumber}>
+                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
+                 {loading ? "Sending..." : "Send Login Link"}
+               </Button>
+             </>
+           )}
+         </CardContent>
+       </Card>
+     </div>
+   );
+ }
