@@ -29,19 +29,23 @@ export default function StudentAuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Get tenant ID from URL query param FIRST (before waiting for session)
+        // Get tenant ID and school name from URL query params (these persist through email link)
         const urlParams = new URLSearchParams(window.location.search);
         let tenantId = urlParams.get('tenant') || sessionStorage.getItem("studentTenantId");
-        let schoolName = sessionStorage.getItem("studentSchoolName") || "";
+        let schoolName = urlParams.get('school') || sessionStorage.getItem("studentSchoolName") || "";
+
+        console.log("URL params:", { tenant: urlParams.get('tenant'), school: urlParams.get('school') });
+        console.log("Session storage:", { tenantId: sessionStorage.getItem("studentTenantId"), schoolName: sessionStorage.getItem("studentSchoolName") });
 
         if (!tenantId) {
-          console.error("No tenant ID found");
-          toast({ variant: "destructive", title: "School not verified" });
+          console.error("No tenant ID found in URL or sessionStorage");
+          toast({ variant: "destructive", title: "School not verified", description: "Please start the login process again" });
           navigate("/student/login", { replace: true });
           return;
         }
 
         console.log("Tenant ID from URL:", tenantId);
+        console.log("School name:", schoolName);
         setSchoolName(schoolName);
 
         // Wait for Supabase to process the OTP token from URL
@@ -50,7 +54,7 @@ export default function StudentAuthCallback() {
         // First try to get the current user (works with OTP tokens in URL)
         const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-        console.log("User check - user:", user, "error:", userError);
+        console.log("User check - user:", user?.id, "error:", userError);
 
         if (userError || !user) {
           console.error("Could not get user:", userError);
@@ -64,18 +68,16 @@ export default function StudentAuthCallback() {
             navigate("/student/login", { replace: true });
             return;
           }
-          
-          // Use session user if available
-          console.log("Using session user:", session.user.id);
         }
 
-        const currentUser = user || (await supabase.auth.getSession()).data.session?.user;
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
 
         if (!currentUser) {
-          console.error("Could not retrieve user from session or token");
+          console.error("Could not retrieve user");
           toast({ variant: "destructive", title: "Authentication failed", description: "No user information available" });
           navigate("/student/login", { replace: true });
           return;
+        }
         }
 
         console.log("Current user ID:", currentUser.id);

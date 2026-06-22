@@ -126,10 +126,11 @@ export default function StudentLogin() {
         }
 
         // Send magic link via Supabase Auth
+        // Include tenant as URL param so it persists through email click
          const { error } = await supabase.auth.signInWithOtp({
            email: emailToUse,
            options: {
-             emailRedirectTo: `${window.location.origin}/student/auth-callback?tenant=${tenantId}`,
+             emailRedirectTo: `${window.location.origin}/student/auth-callback?tenant=${encodeURIComponent(tenantId)}&school=${encodeURIComponent(schoolName)}`,
              data: {
                tenantId: tenantId,
                schoolName: schoolName,
@@ -149,7 +150,7 @@ export default function StudentLogin() {
             emailToUse,
             studentName,
             schoolName,
-            `${window.location.origin}/student/auth-callback?tenant=${tenantId}`
+            `${window.location.origin}/student/auth-callback?tenant=${encodeURIComponent(tenantId)}&school=${encodeURIComponent(schoolName)}`
           ).catch((err) => {
             console.error("Failed to send branded email via Resend:", err);
             // Don't show error to user - OTP was already sent
