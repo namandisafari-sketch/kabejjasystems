@@ -32,6 +32,17 @@ interface Subcounty {
   constituency_name: string;
 }
 
+interface Village {
+  village_code: number;
+  village_name: string;
+  subcounty_code: number;
+  subcounty_name: string;
+  district_code: number;
+  district_name: string;
+  constituency_code: number;
+  constituency_name: string;
+}
+
 const KALULU_REPO_BASE =
   'https://raw.githubusercontent.com/Uganda-Open-Data/kalulu/master';
 
@@ -39,6 +50,7 @@ const DATA_URLS = {
   districts: `${KALULU_REPO_BASE}/district_lookup/uganda_districts_2020.json`,
   constituencies: `${KALULU_REPO_BASE}/constituency_lookup/uganda_constituencies_2020.json`,
   subcounties: `${KALULU_REPO_BASE}/subcounty_lookup/uganda_subcounties_2020.json`,
+  villages: `${KALULU_REPO_BASE}/parish_lookup/uganda_parishes_2020.json`,
 };
 
 /**
@@ -227,8 +239,74 @@ async function importSubcounties(
 }
 
 /**
- * Main import function
+ * Import villages/parishes into the database
  */
+async function importVillages(
+  supabase: SupabaseClient,
+  villages: Village[],
+  districtMap: Record<number, string>,
+  constituencyMap: Record<number, string>,
+  subcountyMap: Record<number, string>
+): Promise<void> {
+  console.log(`Importing ${villages.length} villages...`);
+
+  let successCount = 0;
+
+  // Clear existing data
+  await supabase
+    .from('uganda_villages')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000');
+
+  // Import villages in batches
+  const batchSize = 100;
+  for (let i = 0; i < villages.length; i += batchSize) {
+    const batch = villages.slice(i, i + batchSize);
+    const records = batch
+      .map((village) => {
+        const districtId = districtMap[village.district_code];
+        const constituencyId = constituencyMap[village.constituency_code];
+        const subcountyId = subcountyMap[village.subcounty_code];
+
+        if (!districtId || !constituencyId || !subcountyId) {
+          console.warn(
+            `Missing location info for village ${village.village_name}`
+          );
+          return null;
+        }
+
+        return {
+          village_code: village.village_code,
+          village_name: village.village_name,
+          subcounty_id: subcountyId,
+          subcounty_code: village.subcounty_code,
+          subcounty_name: village.subcounty_name,
+          constituency_id: constituencyId,
+          constituency_code: village.constituency_code,
+          constituency_name: village.constituency_name,
+          district_id: districtId,
+          district_code: village.district_code,
+          district_name: village.district_name,
+        };
+      })
+      .filter(Boolean);
+
+    if (records.length === 0) continue;
+
+    const { error, data } = await supabase
+      .from('uganda_villages')
+      .insert(records as Parameters<typeof supabase.from>[0][]);
+
+    if (error) {
+      console.error(`Error inserting village batch ${i / batchSize + 1}:`, error);
+      continue;
+    }
+
+    successCount += records.length;
+  }
+
+  console.log(`Successfully imported ${successCount} villages`);
+}
 export async function importUgandaLocationData(
   supabase: SupabaseClient
 ): Promise<{ success: boolean; message: string; stats?: Record<string, number> }> {
@@ -236,26 +314,47 @@ export async function importUgandaLocationData(
     console.log('Starting Uganda location data import...');
 
     // Fetch all data from kalulu repository
-    const [districts, constituencies, subcounties] = await Promise.all([
+    const [districts, constituencies, subcounties, villages] = await Promise.all([
       fetchJSON<District[]>(DATA_URLS.districts),
       fetchJSON<Constituency[]>(DATA_URLS.constituencies),
       fetchJSON<Subcounty[]>(DATA_URLS.subcounties),
+      fetchJSON<Village[]>(DATA_URLS.villages),
     ]);
 
     console.log(
-      `Fetched: ${districts.length} districts, ${constituencies.length} constituencies, ${subcounties.length} subcounties`
+      `Fetched: ${districts.length} districts, ${constituencies.length} constituencies, ${subcounties.length} subcounties, ${villages.length} villages`
     );
 
-    // Import in order (districts first, then constituencies, then subcounties)
+    // Import in order (districts → constituencies → subcounties → villages)
     const districtMap = await importDistricts(supabase, districts);
     const constituencyMap = await importConstituencies(
       supabase,
       constituencies,
       districtMap
     );
+    const subcountyMap: Record<number, string> = {};
+    
+    // Build subcounty map from subcounties
+    for (const subcounty of subcounties) {
+      subcountyMap[subcounty.subcounty_code] = ''; // Placeholder, will be filled during import
+    }
+    
     await importSubcounties(supabase, subcounties, districtMap, constituencyMap);
+    
+    // Fetch subcounty IDs for the map
+    const { data: subcountiesData } = await supabase
+      .from('uganda_subcounties')
+      .select('id, subcounty_code');
+    
+    if (subcountiesData) {
+      subcountiesData.forEach((row: any) => {
+        subcountyMap[row.subcounty_code] = row.id;
+      });
+    }
+    
+    await importVillages(supabase, villages, districtMap, constituencyMap, subcountyMap);
 
-    const message = `Successfully imported Uganda location data: ${districts.length} districts, ${constituencies.length} constituencies, ${subcounties.length} subcounties`;
+    const message = `Successfully imported Uganda location data: ${districts.length} districts, ${constituencies.length} constituencies, ${subcounties.length} subcounties, ${villages.length} villages`;
     console.log(message);
 
     return {
@@ -265,6 +364,7 @@ export async function importUgandaLocationData(
         districts: districts.length,
         constituencies: constituencies.length,
         subcounties: subcounties.length,
+        villages: villages.length,
       },
     };
   } catch (error) {
@@ -324,6 +424,23 @@ export async function getSubcountiesByConstituency(
     .select('*')
     .eq('constituency_id', constituencyId)
     .order('subcounty_name');
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Helper function to get villages by subcounty ID
+ */
+export async function getVillagesBySubcounty(
+  supabase: SupabaseClient,
+  subcountyId: string
+) {
+  const { data, error } = await supabase
+    .from('uganda_villages')
+    .select('*')
+    .eq('subcounty_id', subcountyId)
+    .order('village_name');
 
   if (error) throw error;
   return data;

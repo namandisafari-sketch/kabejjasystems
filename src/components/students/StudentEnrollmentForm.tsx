@@ -26,6 +26,7 @@ interface StudentFormData {
   home_district: string;
   constituency: string;
   subcounty: string;
+  village: string;
   religion: string;
   talent: string;
   student_national_id: string;
@@ -139,6 +140,7 @@ export function StudentEnrollmentForm({
     home_district: "",
     constituency: "",
     subcounty: "",
+    village: "",
     religion: "",
     talent: "",
     student_national_id: "",
@@ -481,7 +483,10 @@ export function StudentEnrollmentForm({
                       onConstituencyChange={v => updateField("constituency", v)}
                       subcountyValue={formData.subcounty}
                       onSubcountyChange={v => updateField("subcounty", v)}
-                      showSubcounty={false}
+                      villageValue={formData.village}
+                      onVillageChange={v => updateField("village", v)}
+                      showSubcounty={true}
+                      showVillage={true}
                     />
                   </div>
                 </div>

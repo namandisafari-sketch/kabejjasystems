@@ -22,6 +22,14 @@ export interface UgandaSubcounty {
   constituency_code: number;
 }
 
+export interface UgandaVillage {
+  id: string;
+  village_code: number;
+  village_name: string;
+  subcounty_code: number;
+  subcounty_name: string;
+}
+
 const REGIONS = [
   { code: 1, name: "Central" },
   { code: 2, name: "Eastern" },
@@ -79,6 +87,23 @@ export function useUgandaSubcounties(constituencyCode?: number | null) {
       const { data, error } = await query;
       if (error) throw error;
       return data as UgandaSubcounty[];
+    },
+    staleTime: 1000 * 60 * 60,
+  });
+}
+
+export function useUgandaVillages(subcountyId?: string | null) {
+  return useQuery({
+    queryKey: ['uganda-villages', subcountyId],
+    enabled: !!subcountyId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('uganda_villages')
+        .select('*')
+        .eq('subcounty_id', subcountyId)
+        .order('village_name', { ascending: true });
+      if (error) throw error;
+      return data as UgandaVillage[];
     },
     staleTime: 1000 * 60 * 60,
   });
