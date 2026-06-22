@@ -1,0 +1,4 @@
+{
+  "function_name": "send-student-login-email",
+  "verify_jwt": false
+}

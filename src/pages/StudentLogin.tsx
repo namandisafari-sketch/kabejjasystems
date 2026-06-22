@@ -9,6 +9,7 @@ import { TennaHubLogo } from "@/components/TennaHubLogo";
 import { GraduationCap, ArrowLeft, Loader2, Mail, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n";
+import { sendStudentLoginEmail } from "@/lib/email-service";
 
 interface StudentSession {
   studentId: string;
@@ -69,85 +70,101 @@ export default function StudentLogin() {
    };
 
    const handleLogin = async () => {
-     if (!input.trim()) return;
-     setLoading(true);
+      if (!input.trim()) return;
+      setLoading(true);
 
-     try {
-       let emailToUse = input.trim();
-       
-       // Check if input is an admission number (digits only) or email
-       const isAdmissionNumber = /^\d+$/.test(input.trim());
+      try {
+        let emailToUse = input.trim();
+        let studentName = "";
+        
+        // Check if input is an admission number (digits only) or email
+        const isAdmissionNumber = /^\d+$/.test(input.trim());
 
-        if (isAdmissionNumber) {
-          // Look up student by admission number to get email
-          const { data: student, error: studentError } = await supabase
-            .from("students")
-            .select("id, full_name, admission_number, notification_email, parent_email")
-            .eq("admission_number", input.trim())
-            .eq("tenant_id", tenantId)
-            .single();
+         if (isAdmissionNumber) {
+           // Look up student by admission number to get email
+           const { data: student, error: studentError } = await supabase
+             .from("students")
+             .select("id, full_name, admission_number, notification_email, parent_email")
+             .eq("admission_number", input.trim())
+             .eq("tenant_id", tenantId)
+             .single();
 
-          if (studentError || !student) {
-            toast({ 
-              variant: "destructive", 
-              title: "Student not found", 
-              description: `No student with admission number ${input.trim()} found` 
-            });
-            setLoading(false);
-            return;
-          }
+           if (studentError || !student) {
+             toast({ 
+               variant: "destructive", 
+               title: "Student not found", 
+               description: `No student with admission number ${input.trim()} found` 
+             });
+             setLoading(false);
+             return;
+           }
 
-          // Prefer notification_email (student's personal email), fallback to parent_email
-          if (student.notification_email) {
-            emailToUse = student.notification_email;
-          } else if (student.parent_email) {
-            emailToUse = student.parent_email;
-          } else {
-            toast({ 
-              variant: "destructive", 
-              title: "No email on file", 
-              description: `Student ${student.full_name} has no email address registered` 
-            });
-            setLoading(false);
-            return;
-          }
-       } else if (!emailToUse.includes("@")) {
-         toast({ 
-           variant: "destructive", 
-           title: "Invalid input", 
-           description: "Enter either an admission number or a valid email address" 
+           studentName = student.full_name;
+
+           // Prefer notification_email (student's personal email), fallback to parent_email
+           if (student.notification_email) {
+             emailToUse = student.notification_email;
+           } else if (student.parent_email) {
+             emailToUse = student.parent_email;
+           } else {
+             toast({ 
+               variant: "destructive", 
+               title: "No email on file", 
+               description: `Student ${student.full_name} has no email address registered` 
+             });
+             setLoading(false);
+             return;
+           }
+        } else if (!emailToUse.includes("@")) {
+          toast({ 
+            variant: "destructive", 
+            title: "Invalid input", 
+            description: "Enter either an admission number or a valid email address" 
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Send magic link via Supabase Auth
+         const { error } = await supabase.auth.signInWithOtp({
+           email: emailToUse,
+           options: {
+             emailRedirectTo: `${window.location.origin}/student/auth-callback?tenant=${tenantId}`,
+             data: {
+               tenantId: tenantId,
+               schoolName: schoolName,
+             }
+           },
          });
-         setLoading(false);
-         return;
-       }
 
-       // Send magic link
-        const { error } = await supabase.auth.signInWithOtp({
-          email: emailToUse,
-          options: {
-            emailRedirectTo: `${window.location.origin}/student/auth-callback?tenant=${tenantId}`,
-            data: {
-              tenantId: tenantId,
-              schoolName: schoolName,
-            }
-          },
-        });
+        if (error) {
+          toast({ variant: "destructive", title: "Failed to send login link", description: error.message });
+          setLoading(false);
+          return;
+        }
 
-       if (error) {
-         toast({ variant: "destructive", title: "Failed to send login link", description: error.message });
-         setLoading(false);
-         return;
-       }
+        // Send branded email via Resend (fire and forget, don't block on this)
+        if (studentName) {
+          sendStudentLoginEmail(
+            emailToUse,
+            studentName,
+            schoolName,
+            `${window.location.origin}/student/auth-callback?tenant=${tenantId}`
+          ).catch((err) => {
+            console.error("Failed to send branded email via Resend:", err);
+            // Don't show error to user - OTP was already sent
+          });
+        }
 
-       // Show success message
-       setSentToEmail(emailToUse);
-       setStep("link-sent");
-       setLoading(false);
-     } catch (err: any) {
-       toast({ variant: "destructive", title: "Error", description: err.message });
-       setLoading(false);
-     }
-   };
+        // Show success message
+        setSentToEmail(emailToUse);
+        setStep("link-sent");
+        setLoading(false);
+      } catch (err: any) {
+        toast({ variant: "destructive", title: "Error", description: err.message });
+        setLoading(false);
+      }
+    };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
