@@ -61,7 +61,7 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          pdf: ["jspdf", "html2canvas"],
+          pdf: ["html2canvas"],
         },
       },
     },

@@ -13,7 +13,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, AlertTriangle, CheckCircle2, Download, Save, Plus, Trash2, Eye } from "lucide-react";
 import { toast } from "sonner";
-import jsPDF from "jspdf";
 import { format } from "date-fns";
 import type { StockTakingItem, ProductForStockTaking, StockVarianceReport } from "@/types/stock-taking";
 import { cn } from "@/lib/utils";
@@ -144,10 +143,11 @@ export const StockTakingDialog = ({ isOpen, onClose, tenantId, onStockTakingComp
     setStep("variance");
   };
 
-  const generatePDF = () => {
+  const generatePDF = async () => {
     if (!varianceReport) return;
-
-    const pdf = new jsPDF();
+    try {
+      const jsPDF = (await import("jspdf")).default;
+      const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
     let yPosition = 20;
@@ -234,6 +234,9 @@ export const StockTakingDialog = ({ isOpen, onClose, tenantId, onStockTakingComp
 
     pdf.save(`Stock-Taking-Report-${format(new Date(), "yyyyMMdd-HHmmss")}.pdf`);
     toast.success("PDF report generated successfully");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to generate PDF");
+    }
   };
 
   const handleSaveStockTaking = async () => {
