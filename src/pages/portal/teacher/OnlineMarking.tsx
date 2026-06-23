@@ -35,8 +35,15 @@ const OnlineMarking = () => {
     if (!p?.tenant_id) return;
     setTenantId(p.tenant_id);
 
+    const { data: classAssigns } = await supabase
+      .from("teacher_class_assignments")
+      .select("class_id")
+      .eq("teacher_id", p.id)
+      .eq("tenant_id", p.tenant_id);
+    const assignedClassIds = (classAssigns || []).map((c: any) => c.class_id);
+
     const [cl, ex] = await Promise.all([
-      supabase.from("school_classes").select("*").eq("tenant_id", p.tenant_id).eq("is_active", true).order("name"),
+      supabase.from("school_classes").select("*").eq("tenant_id", p.tenant_id).eq("is_active", true).in("id", assignedClassIds.length > 0 ? assignedClassIds : ["none"]).order("name"),
       supabase.from("exam_results").select("exam_id").eq("tenant_id", p.tenant_id).not("exam_id", "is", null).order("submitted_at", { ascending: false }),
     ]);
     setClasses(cl.data || []);

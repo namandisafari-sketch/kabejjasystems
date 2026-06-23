@@ -516,13 +516,13 @@ export default function StudentCards() {
                 return (
                   <StudentIDCard
                     key={student.id}
-                    student={{ ...student, student_index: globalIndex + 1 }}
+                    student={student}
                     schoolName={tenant?.name || "School Name"}
                     schoolLogo={tenant?.logo_url}
                     schoolPhone={tenant?.phone}
+                    schoolEmail={tenant?.email}
+                    schoolAddress={tenant?.address}
                     className={getClassName(student.class_id)}
-                    idPrefix={schoolSettings?.student_id_prefix || 'STU'}
-                    idDigits={schoolSettings?.student_id_digits || 4}
                   />
                 );
               })}
@@ -540,17 +540,16 @@ export default function StudentCards() {
       <div className="hidden">
         <div ref={printRef}>
           {selectedStudentData.map((student) => {
-            const globalIndex = students.findIndex(s => s.id === student.id);
             return (
               <StudentIDCard
                 key={student.id}
-                student={{ ...student, student_index: globalIndex + 1 }}
+                student={student}
                 schoolName={tenant?.name || "School Name"}
                 schoolLogo={tenant?.logo_url}
                 schoolPhone={tenant?.phone}
+                schoolEmail={tenant?.email}
+                schoolAddress={tenant?.address}
                 className={getClassName(student.class_id)}
-                idPrefix={schoolSettings?.student_id_prefix || 'STU'}
-                idDigits={schoolSettings?.student_id_digits || 4}
                 forPrint
               />
             );

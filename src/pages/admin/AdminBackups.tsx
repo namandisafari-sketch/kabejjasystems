@@ -101,7 +101,36 @@ const AdminBackups = () => {
           counts[table] = 0;
         }
       }
+
+      // Get auth user count via admin API
+      try {
+        const { data: authUsers, error: authErr } = await supabase.auth.admin.listUsers();
+        if (!authErr && authUsers?.users) {
+          counts['auth_users'] = authUsers.users.length;
+          counts['student_accounts'] = authUsers.users.filter((u: any) => u.email?.includes('@ttl.student')).length;
+        }
+      } catch {}
+
       return counts;
+    },
+  });
+
+  // Get storage bucket info
+  const { data: storageInfo } = useQuery({
+    queryKey: ['admin-storage-info'],
+    queryFn: async () => {
+      try {
+        const { data: buckets, error } = await supabase.storage.listBuckets();
+        if (error) throw error;
+        const info: { name: string; fileCount?: number }[] = [];
+        for (const bucket of buckets || []) {
+          try {
+            const { data: files, error: listErr } = await supabase.storage.from(bucket.name).list('', { limit: 1000 });
+            info.push({ name: bucket.name, fileCount: listErr ? undefined : (files || []).length });
+          } catch { info.push({ name: bucket.name }); }
+        }
+        return info;
+      } catch { return []; }
     },
   });
 
@@ -129,6 +158,8 @@ const AdminBackups = () => {
 
       const totalTables = allTables.length;
       const allData: Record<string, any[]> = {};
+      // Track storage files and auth users separately
+      let storageFiles: { bucket: string; path: string }[] = [];
 
       for (let i = 0; i < allTables.length; i++) {
         const table = allTables[i];
@@ -147,6 +178,32 @@ const AdminBackups = () => {
           console.warn(`Could not fetch ${table}:`, err);
         }
       }
+
+      // Include auth users metadata (emails, roles, created_at)
+      try {
+        const { data: authData } = await supabase.auth.admin.listUsers();
+        if (authData?.users) {
+          allData['_auth_users'] = authData.users.map((u: any) => ({
+            id: u.id, email: u.email, role: u.role,
+            created_at: u.created_at, last_sign_in_at: u.last_sign_in_at,
+            user_metadata: { role: u.user_metadata?.role, first_name: u.user_metadata?.first_name, last_name: u.user_metadata?.last_name, tenant_id: u.user_metadata?.tenant_id },
+          }));
+        }
+      } catch {}
+
+      // List storage files metadata
+      try {
+        const { data: buckets } = await supabase.storage.listBuckets();
+        for (const bucket of buckets || []) {
+          try {
+            const { data: files } = await supabase.storage.from(bucket.name).list('', { limit: 10000 });
+            if (files) {
+              storageFiles = [...storageFiles, ...files.map(f => ({ bucket: bucket.name, path: f.name }))];
+            }
+          } catch {}
+        }
+        allData['_storage_files'] = storageFiles;
+      } catch {}
 
       const timestamp = formatDate(new Date(), 'yyyy-MM-dd_HH-mm');
       const fileName = `system_backup_${timestamp}.${exportFormat}`;
@@ -343,7 +400,7 @@ const AdminBackups = () => {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-7 gap-4 mb-6">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -395,6 +452,33 @@ const AdminBackups = () => {
               <div>
                 <p className="text-2xl font-bold">{tableCounts?.products || 0}</p>
                 <p className="text-xs text-muted-foreground">Products</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Shield className="h-8 w-8 text-rose-500" />
+              <div>
+                <p className="text-2xl font-bold">{tableCounts?.auth_users || 0}</p>
+                <p className="text-xs text-muted-foreground">Auth Users ({tableCounts?.student_accounts || 0} students)</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <HardDrive className="h-8 w-8 text-cyan-500" />
+              <div>
+                <p className="text-2xl font-bold">{storageInfo?.length || 0}</p>
+                <p className="text-xs text-muted-foreground">
+                  Storage Buckets
+                  {storageInfo && storageInfo.filter(b => b.fileCount !== undefined).length > 0 &&
+                    ` (${storageInfo.reduce((s, b) => s + (b.fileCount || 0), 0)} files)`
+                  }
+                </p>
               </div>
             </div>
           </CardContent>

@@ -23,15 +23,24 @@ const Students = () => {
 
     const { data: p } = await supabase
       .from("profiles")
-      .select("tenant_id")
+      .select("tenant_id, id")
       .eq("id", session.user.id)
       .single();
     if (!p?.tenant_id) return;
 
+    const { data: classAssigns } = await supabase
+      .from("teacher_class_assignments")
+      .select("class_id")
+      .eq("teacher_id", p.id)
+      .eq("tenant_id", p.tenant_id);
+
+    const classIds = (classAssigns || []).map((c: any) => c.class_id);
+
     const { data } = await supabase
       .from("students")
-      .select("*")
+      .select("*, school_classes!inner(name)")
       .eq("tenant_id", p.tenant_id)
+      .in("class_id", classIds.length > 0 ? classIds : ["none"])
       .order("full_name");
 
     setStudents(data || []);
@@ -75,7 +84,7 @@ const Students = () => {
                   <p className="text-xs text-muted-foreground">{s.admission_number || "No Adm No."}</p>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {s.gender && <Badge variant="outline" className="text-xs">{s.gender}</Badge>}
-                    {s.class_id && <Badge variant="outline" className="text-xs">{s.class_id}</Badge>}
+                    {s.school_classes?.name && <Badge variant="outline" className="text-xs">{s.school_classes.name}</Badge>}
                     {s.boarding_status && <Badge variant="outline" className="text-xs">{s.boarding_status}</Badge>}
                   </div>
                   <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">

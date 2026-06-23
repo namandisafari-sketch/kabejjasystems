@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard, BarChart3, FileText, Calendar, CreditCard,
   CalendarCheck, BookOpen, Lightbulb, LogOut, IdCard,
-  CalendarClock, ScrollText, UserCircle,
+  CalendarClock, ScrollText, UserCircle, GraduationCap,
 } from "lucide-react";
 import type { PortalMenuItem } from "@/components/portal/PortalSidebar";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,7 @@ export default function StudentLayout() {
     { title: t.nav.fees, url: "/student/fees", icon: CreditCard },
     { title: t.attendance.today, url: "/student/events", icon: CalendarCheck },
     { title: t.common.notes, url: "/student/resources", icon: BookOpen },
+    { title: "Curriculum", url: "/student/curriculum", icon: GraduationCap },
     { title: t.navigation.adminSidebarItems.suggestions, url: "/student/suggestions", icon: Lightbulb },
     { title: "Profile & Password", url: "/student/set-password", icon: UserCircle },
   ];

@@ -12,9 +12,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, FileText, Calendar, Edit, Eye, XCircle, AlertTriangle } from "lucide-react";
+import { Plus, FileText, Calendar, Edit, Eye, XCircle, AlertTriangle, FileSignature } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
+import LeaseSigningDialog from "@/components/rental/LeaseSigningDialog";
 
 export default function RentalLeases() {
   const { data: tenantData } = useTenant();
@@ -29,6 +30,8 @@ export default function RentalLeases() {
     termination_reason: '',
   });
   const [editingLease, setEditingLease] = useState<any>(null);
+  const [signingLease, setSigningLease] = useState<any>(null);
+  const [signDialogOpen, setSignDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     unit_id: '',
     rental_tenant_id: '',
@@ -552,6 +555,9 @@ export default function RentalLeases() {
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(lease)} title="Edit">
                         <Edit className="h-4 w-4" />
                       </Button>
+                      <Button variant="ghost" size="icon" onClick={() => { setSigningLease(lease); setSignDialogOpen(true); }} title="Sign Lease" className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50">
+                        <FileSignature className="h-4 w-4" />
+                      </Button>
                       {lease.status === 'active' && (
                         <Button 
                           variant="ghost" 
@@ -578,6 +584,9 @@ export default function RentalLeases() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Sign Lease Dialog */}
+      <LeaseSigningDialog lease={signingLease} open={signDialogOpen} onOpenChange={setSignDialogOpen} />
 
       {/* Mark as Loss Dialog */}
       <Dialog open={lossDialogOpen} onOpenChange={setLossDialogOpen}>

@@ -95,11 +95,10 @@ export function detectSchoolLevels(classes: any[]): string[] {
   const levels = new Set<string>();
   classes.forEach(c => {
     const lv = c.level?.toLowerCase() || "";
-    if (lv.includes("ecd")) levels.add("ecd");
+    if (lv.includes("ecd") || lv.includes("kindergarten")) levels.add("ecd");
     else if (lv.includes("primary") || lv.match(/^p\d+$/)) levels.add("primary");
-    else if (lv === "s1" || lv === "s2" || lv === "s3" || lv === "s4") levels.add("lower_secondary");
-    else if (lv === "s5" || lv === "s6") levels.add("a_level");
-    else levels.add("primary");
+    else if (lv === "o-level" || lv === "s1" || lv === "s2" || lv === "s3" || lv === "s4") levels.add("lower_secondary");
+    else if (lv === "a-level" || lv === "s5" || lv === "s6") levels.add("a_level");
   });
   return Array.from(levels);
 }

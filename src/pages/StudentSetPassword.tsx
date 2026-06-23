@@ -67,7 +67,7 @@ export default function StudentSetPassword() {
           <CardTitle className="text-xl">Profile & Password</CardTitle>
           <CardDescription>
             {studentEmail && <span className="block text-xs mb-1">Logged in as: {studentEmail}</span>}
-            Set a password so you can login without email magic links.
+            Change your password from the default to something secure.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

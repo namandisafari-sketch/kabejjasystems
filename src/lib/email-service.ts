@@ -33,3 +33,36 @@ export async function sendStudentLoginEmail(
     return { success: false, error: err.message };
   }
 }
+
+export async function sendWelcomeEmail(params: {
+  studentEmail: string;
+  studentName: string;
+  admissionNumber: string;
+  className: string;
+  schoolName: string;
+  termName?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    console.log("[EmailService] Sending welcome email...", params);
+
+    const { data, error } = await supabase.functions.invoke("send-welcome-email", {
+      body: params,
+    });
+
+    if (error) {
+      console.error("[EmailService] Welcome email function error:", error);
+      return { success: false, error: error.message };
+    }
+
+    if (data?.error) {
+      console.error("[EmailService] Welcome email send error:", data.error);
+      return { success: false, error: data.error };
+    }
+
+    console.log("[EmailService] Welcome email sent:", data?.messageId);
+    return { success: true };
+  } catch (err: any) {
+    console.error("[EmailService] Welcome email unexpected error:", err);
+    return { success: false, error: err.message };
+  }
+}

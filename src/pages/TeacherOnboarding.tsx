@@ -53,8 +53,14 @@ const TeacherOnboarding = () => {
     const levels = detectSchoolLevels(classData);
     setSchoolLevels(levels);
 
-    const hasOnboardedClasses = classData.some((c: any) => c.class_teacher_id === p.id);
-    if (hasOnboardedClasses) {
+    const [classAssignments, subjectAssignments] = await Promise.all([
+      supabase.from("teacher_class_assignments").select("id").eq("teacher_id", p.id).eq("tenant_id", p.tenant_id).limit(1),
+      supabase.from("teacher_subject_assignments").select("id").eq("teacher_id", p.id).eq("tenant_id", p.tenant_id).limit(1),
+    ]);
+    const hasOnboarded =
+      (classAssignments.data && classAssignments.data.length > 0) ||
+      (subjectAssignments.data && subjectAssignments.data.length > 0);
+    if (hasOnboarded) {
       navigate("/teacher");
       return;
     }

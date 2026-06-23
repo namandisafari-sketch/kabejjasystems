@@ -4,7 +4,7 @@ import {
   Scissors, Calendar, Pill, HeartPulse, Wrench, Cog, PackageMinus, Truck, Tags, AlertTriangle, 
   ClipboardList, CreditCard, Wallet2, Sparkles, GraduationCap, ClipboardCheck, Award, BookOpen, FileText, ScanLine,
   ShieldAlert, Building2, DoorOpen, Calculator, Home, Upload, Shield, Link, UserPlus,
-  ChevronRight, Lightbulb, Star, Bell, MessageSquare, BadgeCheck
+  ChevronRight, Lightbulb, Star, Bell, MessageSquare, BadgeCheck, TrendingUp, Heart
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";

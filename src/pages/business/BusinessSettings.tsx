@@ -53,12 +53,20 @@ const BusinessSettings = () => {
 
       let rentalPackage = null;
       if (tenantData?.business_type === 'rental_management') {
-        const { data: rp } = await supabase
-          .from('rental_packages')
-          .select('name, monthly_price, max_properties, max_units, included_users')
-          .eq('id', tenantData.package_id)
+        const { data: sub } = await supabase
+          .from('rental_subscriptions')
+          .select('package_id')
+          .eq('tenant_id', profile.tenant_id)
+          .eq('status', 'active')
           .maybeSingle();
-        rentalPackage = rp;
+        if (sub?.package_id) {
+          const { data: rp } = await supabase
+            .from('rental_packages')
+            .select('name, monthly_price, max_properties, max_units, included_users')
+            .eq('id', sub.package_id)
+            .maybeSingle();
+          rentalPackage = rp;
+        }
       }
 
       return { ...tenantData, rental_packages: rentalPackage };

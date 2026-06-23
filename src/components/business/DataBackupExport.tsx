@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Download, FileSpreadsheet, FileText, Database, Loader2, CheckCircle2 } from 'lucide-react';
+import { Download, FileSpreadsheet, FileText, Database, Loader2, CheckCircle2, Shield, HardDrive, FileArchive } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface DataBackupExportProps {
@@ -325,6 +325,10 @@ export function DataBackupExport({ tenantId, businessType }: DataBackupExportPro
           <p className="flex items-center gap-1">
             <CheckCircle2 className="h-3 w-3 text-green-500" />
             Recommended to backup regularly for data safety
+          </p>
+          <p className="flex items-center gap-1 text-muted-foreground">
+            <Shield className="h-3 w-3" />
+            Auth accounts and storage files require admin-level backup
           </p>
         </div>
       </CardContent>

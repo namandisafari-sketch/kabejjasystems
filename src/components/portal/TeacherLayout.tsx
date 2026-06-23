@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Outlet } from "react-router-dom";
+import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { PortalSidebar } from "@/components/portal/PortalSidebar";
 import { supabase } from "@/integrations/supabase/client";
@@ -85,6 +85,8 @@ const teacherMenuItems: PortalMenuItem[] = [
 
 export function TeacherLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isOnboarding = location.pathname === "/teacher/onboarding";
   const [tenantName, setTenantName] = useState("");
 
   useEffect(() => {
@@ -114,12 +116,14 @@ export function TeacherLayout() {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <PortalSidebar title="Teacher Portal" menuItems={teacherMenuItems} tenantName={tenantName} />
+        {!isOnboarding && <PortalSidebar title="Teacher Portal" menuItems={teacherMenuItems} tenantName={tenantName} />}
         <div className="flex-1 flex flex-col">
-          <header className="h-14 border-b border-border flex items-center px-4 bg-card sticky top-0 z-30">
-            <SidebarTrigger />
-          </header>
-          <main className="flex-1 overflow-auto p-6">
+          {!isOnboarding && (
+            <header className="h-14 border-b border-border flex items-center px-4 bg-card sticky top-0 z-30">
+              <SidebarTrigger />
+            </header>
+          )}
+          <main className={`flex-1 overflow-auto ${isOnboarding ? "p-0" : "p-6"}`}>
             <TranslationProvider>
               <Outlet />
             </TranslationProvider>

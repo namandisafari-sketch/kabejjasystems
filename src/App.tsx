@@ -29,6 +29,7 @@ import TeacherProfile from "./pages/portal/teacher/TeacherProfile";
 import TeacherPassword from "./pages/portal/teacher/TeacherPassword";
 import PersonalFinance from "./pages/portal/teacher/PersonalFinance";
 import TeacherStudents from "./pages/portal/teacher/Students";
+import TeacherResources from "./pages/portal/teacher/Resources";
 import TeacherOnboarding from "./pages/TeacherOnboarding";
 import DOSDashboard from "./pages/portal/dos/Dashboard";
 import SubjectAllocation from "./pages/portal/dos/SubjectAllocation";
@@ -59,6 +60,7 @@ import PendingApproval from "./pages/PendingApproval";
 import Dashboard from "./pages/Dashboard";
 import AcceptInvitation from "./pages/AcceptInvitation";
 import ExamResultsLookup from "./pages/public/ExamResultsLookup";
+import VerifyStudent from "./pages/public/VerifyStudent";
 import ExamResults from "./pages/public/ExamResults";
 import { AdminLayout } from "./components/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -138,6 +140,7 @@ import InventoryImport from "./pages/business/InventoryImport";
 import ParentsImport from "./pages/business/ParentsImport";
 import ClassesImport from "./pages/business/ClassesImport";
 import SubjectsImport from "./pages/business/SubjectsImport";
+import Grades from "./pages/business/Grades";
 import StudentCards from "./pages/business/StudentCards";
 import TermRequirements from "./pages/business/TermRequirements";
 import ReportCards from "./pages/business/ReportCards";
@@ -167,6 +170,8 @@ import AdmissionConfirmations from "./pages/business/AdmissionConfirmations";
 import StudentLifecycle from "./pages/business/StudentLifecycle";
 import PromotionRules from "./pages/business/PromotionRules";
 import SchoolHolidays from "./pages/business/SchoolHolidays";
+import SubjectCombinations from "./pages/business/SubjectCombinations";
+import ContinuousAssessment from "./pages/business/ContinuousAssessment";
 import Suggestions from "./pages/business/Suggestions";
 import StaffReviews from "./pages/business/StaffReviews";
 import NotificationSettings from "./pages/business/NotificationSettings";
@@ -182,6 +187,11 @@ import RentalMaintenance from "./pages/business/rental/RentalMaintenance";
 import RentalIDCards from "./pages/business/rental/RentalIDCards";
 import RentalPaymentProofs from "./pages/business/rental/RentalPaymentProofs";
 import RentalTaxDashboard from "./pages/business/rental/RentalTaxDashboard";
+import RentalExpenses from "./pages/business/rental/RentalExpenses";
+import RentalRecurringBilling from "./pages/business/rental/RentalRecurringBilling";
+import RentalFinancialReports from "./pages/business/rental/RentalFinancialReports";
+import RentalPreventativeMaintenance from "./pages/business/rental/RentalPreventativeMaintenance";
+import RentalMessages from "./pages/business/rental/RentalMessages";
 import PublicMenu from "./pages/public/PublicMenu";
 import SubmitPaymentProof from "./pages/public/SubmitPaymentProof";
 import JobStatus from "./pages/public/JobStatus";
@@ -201,6 +211,7 @@ import StudentTimetable from "./pages/student/Timetable";
 import StudentFees from "./pages/student/Fees";
 import StudentEvents from "./pages/student/Events";
 import StudentResources from "./pages/student/Resources";
+import StudentCurriculum from "./pages/student/Curriculum";
 import StudentSuggestions from "./pages/student/Suggestions";
 import DisciplineBlocked from "./pages/student/DisciplineBlocked";
 import AppealDisciplineCase from "./pages/student/AppealDisciplineCase";
@@ -248,6 +259,9 @@ const App = () => {
               {/* UNEB Exam Results - Public Access */}
               <Route path="/exam-results" element={<ExamResultsLookup />} />
               <Route path="/exam-results/:resultId" element={<ExamResults />} />
+
+              {/* Public Student ID Card Verification */}
+              <Route path="/verify-student" element={<VerifyStudent />} />
 
               {/* Admin Routes with Sidebar Layout */}
               <Route path="/admin" element={<AdminLayout />}>
@@ -319,6 +333,7 @@ const App = () => {
                 <Route path="academic-terms" element={<AcademicTerms />} />
                 <Route path="subjects" element={<Subjects />} />
                 <Route path="subjects-import" element={<SubjectsImport />} />
+                <Route path="grades" element={<Grades />} />
                 <Route path="inventory" element={<Inventory />} />
                 <Route path="inventory/:id" element={<ProductDetail />} />
                 <Route path="inventory-import" element={<InventoryImport />} />
@@ -369,6 +384,9 @@ const App = () => {
                 <Route path="notification-settings" element={<NotificationSettings />} />
                 <Route path="notification-log" element={<NotificationLog />} />
                 <Route path="parent-notification-preferences" element={<ParentNotificationPreferences />} />
+                {/* A-Level & NCDC Routes */}
+                <Route path="subject-combinations" element={<SubjectCombinations />} />
+                <Route path="continuous-assessment" element={<ContinuousAssessment />} />
                 {/* Rental Management Routes */}
                 <Route path="rental-dashboard" element={<RentalDashboard />} />
                 <Route path="rental-tax-dashboard" element={<RentalTaxDashboard />} />
@@ -380,6 +398,11 @@ const App = () => {
                 <Route path="rental-maintenance" element={<RentalMaintenance />} />
                 <Route path="rental-id-cards" element={<RentalIDCards />} />
                 <Route path="rental-payment-proofs" element={<RentalPaymentProofs />} />
+                <Route path="rental-expenses" element={<RentalExpenses />} />
+                <Route path="rental-recurring-billing" element={<RentalRecurringBilling />} />
+                <Route path="rental-financial-reports" element={<RentalFinancialReports />} />
+                <Route path="rental-preventative-maintenance" element={<RentalPreventativeMaintenance />} />
+                <Route path="rental-messages" element={<RentalMessages />} />
               </Route>
 
               {/* Parent Portal Routes */}
@@ -407,6 +430,7 @@ const App = () => {
                 <Route path="fees" element={<StudentFees />} />
                 <Route path="events" element={<StudentEvents />} />
                 <Route path="resources" element={<StudentResources />} />
+                <Route path="curriculum" element={<StudentCurriculum />} />
                 <Route path="suggestions" element={<StudentSuggestions />} />
               </Route>
 
@@ -442,8 +466,8 @@ const App = () => {
                 <Route path="reports/averages" element={<SubjectAverages />} />
                 <Route path="reports/ranking" element={<ClassRanking />} />
                 <Route path="reports/attendance" element={<SmartDataView />} />
-                <Route path="resources/materials" element={<SmartDataView />} />
-                <Route path="resources/past-papers" element={<SmartDataView />} />
+                <Route path="resources/materials" element={<TeacherResources />} />
+                <Route path="resources/past-papers" element={<TeacherResources />} />
                 <Route path="resources/curriculum" element={<SmartDataView />} />
                 <Route path="resources/calendar" element={<SmartDataView />} />
                 <Route path="settings/profile" element={<TeacherProfile />} />

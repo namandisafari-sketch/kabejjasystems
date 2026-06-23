@@ -14,7 +14,6 @@ interface Student {
   date_of_birth: string | null;
   gender: string | null;
   photo_url?: string | null;
-  student_index?: number;
 }
 
 interface StudentIDCardProps {
@@ -22,11 +21,11 @@ interface StudentIDCardProps {
   schoolName: string;
   schoolLogo?: string | null;
   schoolPhone?: string | null;
+  schoolEmail?: string | null;
+  schoolAddress?: string | null;
   className: string;
   forPrint?: boolean;
   termYear?: string;
-  idPrefix?: string;
-  idDigits?: number;
 }
 
 const NAVY = '#0a1628';
@@ -38,21 +37,20 @@ export default function StudentIDCard({
   schoolName,
   schoolLogo,
   schoolPhone,
+  schoolEmail,
+  schoolAddress,
   className,
   forPrint = false,
   termYear = "2024-2025",
-  idPrefix = "STU",
-  idDigits = 4
 }: StudentIDCardProps) {
   const cardId = student.admission_number || student.id.slice(0, 12).toUpperCase();
-  const studentIndex = student.student_index || 1;
-  const formattedStudentId = `${idPrefix}-${String(studentIndex).padStart(idDigits, '0')}`;
-  const barcodeValue = formattedStudentId;
+  const verifyUrl = `${window.location.origin}/verify-student?sid=${student.id}`;
   const qrValue = JSON.stringify({
     type: 'student',
     id: cardId,
     sid: student.id,
     t: Date.now(),
+    url: verifyUrl,
   });
 
   const formatDate = (dateStr: string | null) => {
@@ -146,7 +144,7 @@ export default function StudentIDCard({
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 6px' }}>
               <div>
                 <div style={{ color: NAVY, fontSize: '6px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6 }}>Admission No.</div>
-                <div style={{ fontWeight: 600, fontSize: '8px', color: NAVY, fontFamily: 'monospace' }}>{formattedStudentId}</div>
+                <div style={{ fontWeight: 600, fontSize: '8px', color: NAVY, fontFamily: 'monospace' }}>{cardId}</div>
               </div>
               <div>
                 <div style={{ color: NAVY, fontSize: '6px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6 }}>Class</div>
@@ -179,14 +177,14 @@ export default function StudentIDCard({
               }} />
               <QRCodeSVG value={qrValue} size={48} level="M" />
             </div>
-            <div style={{ fontSize: '5px', color: '#94a3b8', marginTop: '2px', textAlign: 'center', fontWeight: 600, letterSpacing: '0.5px' }}>SECURE QR</div>
+            <div style={{ fontSize: '5px', color: '#94a3b8', marginTop: '2px', textAlign: 'center', fontWeight: 600, letterSpacing: '0.5px' }}>VERIFY QR</div>
           </div>
         </div>
 
         {/* Footer row */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
           <div style={{ fontSize: '5px', color: '#94a3b8', fontFamily: 'monospace', letterSpacing: '0.5px' }}>
-            ID: {cardId.slice(0, 12)}
+            {cardId}
           </div>
           <div style={{
             background: `linear-gradient(135deg, ${NAVY}, ${NAVY}dd)`,
@@ -235,7 +233,7 @@ export default function StudentIDCard({
             overflow: 'hidden',
           }}>
             <Barcode
-              value={barcodeValue}
+              value={cardId}
               width={1.1}
               height={30}
               fontSize={7}
@@ -287,7 +285,9 @@ export default function StudentIDCard({
           border: `1px solid ${NAVY}11`,
         }}>
           <span style={{ fontWeight: 700, color: NAVY }}>NOTICE:</span> This card is the property of {schoolName}. It is non-transferable and must be surrendered upon request or withdrawal. If found, please return to the school administration office.
-          {schoolPhone && <span style={{ display: 'block', marginTop: '1px' }}>Contact: {schoolPhone}</span>}
+          {schoolPhone && <span style={{ display: 'block', marginTop: '1px' }}>📞 {schoolPhone}</span>}
+          {schoolEmail && <span>✉️ {schoolEmail}</span>}
+          {schoolAddress && <span style={{ display: 'block' }}>📍 {schoolAddress}</span>}
         </div>
 
         <div style={{

@@ -270,6 +270,11 @@ export const moduleRoutes: Record<string, { url: string; icon: string }> = {
   rental_maintenance: { url: '/business/rental-maintenance', icon: 'Wrench' },
   rental_id_cards: { url: '/business/rental-id-cards', icon: 'CreditCard' },
   rental_payment_proofs: { url: '/business/rental-payment-proofs', icon: 'Receipt' },
+  rental_expenses: { url: '/business/rental-expenses', icon: 'Receipt' },
+  rental_recurring_billing: { url: '/business/rental-recurring-billing', icon: 'Repeat' },
+  rental_financial_reports: { url: '/business/rental-financial-reports', icon: 'BarChart3' },
+  rental_preventative_maintenance: { url: '/business/rental-preventative-maintenance', icon: 'CalendarCheck' },
+  rental_messages: { url: '/business/rental-messages', icon: 'MessageSquare' },
   // Community Hub modules
   suggestions: { url: '/business/suggestions', icon: 'Lightbulb' },
   staff_reviews: { url: '/business/staff-reviews', icon: 'Star' },
@@ -280,6 +285,10 @@ export const moduleRoutes: Record<string, { url: string; icon: string }> = {
   // governing_bodies, departments, staff_roles, school_inspections - integrated into pages
   // NCDC New Curriculum modules (integrated into Subjects, MarksEntry, ReportCards sub-tabs)
   // subject_elements, aoi_scores, report_templates, report_delivery - integrated into pages
+  // A-Level & NCDC modules
+  subject_combinations: { url: '/business/subject-combinations', icon: 'BookOpen' },
+  continuous_assessment: { url: '/business/continuous-assessment', icon: 'ClipboardCheck' },
+  olevel_enrollment: { url: '/business/olevel-enrollment', icon: 'UserPlus' },
 };
 
 // ECD route overrides - when business is kindergarten, use these routes instead

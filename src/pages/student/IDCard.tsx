@@ -43,7 +43,7 @@ export default function StudentIDCardPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("tenants")
-        .select("name, logo_url, phone")
+        .select("name, logo_url, phone, email, address")
         .eq("id", session.tenantId)
         .single();
       return data;
@@ -124,10 +124,10 @@ export default function StudentIDCardPage() {
               schoolName={session.schoolName}
               schoolLogo={tenant?.logo_url || null}
               schoolPhone={tenant?.phone || null}
+              schoolEmail={tenant?.email || null}
+              schoolAddress={tenant?.address || null}
               className={session.className}
               forPrint
-              idPrefix={schoolSettings?.id_prefix || "STU"}
-              idDigits={schoolSettings?.id_digits || 4}
             />
           </div>
           <div className="flex justify-center gap-3">
