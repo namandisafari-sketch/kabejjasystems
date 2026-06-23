@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { BusinessSidebar } from "@/components/BusinessSidebar";
-import { MobileBottomNav } from "@/components/MobileBottomNav";
+
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 import { TermsFooterLink } from "@/components/TermsFooterLink";
@@ -142,10 +142,8 @@ export function BusinessLayout() {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background relative">
-        {/* Desktop sidebar - hidden on mobile (screens < 768px) */}
-        <div className="hidden md:block">
-          <BusinessSidebar businessName={businessName} businessType={businessType} devMode={isDevMode} />
-        </div>
+        {/* Sidebar - responsive: overlay on mobile, fixed on desktop */}
+        <BusinessSidebar businessName={businessName} businessType={businessType} devMode={isDevMode} />
         
         <div className="flex-1 flex flex-col min-w-0">
           
@@ -162,6 +160,7 @@ export function BusinessLayout() {
           
           {/* Mobile header - shown only on mobile (screens < 768px) */}
           <header className="flex md:hidden h-14 border-b border-border px-4 bg-card sticky top-0 z-40 safe-top">
+            <SidebarTrigger className="mr-2 touch-target" />
             <span className="font-semibold text-sm truncate flex-1">{businessName}</span>
             <div className="flex items-center gap-1">
               <LanguageSwitcher />
@@ -170,17 +169,12 @@ export function BusinessLayout() {
             </div>
           </header>
           
-          {/* Main content - add bottom padding on mobile for bottom nav */}
-          <main className="flex-1 overflow-auto p-4 sm:p-6 pb-24 md:pb-6 safe-bottom">
+          {/* Main content */}
+          <main className="flex-1 overflow-auto p-4 sm:p-6 pb-6 safe-bottom">
             <TranslationProvider>
               <Outlet />
             </TranslationProvider>
           </main>
-        </div>
-        
-        {/* Mobile bottom navigation - only visible on mobile (screens < 768px) */}
-        <div className="block md:hidden">
-          <MobileBottomNav businessType={businessType} devMode={isDevMode} />
         </div>
         
         {/* Terms & Conditions link for school businesses - positioned fixed */}
