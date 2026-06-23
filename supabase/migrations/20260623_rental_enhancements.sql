@@ -67,8 +67,32 @@ CREATE TABLE IF NOT EXISTS public.lease_signatures (
 
 ALTER TABLE public.lease_signatures ENABLE ROW LEVEL SECURITY;
 
+-- 5. Rental Applications (eLeasing / tenant screening)
+CREATE TABLE IF NOT EXISTS public.rental_applications (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+  property_id UUID REFERENCES public.rental_properties(id) ON DELETE SET NULL,
+  unit_id UUID REFERENCES public.rental_units(id) ON DELETE SET NULL,
+  applicant_name TEXT NOT NULL,
+  applicant_email TEXT,
+  applicant_phone TEXT NOT NULL,
+  employment_info TEXT,
+  income_info TEXT,
+  emergency_contact TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  screening_notes TEXT,
+  application_link_id TEXT,
+  submitted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  reviewed_by UUID,
+  reviewed_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.rental_applications ENABLE ROW LEVEL SECURITY;
+
 -- RLS policies
 CREATE POLICY "tenant_access" ON public.maintenance_images FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "tenant_access" ON public.maintenance_schedules FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "tenant_access" ON public.payment_reminders FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "tenant_access" ON public.lease_signatures FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "tenant_access" ON public.rental_applications FOR ALL USING (true) WITH CHECK (true);

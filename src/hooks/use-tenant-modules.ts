@@ -275,6 +275,7 @@ export const moduleRoutes: Record<string, { url: string; icon: string }> = {
   rental_financial_reports: { url: '/business/rental-financial-reports', icon: 'BarChart3' },
   rental_preventative_maintenance: { url: '/business/rental-preventative-maintenance', icon: 'CalendarCheck' },
   rental_messages: { url: '/business/rental-messages', icon: 'MessageSquare' },
+  rental_eleasing: { url: '/business/rental-eleasing', icon: 'FileSignature' },
   // Community Hub modules
   suggestions: { url: '/business/suggestions', icon: 'Lightbulb' },
   staff_reviews: { url: '/business/staff-reviews', icon: 'Star' },

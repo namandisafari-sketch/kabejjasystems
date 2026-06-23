@@ -192,6 +192,7 @@ import RentalRecurringBilling from "./pages/business/rental/RentalRecurringBilli
 import RentalFinancialReports from "./pages/business/rental/RentalFinancialReports";
 import RentalPreventativeMaintenance from "./pages/business/rental/RentalPreventativeMaintenance";
 import RentalMessages from "./pages/business/rental/RentalMessages";
+import RentalELeasing from "./pages/business/rental/RentalELeasing";
 import PublicMenu from "./pages/public/PublicMenu";
 import SubmitPaymentProof from "./pages/public/SubmitPaymentProof";
 import JobStatus from "./pages/public/JobStatus";
@@ -403,6 +404,7 @@ const App = () => {
                 <Route path="rental-financial-reports" element={<RentalFinancialReports />} />
                 <Route path="rental-preventative-maintenance" element={<RentalPreventativeMaintenance />} />
                 <Route path="rental-messages" element={<RentalMessages />} />
+                <Route path="rental-eleasing" element={<RentalELeasing />} />
               </Route>
 
               {/* Parent Portal Routes */}
