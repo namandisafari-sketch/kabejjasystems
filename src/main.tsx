@@ -3,6 +3,28 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
+// Global error handler - must be registered BEFORE React renders
+window.onerror = function (message, source, lineno, colno, error) {
+  const errorMsg = `JS Error: ${message}
+Source: ${source}
+Line: ${lineno}
+Column: ${colno}`;
+  console.error(errorMsg);
+  if (import.meta.env.PROD) {
+    alert(errorMsg);
+  }
+  return false;
+};
+
+// Catch unhandled promise rejections
+window.onunhandledrejection = function (event) {
+  const errorMsg = `Unhandled Promise: ${event.reason}`;
+  console.error(errorMsg);
+  if (import.meta.env.PROD) {
+    alert(errorMsg);
+  }
+};
+
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Error | null }> {
   state = { error: null as Error | null };
   static getDerivedStateFromError(error: Error) { return { error }; }
@@ -30,29 +52,19 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Er
   }
 }
 
-// Global error handler for debugging white screens
-window.onerror = function (message, source, lineno, colno, error) {
-  const errorMsg = `JS Error: ${message}\nSource: ${source}\nLine: ${lineno}\nColumn: ${colno}`;
-  console.error(errorMsg);
-  if (import.meta.env.PROD) {
-    alert(errorMsg);
+const rootElement = document.getElementById("root");
+if (!rootElement) {
+  document.body.innerHTML = '<div style="padding:40px;font-family:system-ui;color:red"><h1>Fatal: root element not found</h1></div>';
+} else {
+  try {
+    createRoot(rootElement).render(
+      <React.StrictMode>
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+      </React.StrictMode>
+    );
+  } catch (e: any) {
+    rootElement.innerHTML = `<div style="padding:40px;font-family:system-ui;color:red"><h1>Render initialization failed</h1><pre>${e?.stack || e?.message || String(e)}</pre></div>`;
   }
-  return false;
-};
-
-// Catch unhandled promise rejections
-window.onunhandledrejection = function (event) {
-  const errorMsg = `Unhandled Promise: ${event.reason}`;
-  console.error(errorMsg);
-  if (import.meta.env.PROD) {
-    alert(errorMsg);
-  }
-};
-
-createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>
-  </React.StrictMode>
-);
+}

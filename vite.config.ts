@@ -60,9 +60,7 @@ export default defineConfig(({ mode }) => ({
     cssTarget: "chrome61",
     rollupOptions: {
       output: {
-        manualChunks: {
-          pdf: ["html2canvas"],
-        },
+        manualChunks: {},
       },
     },
   },
