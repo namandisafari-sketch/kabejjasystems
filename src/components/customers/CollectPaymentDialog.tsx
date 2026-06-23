@@ -6,7 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +21,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Loader2, Banknote, Receipt } from "lucide-react";
+import { Loader2, Banknote, Receipt, X } from "lucide-react";
 import { z } from "zod";
 import { format } from "date-fns";
 
@@ -45,8 +51,9 @@ export function CollectPaymentDialog({ open, onOpenChange, customer, tenantId }:
   const [referenceNumber, setReferenceNumber] = useState("");
   const [notes, setNotes] = useState("");
   const [selectedSaleId, setSelectedSaleId] = useState<string>("");
+  const [saleSearchQuery, setSaleSearchQuery] = useState("");
 
-  // Fetch credit sales for this customer
+  // Fetch credit sales for this customer - LIMITED to 50 recent sales
   const { data: creditSales = [] } = useQuery({
     queryKey: ['customer-credit-sales', customer?.id],
     queryFn: async () => {
@@ -57,13 +64,20 @@ export function CollectPaymentDialog({ open, onOpenChange, customer, tenantId }:
         .select('id, order_number, total_amount, sale_date, payment_status')
         .eq('customer_id', customer.id)
         .eq('payment_status', 'credit')
-        .order('sale_date', { ascending: false });
+        .order('sale_date', { ascending: false })
+        .limit(50); // PERF: Limit to 50 recent sales to prevent DOM bloat in Select
       
       if (error) throw error;
       return data || [];
     },
     enabled: !!customer?.id && open,
   });
+
+  // Filter sales by search query
+  const filteredSales = creditSales.filter(sale =>
+    sale.order_number.toString().includes(saleSearchQuery) ||
+    sale.total_amount.toString().includes(saleSearchQuery)
+  );
 
   const collectPaymentMutation = useMutation({
     mutationFn: async () => {
@@ -158,6 +172,7 @@ export function CollectPaymentDialog({ open, onOpenChange, customer, tenantId }:
     setReferenceNumber("");
     setNotes("");
     setSelectedSaleId("");
+    setSaleSearchQuery("");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -205,32 +220,52 @@ export function CollectPaymentDialog({ open, onOpenChange, customer, tenantId }:
             </p>
           </div>
 
-          {/* Credit Sales Selector */}
-          {creditSales.length > 0 && (
-            <div>
-              <Label htmlFor="linkedSale" className="flex items-center gap-2">
-                <Receipt className="h-4 w-4" />
-                Link to Credit Sale (Optional)
-              </Label>
-              <Select value={selectedSaleId} onValueChange={handleSelectSale}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a credit sale to link..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No specific sale</SelectItem>
-                  {creditSales.map((sale) => (
-                    <SelectItem key={sale.id} value={sale.id}>
-                      Order #{sale.order_number} - {sale.total_amount.toLocaleString()} UGX 
-                      ({format(new Date(sale.sale_date), 'MMM d, yyyy')})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                Linking helps track which sale this payment is for
-              </p>
-            </div>
-          )}
+          {/* Credit Sales Selector - Searchable */}
+           {creditSales.length > 0 && (
+             <div>
+               <Label htmlFor="linkedSale" className="flex items-center gap-2">
+                 <Receipt className="h-4 w-4" />
+                 Link to Credit Sale (Optional)
+               </Label>
+               <div className="space-y-2">
+                 <Input
+                   type="text"
+                   placeholder="Search order number or amount..."
+                   value={saleSearchQuery}
+                   onChange={(e) => setSaleSearchQuery(e.target.value)}
+                   className="h-10"
+                 />
+                 <Select value={selectedSaleId} onValueChange={handleSelectSale}>
+                   <SelectTrigger>
+                     <SelectValue placeholder={selectedSaleId ? "Sale selected" : "Select from list..."} />
+                   </SelectTrigger>
+                   <SelectContent className="max-h-[300px]">
+                     <SelectItem value="none">None (no specific sale)</SelectItem>
+                     {filteredSales.length > 0 ? (
+                       filteredSales.map((sale) => (
+                         <SelectItem key={sale.id} value={sale.id}>
+                           Order #{sale.order_number} - {sale.total_amount.toLocaleString()} UGX 
+                           ({format(new Date(sale.sale_date), 'MMM d, yyyy')})
+                         </SelectItem>
+                       ))
+                     ) : (
+                       <div className="py-2 px-3 text-sm text-muted-foreground">
+                         {saleSearchQuery ? 'No sales match your search' : `Showing 50 most recent sales`}
+                       </div>
+                     )}
+                   </SelectContent>
+                 </Select>
+               </div>
+               {creditSales.length >= 50 && (
+                 <p className="text-xs text-amber-600 mt-1">
+                   Showing 50 most recent sales. Use search to filter.
+                 </p>
+               )}
+               <p className="text-xs text-muted-foreground mt-1">
+                 Linking helps track which sale this payment is for
+               </p>
+             </div>
+           )}
 
           <div>
             <Label htmlFor="amount">Amount to Collect *</Label>
