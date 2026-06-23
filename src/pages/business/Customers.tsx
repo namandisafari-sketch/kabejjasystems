@@ -228,77 +228,38 @@ const Customers = () => {
   };
 
   const CustomerForm = () => (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 pb-4">
       <div>
         <Label htmlFor="name">Name *</Label>
-        <Input
-          id="name"
-          value={formData.name}
-          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-          required
-          className="mt-1.5 h-11"
-        />
+        <Input id="name" value={formData.name} onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} required />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <Label htmlFor="phone">Phone</Label>
-          <Input
-            id="phone"
-            value={formData.phone}
-            onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-            className="mt-1.5 h-11"
-          />
+          <Input id="phone" value={formData.phone} onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))} />
         </div>
         <div>
           <Label htmlFor="credit_limit">Credit Limit</Label>
-          <Input
-            id="credit_limit"
-            type="number"
-            min="0"
-            value={formData.credit_limit}
-            onChange={(e) => setFormData(prev => ({ ...prev, credit_limit: e.target.value }))}
-            className="mt-1.5 h-11"
-          />
+          <Input id="credit_limit" type="number" min="0" value={formData.credit_limit} onChange={(e) => setFormData(prev => ({ ...prev, credit_limit: e.target.value }))} />
         </div>
       </div>
 
       <div>
         <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          value={formData.email}
-          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-          className="mt-1.5 h-11"
-        />
+        <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))} />
       </div>
 
       <div>
         <Label htmlFor="address">Address</Label>
-        <Textarea
-          id="address"
-          value={formData.address}
-          onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-          rows={2}
-          className="mt-1.5"
-        />
+        <Textarea id="address" value={formData.address} onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))} rows={2} />
       </div>
 
-      <div className="flex gap-2 pt-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => {
-            setIsDialogOpen(false);
-            setEditingCustomer(null);
-            resetForm();
-          }}
-          className="flex-1 h-11"
-        >
+      <div className="border-t pt-4 flex flex-col sm:flex-row gap-2 -mx-4 px-4">
+        <Button type="button" variant="outline" onClick={() => { setIsDialogOpen(false); setEditingCustomer(null); resetForm(); }} className="flex-1">
           Cancel
         </Button>
-        <Button type="submit" disabled={saveCustomerMutation.isPending} className="flex-1 h-11">
+        <Button type="submit" disabled={saveCustomerMutation.isPending} className="flex-1">
           {saveCustomerMutation.isPending ? "Saving..." : "Save"}
         </Button>
       </div>
@@ -384,41 +345,24 @@ const Customers = () => {
         </div>
       </header>
 
-      {/* ADD/EDIT CUSTOMER DRAWER/DIALOG */}
-      {isMobile ? (
-        <Drawer open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) {
-            setEditingCustomer(null);
-            resetForm();
-          }
-        }}>
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle>{editingCustomer ? "Edit Customer" : "Add Customer"}</DrawerTitle>
-            </DrawerHeader>
-            <div className="p-4">
-              <CustomerForm />
-            </div>
-          </DrawerContent>
-        </Drawer>
-      ) : (
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) {
-            setEditingCustomer(null);
-            resetForm();
-          }
-        }}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{editingCustomer ? "Edit Customer" : "Add Customer"}</DialogTitle>
-              <DialogDescription>Fill in the customer details</DialogDescription>
-            </DialogHeader>
+      {/* ADD/EDIT CUSTOMER DRAWER */}
+      <Drawer open={isDialogOpen} onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        if (!open) {
+          setEditingCustomer(null);
+          resetForm();
+        }
+      }}>
+        <DrawerContent className="fixed inset-x-0 bottom-0 z-50 flex flex-col w-full max-h-[90dvh] rounded-t-xl border bg-background sm:max-w-2xl sm:left-1/2 sm:-translate-x-1/2">
+          <DrawerHeader>
+            <DrawerTitle>{editingCustomer ? "Edit Customer" : "Add Customer"}</DrawerTitle>
+          </DrawerHeader>
+
+          <div className="flex-1 overflow-y-auto px-4 min-h-0">
             <CustomerForm />
-          </DialogContent>
-        </Dialog>
-      )}
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       {/* MAIN CONTENT */}
       <div className="p-4 space-y-4">

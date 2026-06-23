@@ -209,11 +209,12 @@ const Categories = () => {
 
       {/* ADD/EDIT DRAWER */}
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <DrawerContent className="max-h-[90vh]">
+        <DrawerContent className="fixed inset-x-0 bottom-0 z-50 flex flex-col w-full max-h-[90dvh] rounded-t-xl border bg-background sm:max-w-2xl sm:left-1/2 sm:-translate-x-1/2">
           <DrawerHeader>
             <DrawerTitle>{editingCategory ? "Edit Category" : "Add Category"}</DrawerTitle>
           </DrawerHeader>
-          <ScrollArea className="flex-1 px-4 max-h-[60vh]">
+
+          <div className="flex-1 overflow-y-auto px-4 min-h-0">
             <form id="category-form" onSubmit={handleSubmit} className="space-y-4 pb-4">
               <div>
                 <Label>Category Name *</Label>
@@ -228,8 +229,9 @@ const Categories = () => {
                 <Switch checked={formData.is_active} onCheckedChange={(c) => setFormData(p => ({ ...p, is_active: c }))} />
               </div>
             </form>
-          </ScrollArea>
-          <DrawerFooter className="flex-row gap-2">
+          </div>
+
+          <div className="border-t p-4 flex flex-col sm:flex-row gap-2">
             {editingCategory && (
               <Button variant="destructive" size="sm" onClick={() => { deleteCategoryMutation.mutate(editingCategory.id); setIsDrawerOpen(false); }}>
                 <Trash2 className="h-4 w-4" />
@@ -239,7 +241,7 @@ const Categories = () => {
             <Button type="submit" form="category-form" className="flex-1" disabled={saveCategoryMutation.isPending}>
               {saveCategoryMutation.isPending ? "Saving..." : "Save"}
             </Button>
-          </DrawerFooter>
+          </div>
         </DrawerContent>
       </Drawer>
     </div>

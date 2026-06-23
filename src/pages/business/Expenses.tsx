@@ -174,14 +174,14 @@ export default function Expenses() {
   };
 
   const ExpenseForm = () => (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-4">
       <div>
         <Label>Category</Label>
         <Select
           value={formData.category}
           onValueChange={(value) => setFormData({ ...formData, category: value })}
         >
-          <SelectTrigger className="mt-1.5 h-11">
+          <SelectTrigger>
             <SelectValue placeholder="Select category" />
           </SelectTrigger>
           <SelectContent>
@@ -198,7 +198,6 @@ export default function Expenses() {
           value={formData.amount}
           onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
           placeholder="0"
-          className="mt-1.5 h-11"
         />
       </div>
       <div>
@@ -207,7 +206,6 @@ export default function Expenses() {
           type="date"
           value={formData.expense_date}
           onChange={(e) => setFormData({ ...formData, expense_date: e.target.value })}
-          className="mt-1.5 h-11"
         />
       </div>
       <div>
@@ -216,7 +214,7 @@ export default function Expenses() {
           value={formData.payment_method}
           onValueChange={(value) => setFormData({ ...formData, payment_method: value })}
         >
-          <SelectTrigger className="mt-1.5 h-11">
+          <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -232,19 +230,15 @@ export default function Expenses() {
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           placeholder="Optional notes..."
-          className="mt-1.5"
         />
       </div>
-      <Button 
-        onClick={() => createMutation.mutate()} 
-        disabled={!formData.category || !formData.amount || createMutation.isPending}
-        className="w-full h-11"
-      >
-        {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-        Save Expense
-      </Button>
     </div>
   );
+
+  const handleSaveExpense = () => {
+    createMutation.mutate();
+    setOpen(false);
+  };
 
   if (isLoading) {
     return (
@@ -270,28 +264,26 @@ export default function Expenses() {
         </div>
       </header>
 
-      {/* ADD EXPENSE DRAWER/DIALOG */}
-      {isMobile ? (
-        <Drawer open={open} onOpenChange={setOpen}>
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle>Record New Expense</DrawerTitle>
-            </DrawerHeader>
-            <div className="p-4">
-              <ExpenseForm />
-            </div>
-          </DrawerContent>
-        </Drawer>
-      ) : (
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Record New Expense</DialogTitle>
-            </DialogHeader>
+      {/* ADD EXPENSE DRAWER */}
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerContent className="fixed inset-x-0 bottom-0 z-50 flex flex-col w-full max-h-[90dvh] rounded-t-xl border bg-background sm:max-w-2xl sm:left-1/2 sm:-translate-x-1/2">
+          <DrawerHeader>
+            <DrawerTitle>Record New Expense</DrawerTitle>
+          </DrawerHeader>
+
+          <div className="flex-1 overflow-y-auto px-4 min-h-0">
             <ExpenseForm />
-          </DialogContent>
-        </Dialog>
-      )}
+          </div>
+
+          <div className="border-t p-4 flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button className="flex-1" onClick={handleSaveExpense} disabled={!formData.category || !formData.amount || createMutation.isPending}>
+              {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Save Expense
+            </Button>
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       {/* MAIN CONTENT */}
       <div className="p-4 space-y-4">

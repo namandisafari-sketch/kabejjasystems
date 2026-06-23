@@ -208,11 +208,12 @@ const Suppliers = () => {
 
       {/* ADD/EDIT DRAWER */}
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <DrawerContent className="max-h-[90vh]">
+        <DrawerContent className="fixed inset-x-0 bottom-0 z-50 flex flex-col w-full max-h-[90dvh] rounded-t-xl border bg-background sm:max-w-2xl sm:left-1/2 sm:-translate-x-1/2">
           <DrawerHeader>
             <DrawerTitle>{editingSupplier ? "Edit Supplier" : "Add Supplier"}</DrawerTitle>
           </DrawerHeader>
-          <ScrollArea className="flex-1 px-4 max-h-[60vh]">
+
+          <div className="flex-1 overflow-y-auto px-4 min-h-0">
             <form id="supplier-form" onSubmit={handleSubmit} className="space-y-4 pb-4">
               <div>
                 <Label>Supplier Name *</Label>
@@ -222,7 +223,7 @@ const Suppliers = () => {
                 <Label>Contact Person</Label>
                 <Input value={formData.contact_person} onChange={(e) => setFormData(p => ({ ...p, contact_person: e.target.value }))} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label>Phone</Label>
                   <Input value={formData.phone} onChange={(e) => setFormData(p => ({ ...p, phone: e.target.value }))} />
@@ -245,8 +246,9 @@ const Suppliers = () => {
                 <Switch checked={formData.is_active} onCheckedChange={(c) => setFormData(p => ({ ...p, is_active: c }))} />
               </div>
             </form>
-          </ScrollArea>
-          <DrawerFooter className="flex-row gap-2">
+          </div>
+
+          <div className="border-t p-4 flex flex-col sm:flex-row gap-2">
             {editingSupplier && (
               <Button variant="destructive" size="sm" onClick={() => { deleteSupplierMutation.mutate(editingSupplier.id); setIsDrawerOpen(false); }}>
                 <Trash2 className="h-4 w-4" />
@@ -256,7 +258,7 @@ const Suppliers = () => {
             <Button type="submit" form="supplier-form" className="flex-1" disabled={saveSupplierMutation.isPending}>
               {saveSupplierMutation.isPending ? "Saving..." : "Save"}
             </Button>
-          </DrawerFooter>
+          </div>
         </DrawerContent>
       </Drawer>
     </div>
