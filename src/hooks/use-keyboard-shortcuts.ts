@@ -1,23 +1,37 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-// Keyboard shortcut configuration
-const SHORTCUTS = {
-  'ctrl+i': { action: 'newInvoice', description: 'Create new invoice (POS)' },
-  'alt+n': { action: 'newInvoice', description: 'Create new invoice (POS)' },
-  'ctrl+p': { action: 'print', description: 'Print receipt' },
-  'ctrl+h': { action: 'history', description: 'View transaction history' },
-  'f1': { action: 'help', description: 'Show keyboard shortcuts' },
-  'shift+f1': { action: 'showFeedback', description: 'Send feedback' },
-  'ctrl+d': { action: 'dashboard', description: 'Go to dashboard' },
-  'ctrl+inventory': { action: 'inventory', description: 'Go to inventory' },
-  'ctrl+s': { action: 'save', description: 'Save current form' },
-  'escape': { action: 'closeDialog', description: 'Close current dialog' },
-};
-
-interface ShortcutHandler {
-  (event: KeyboardEvent): void | boolean;
+export interface Shortcut {
+  category: string;
+  label: string;
+  description: string;
+  action: string;
 }
+
+const ALL_SHORTCUTS: Shortcut[] = [
+  { category: "POS", label: "Ctrl+I / Alt+N", description: "Create new invoice", action: "newInvoice" },
+  { category: "General", label: "Ctrl+P", description: "Print receipt", action: "print" },
+  { category: "Navigation", label: "Ctrl+H", description: "View transaction history", action: "history" },
+  { category: "Help", label: "F1", description: "Show keyboard shortcuts", action: "help" },
+  { category: "Help", label: "Shift+F1", description: "Send feedback", action: "showFeedback" },
+  { category: "Navigation", label: "Ctrl+D", description: "Go to dashboard", action: "dashboard" },
+  { category: "Navigation", label: "Ctrl+Shift+I", description: "Go to inventory", action: "inventory" },
+  { category: "General", label: "Ctrl+S", description: "Save current form", action: "save" },
+  { category: "General", label: "Escape", description: "Close current dialog", action: "closeDialog" },
+];
+
+// Key combo map for event handling
+const COMBO_MAP: Record<string, string> = {
+  'ctrl+i': 'newInvoice',
+  'alt+n': 'newInvoice',
+  'ctrl+p': 'print',
+  'ctrl+h': 'history',
+  'f1': 'help',
+  'shift+f1': 'showFeedback',
+  'ctrl+d': 'dashboard',
+  'ctrl+s': 'save',
+  'escape': 'closeDialog',
+};
 
 export function useKeyboardShortcuts() {
   const navigate = useNavigate();
@@ -26,7 +40,6 @@ export function useKeyboardShortcuts() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Build key combo string
       const modifiers = [];
       if (event.ctrlKey || event.metaKey) modifiers.push('ctrl');
       if (event.shiftKey) modifiers.push('shift');
@@ -35,79 +48,67 @@ export function useKeyboardShortcuts() {
       const key = event.key.toLowerCase();
       const combo = modifiers.length > 0 ? `${modifiers.join('+')}+${key}` : key;
 
-      // Prevent shortcuts if user is typing in an input field
       const target = event.target as HTMLElement;
       if (
         target.tagName === 'INPUT' ||
         target.tagName === 'TEXTAREA' ||
         target.contentEditable === 'true'
       ) {
-        // Allow only specific shortcuts in input fields
         if (combo !== 'escape') return;
       }
 
-      // Handle shortcuts
-      switch (combo) {
-        case 'ctrl+i':
-        case 'alt+n':
-          // Navigate to POS if on hardware/retail business
+      const action = COMBO_MAP[combo];
+      if (!action) return;
+
+      switch (action) {
+        case 'newInvoice':
           navigate('/business/pos');
           event.preventDefault();
           break;
 
-        case 'ctrl+p':
-          // Trigger print
+        case 'print':
           if (window.print) {
             window.print();
             event.preventDefault();
           }
           break;
 
-        case 'ctrl+h':
-          // Go to sales/history page - check current business type
+        case 'history':
           navigate('/business/sales');
           event.preventDefault();
           break;
 
-        case 'f1':
-          // Show shortcuts dialog
+        case 'help':
           setShowShortcutsDialog(true);
           event.preventDefault();
           break;
 
-        case 'shift+f1':
-          // Go to feedback/suggestions
+        case 'showFeedback':
           navigate('/business/suggestions');
           event.preventDefault();
           break;
 
-        case 'ctrl+d':
-          // Go to dashboard
+        case 'dashboard':
           navigate('/business/dashboard');
           event.preventDefault();
           break;
 
-        case 'ctrl+i':
-          // Go to inventory (different context)
+        case 'inventory':
           if (event.shiftKey) {
             navigate('/business/inventory');
             event.preventDefault();
           }
           break;
 
-        case 'escape':
-          // Close any open dialog - this is handled by dialog components
-          // Dispatching custom event that dialog components can listen to
-          const closeEvent = new CustomEvent('closeAllDialogs');
-          window.dispatchEvent(closeEvent);
+        case 'closeDialog':
+          window.dispatchEvent(new CustomEvent('closeAllDialogs'));
           break;
 
-        default:
+        case 'save':
           break;
       }
     };
 
-    // Add global event listener
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
@@ -117,11 +118,10 @@ export function useKeyboardShortcuts() {
   return {
     showShortcutsDialog,
     setShowShortcutsDialog,
-    shortcuts: SHORTCUTS,
+    shortcuts: ALL_SHORTCUTS,
   };
 }
 
-// Shortcuts reference component
 export const KeyboardShortcutsDialog = ({ 
   open, 
   onOpenChange 
@@ -129,13 +129,9 @@ export const KeyboardShortcutsDialog = ({
   open: boolean; 
   onOpenChange: (open: boolean) => void 
 }) => {
-  // This would use your Dialog component
-  // Just returns the shortcut list for now
-  const shortcuts = Object.entries(SHORTCUTS).map(([combo, info]) => ({
-    combo,
-    action: info.action,
-    description: info.description,
+  return ALL_SHORTCUTS.map(s => ({
+    combo: s.label,
+    action: s.action,
+    description: s.description,
   }));
-
-  return shortcuts;
 };
