@@ -18,6 +18,7 @@ export default function StudentSetPassword() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [studentEmail, setStudentEmail] = useState("");
 
   useEffect(() => {
     const session = getStudentSession();
@@ -28,6 +29,8 @@ export default function StudentSetPassword() {
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) {
         navigate("/student/login", { replace: true });
+      } else {
+        setStudentEmail(data.user.email || "");
       }
     });
   }, [navigate]);
@@ -61,9 +64,10 @@ export default function StudentSetPassword() {
             <GraduationCap className="h-5 w-5" />
             <span className="text-sm font-medium">{t.pages.studentSetPassword.studentPortal}</span>
           </div>
-          <CardTitle className="text-xl">{t.pages.studentSetPassword.setPassword}</CardTitle>
+          <CardTitle className="text-xl">Profile & Password</CardTitle>
           <CardDescription>
-            {t.pages.studentSetPassword.description}
+            {studentEmail && <span className="block text-xs mb-1">Logged in as: {studentEmail}</span>}
+            Set a password so you can login without email magic links.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -110,7 +114,7 @@ export default function StudentSetPassword() {
             onClick={handleSubmit}
             disabled={loading || !newPassword || !confirmPassword}
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.pages.studentSetPassword.setPasswordButton}
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Password"}
           </Button>
         </CardContent>
       </Card>
