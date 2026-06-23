@@ -16,7 +16,6 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-UG", { style: "currency", currency: "UGX", minimumFractionDigits: 0 }).format(amount);
@@ -354,25 +353,25 @@ const HardwareDashboard = ({ tenantId }: { tenantId: string }) => {
                   <CardTitle className="text-lg">Payment Methods Breakdown</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                      <Pie
-                        data={paymentBreakdown}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, value }) => `${name}: ${formatCurrency(value)}`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {paymentBreakdown.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                  <div className="h-[250px] w-full flex items-center justify-center">
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground mb-2">Payment Method Breakdown</p>
+                      <div className="space-y-2">
+                        {paymentBreakdown.map((method, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <div 
+                                className="h-3 w-3 rounded-full" 
+                                style={{ backgroundColor: method.fill }}
+                              />
+                              <span>{method.name}</span>
+                            </div>
+                            <span className="font-semibold">{formatCurrency(method.value)}</span>
+                          </div>
                         ))}
-                      </Pie>
-                      <Tooltip formatter={(value) => formatCurrency(value)} />
-                    </PieChart>
-                  </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             )}
