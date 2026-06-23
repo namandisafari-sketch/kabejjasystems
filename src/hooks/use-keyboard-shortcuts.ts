@@ -45,7 +45,7 @@ export function useKeyboardShortcuts() {
       if (event.shiftKey) modifiers.push('shift');
       if (event.altKey) modifiers.push('alt');
 
-      const key = event.key.toLowerCase();
+      const key = (event.key || "").toLowerCase();
       const combo = modifiers.length > 0 ? `${modifiers.join('+')}+${key}` : key;
 
       const target = event.target as HTMLElement;
