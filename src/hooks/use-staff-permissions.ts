@@ -48,7 +48,7 @@ export function useStaffPermissions() {
         .eq('profile_id', user.id)
         .eq('tenant_id', profile.tenant_id!)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       // Get teacher assignments if staff is a teacher
       let teacherAssignments: TeacherAssignment | null = null;
