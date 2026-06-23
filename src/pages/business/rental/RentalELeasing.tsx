@@ -45,7 +45,7 @@ export default function RentalELeasing() {
   const [signDialogOpen, setSignDialogOpen] = useState(false);
 
   const [selectedProperty, setSelectedProperty] = useState("");
-  const [selectedUnit, setSelectedUnit] = useState("");
+  const [selectedUnit, setSelectedUnit] = useState("__any__");
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: properties = [] } = useQuery({
@@ -167,7 +167,7 @@ export default function RentalELeasing() {
       const { error } = await supabase.from("rental_application_links").insert({
         tenant_id: tenantId,
         property_id: selectedProperty,
-        unit_id: selectedUnit || null,
+        unit_id: selectedUnit === "__any__" ? null : selectedUnit,
         application_link_id: linkId,
         share_url: `${baseUrl}/apply/${linkId}`,
         status: "active",
@@ -533,7 +533,7 @@ export default function RentalELeasing() {
                       <SelectValue placeholder="Any unit" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Any Unit</SelectItem>
+                      <SelectItem value="__any__">Any Unit</SelectItem>
                       {filteredUnits.map((u: any) => (
                         <SelectItem key={u.id} value={u.id}>
                           {(u.rental_properties as any)?.name} - {u.unit_number}
