@@ -193,6 +193,8 @@ import RentalFinancialReports from "./pages/business/rental/RentalFinancialRepor
 import RentalPreventativeMaintenance from "./pages/business/rental/RentalPreventativeMaintenance";
 import RentalMessages from "./pages/business/rental/RentalMessages";
 import RentalELeasing from "./pages/business/rental/RentalELeasing";
+import RentalListingBanners from "./pages/business/rental/RentalListingBanners";
+import PublicPropertyListing from "./pages/public/PublicPropertyListing";
 import PublicMenu from "./pages/public/PublicMenu";
 import SubmitPaymentProof from "./pages/public/SubmitPaymentProof";
 import JobStatus from "./pages/public/JobStatus";
@@ -260,6 +262,9 @@ const App = () => {
               {/* UNEB Exam Results - Public Access */}
               <Route path="/exam-results" element={<ExamResultsLookup />} />
               <Route path="/exam-results/:resultId" element={<ExamResults />} />
+
+              {/* Public Rental Property Listings (QR code landing pages) */}
+              <Route path="/listing/:slug" element={<PublicPropertyListing />} />
 
               {/* Public Student ID Card Verification */}
               <Route path="/verify-student" element={<VerifyStudent />} />
@@ -405,6 +410,7 @@ const App = () => {
                 <Route path="rental-preventative-maintenance" element={<RentalPreventativeMaintenance />} />
                 <Route path="rental-messages" element={<RentalMessages />} />
                 <Route path="rental-eleasing" element={<RentalELeasing />} />
+                <Route path="rental-listing-banners" element={<RentalListingBanners />} />
               </Route>
 
               {/* Parent Portal Routes */}
