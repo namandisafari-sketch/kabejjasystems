@@ -36,6 +36,9 @@ interface PrintReceiptProps {
   items: CartItem[];
   total: number;
   paymentMethod: string;
+  paymentStatus?: string;
+  taxAmount?: number;
+  subtotal?: number;
   receiptNumber?: string;
   cashierName?: string;
   saleDate?: Date;
@@ -53,6 +56,9 @@ export const PrintReceipt = forwardRef<HTMLDivElement, PrintReceiptProps>(
     items, 
     total, 
     paymentMethod, 
+    paymentStatus,
+    taxAmount,
+    subtotal,
     receiptNumber, 
     cashierName,
     saleDate,
@@ -178,21 +184,51 @@ export const PrintReceipt = forwardRef<HTMLDivElement, PrintReceiptProps>(
 
         {/* Total */}
         <div className="pt-3 mb-4 border-t border-neutral-200">
-          <div className="flex justify-between text-xs text-neutral-600 mb-2">
-            <span>Subtotal</span>
-            <span>{total.toLocaleString()} UGX</span>
-          </div>
-          <div className="flex justify-between items-center font-bold text-lg py-3 px-4 bg-neutral-900 text-white rounded-lg">
-            <span>Total</span>
-            <span>{total.toLocaleString()} UGX</span>
-          </div>
+          {subtotal !== undefined && taxAmount !== undefined && taxAmount > 0 ? (
+            <>
+              <div className="flex justify-between text-xs text-neutral-600 mb-1">
+                <span>Subtotal</span>
+                <span>{subtotal.toLocaleString()} UGX</span>
+              </div>
+              <div className="flex justify-between text-xs text-neutral-600 mb-2">
+                <span>GST (18%)</span>
+                <span>{taxAmount.toLocaleString()} UGX</span>
+              </div>
+              <div className="flex justify-between items-center font-bold text-lg py-3 px-4 bg-neutral-900 text-white rounded-lg">
+                <span>Total</span>
+                <span>{total.toLocaleString()} UGX</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex justify-between text-xs text-neutral-600 mb-2">
+                <span>Subtotal</span>
+                <span>{total.toLocaleString()} UGX</span>
+              </div>
+              <div className="flex justify-between items-center font-bold text-lg py-3 px-4 bg-neutral-900 text-white rounded-lg">
+                <span>Total</span>
+                <span>{total.toLocaleString()} UGX</span>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Payment Method */}
         {show_payment_method && (
           <div className="text-xs text-center py-2 px-3 bg-neutral-50 rounded-md mb-4">
-            <span className="text-neutral-500">Paid via </span>
-            <span className="font-medium text-neutral-900 capitalize">{paymentMethod.replace(/_/g, " ")}</span>
+            {paymentStatus && paymentStatus !== 'paid' ? (
+              <>
+                <span className="text-orange-600 font-medium">Credit Sale</span>
+                {paymentMethod && paymentMethod !== 'credit' && (
+                  <span className="text-neutral-500 ml-1">· {paymentMethod.replace(/_/g, " ")}</span>
+                )}
+              </>
+            ) : (
+              <>
+                <span className="text-neutral-500">Paid via </span>
+                <span className="font-medium text-neutral-900 capitalize">{paymentMethod.replace(/_/g, " ")}</span>
+              </>
+            )}
           </div>
         )}
 

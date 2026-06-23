@@ -30,6 +30,7 @@ import { DigitalReceiptDialog } from "@/components/pos/DigitalReceiptDialog";
 import { POSQueuePanel } from "@/components/pos/POSQueuePanel";
 import { LiveSalesWidget } from "@/components/pos/LiveSalesWidget";
 import { PrintReceipt } from "@/components/pos/PrintReceipt";
+import { calculateGSTBreakdown, GST_STANDARD_RATE } from "@/lib/gst-calculations";
 import { ScanTriggerButton } from "@/components/pos/BarcodeScanner";
 
 interface Product {
@@ -156,11 +157,13 @@ export default function POS() {
   const [showDigitalReceipt, setShowDigitalReceipt] = useState(false);
   const [lastSaleData, setLastSaleData] = useState<{
     items: CartItem[]; total: number; method: string;
-    customerName?: string; receiptNumber?: string;
+    customerName?: string; receiptNumber?: string; paymentStatus?: string;
+    taxAmount?: number; subtotal?: number;
   } | null>(null);
   const [showCustomPriceDialog, setShowCustomPriceDialog] = useState(false);
   const [pendingServiceItem, setPendingServiceItem] = useState<any>(null);
   const [customPriceValue, setCustomPriceValue] = useState("");
+  const [taxEnabled, setTaxEnabled] = useState(false);
 
   // Data fetching
   useEffect(() => {
@@ -501,12 +504,14 @@ export default function POS() {
           tenant_id: tenantId,
           customer_id: selectedCustomer?.id || null,
           total_amount: total,
+          tax_amount: taxInfo.tax_amount,
+          gst_amount: taxInfo.gst_amount,
           payment_method: selectedCustomer ? "credit" : "cash",
           payment_status: selectedCustomer ? "unpaid" : "paid",
           order_type: "counter",
           order_status: "completed",
           sale_date: saleDatetime,
-          notes: `POS: ${customerInfo.name}, ${normalizedPhone}${roundingAdjustment !== 0 ? ` [Rounding: ${roundingAdjustment}]` : ""}`,
+          notes: `POS: ${customerInfo.name}, ${normalizedPhone}${roundingAdjustment !== 0 ? ` [Rounding: ${roundingAdjustment}]` : ""}${taxEnabled ? ` [GST incl.]` : ""}`,
         })
         .select()
         .single();
@@ -572,7 +577,26 @@ export default function POS() {
       }
 
       // Prepare receipt data
-      const receiptData = { items: [...cart], total, method: "cash", customerName: customerInfo.name, receiptNumber: sale.id.slice(0, 8).toUpperCase() };
+      const actualMethod = selectedCustomer ? "credit" : "cash";
+      const actualStatus = selectedCustomer ? "unpaid" : "paid";
+      
+      // Calculate tax if enabled
+      let taxInfo = { subtotal: total, gst_amount: 0, tax_amount: 0 };
+      if (taxEnabled) {
+        const breakdown = calculateGSTBreakdown(total, true, GST_STANDARD_RATE);
+        taxInfo = { subtotal: breakdown.subtotal, gst_amount: breakdown.gst_amount, tax_amount: breakdown.gst_amount };
+      }
+      
+      const receiptData = { 
+        items: [...cart], 
+        total, 
+        method: actualMethod, 
+        paymentStatus: actualStatus, 
+        customerName: customerInfo.name, 
+        receiptNumber: sale.id.slice(0, 8).toUpperCase(),
+        taxAmount: taxInfo.tax_amount,
+        subtotal: taxInfo.subtotal,
+      };
       setLastSaleData(receiptData);
 
       toast.success(`Sale #${sale.id.slice(0, 8)} completed!`);
@@ -619,12 +643,14 @@ export default function POS() {
       return;
     }
     try {
+      const taxInfo = taxEnabled ? calculateGSTBreakdown(total, true) : { subtotal: total, gst_amount: 0 };
       const saleDatetime = new Date(`${saleDate}T${saleTime}:00`).toISOString();
       const { data: sale, error: saleErr } = await supabase.from("sales").insert({
         tenant_id: tenantId, customer_id: selectedCustomer?.id || null,
-        total_amount: total, payment_method: "split", payment_status: "paid",
+        total_amount: total, tax_amount: taxInfo.gst_amount, gst_amount: taxInfo.gst_amount,
+        payment_method: "split", payment_status: "paid",
         order_type: "counter", order_status: "completed", sale_date: saleDatetime,
-        notes: `POS Split: ${customerInfo.name}`,
+        notes: `POS Split: ${customerInfo.name}${taxEnabled ? " [GST incl.]" : ""}`,
       }).select().single();
       if (saleErr || !sale) throw saleErr || new Error("Sale creation failed");
 
@@ -647,7 +673,7 @@ export default function POS() {
         }).eq("id", item.product.id);
       }
 
-      setLastSaleData({ items: [...cart], total, method: "split", customerName: customerInfo.name, receiptNumber: sale.id.slice(0, 8).toUpperCase() });
+      setLastSaleData({ items: [...cart], total, method: "split", paymentStatus: "paid", taxAmount: taxInfo.gst_amount, subtotal: taxInfo.subtotal, customerName: customerInfo.name, receiptNumber: sale.id.slice(0, 8).toUpperCase() });
       toast.success(`Split payment sale #${sale.id.slice(0, 8)} completed!`);
       setCart([]); setShowSplitPayment(false); setShowCheckout(false);
       setCustomerInfo({ name: "", phone: "" }); setSelectedCustomer(null); setRoundingAdjustment(0);
@@ -1352,6 +1378,29 @@ export default function POS() {
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>Subtotal</span><span>UGX {rawTotal.toLocaleString()}</span>
                 </div>
+                {/* Tax toggle */}
+                <label className="flex items-center gap-2 text-xs cursor-pointer py-1">
+                  <input
+                    type="checkbox"
+                    checked={taxEnabled}
+                    onChange={(e) => setTaxEnabled(e.target.checked)}
+                    className="h-3.5 w-3.5 rounded border-gray-300"
+                  />
+                  <span>Include GST (18%) {taxEnabled ? "— included" : ""}</span>
+                </label>
+                {taxEnabled && (() => {
+                  const bd = calculateGSTBreakdown(rawTotal, true);
+                  return (
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Taxable</span><span>UGX {bd.subtotal.toLocaleString()}</span>
+                    </div>
+                  );
+                })()}
+                {taxEnabled && (
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>GST (18%)</span><span>UGX {calculateGSTBreakdown(rawTotal, true).gst_amount.toLocaleString()}</span>
+                  </div>
+                )}
                 {roundingAdjustment !== 0 && (
                   <div className="flex justify-between text-xs font-bold text-amber-600">
                     <span>Rounding (F7)</span><span>{roundingAdjustment > 0 ? "+" : ""}{roundingAdjustment.toLocaleString()}</span>
@@ -1516,6 +1565,9 @@ export default function POS() {
             items={lastSaleData.items.map(i => ({ name: i.product.name, quantity: i.quantity, price: getEffectivePrice(i.product, i.customPrice) }))}
             total={lastSaleData.total}
             paymentMethod={lastSaleData.method}
+            paymentStatus={lastSaleData.paymentStatus}
+            taxAmount={lastSaleData.taxAmount}
+            subtotal={lastSaleData.subtotal}
             receiptNumber={lastSaleData.receiptNumber}
             settings={receiptSettings || undefined} />
         </div>
@@ -1527,6 +1579,7 @@ export default function POS() {
           customerName={lastSaleData.customerName}
           items={lastSaleData.items.map(i => ({ name: i.product.name, quantity: i.quantity, price: getEffectivePrice(i.product, i.customPrice) }))}
           total={lastSaleData.total} paymentMethod={lastSaleData.method}
+          paymentStatus={lastSaleData.paymentStatus}
           businessName={tenantInfo?.name} businessPhone={tenantInfo?.phone || undefined}
           businessEmail={tenantInfo?.email || undefined}
           businessAddress={tenantInfo?.address || undefined}

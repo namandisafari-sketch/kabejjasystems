@@ -73,6 +73,55 @@ const BusinessSettings = () => {
     },
   });
 
+  const [notificationEmail, setNotificationEmail] = useState("");
+  const [dailyReport, setDailyReport] = useState(false);
+  const [weeklyReport, setWeeklyReport] = useState(false);
+  const [monthlyReport, setMonthlyReport] = useState(false);
+  const [notifSettingsLoaded, setNotifSettingsLoaded] = useState(false);
+  const [savingNotifs, setSavingNotifs] = useState(false);
+
+  const { data: tenantSettings } = useQuery({
+    queryKey: ['tenant-settings-notifications'],
+    queryFn: async () => {
+      if (!tenantData?.id) return null;
+      const { data } = await supabase
+        .from('tenant_settings')
+        .select('*')
+        .eq('tenant_id', tenantData.id)
+        .maybeSingle();
+      if (data && !notifSettingsLoaded) {
+        setNotificationEmail(data.admin_email || "");
+        setDailyReport(data.daily_report_enabled || false);
+        setWeeklyReport(data.weekly_report_enabled || false);
+        setMonthlyReport(data.monthly_report_enabled || false);
+        setNotifSettingsLoaded(true);
+      }
+      return data;
+    },
+    enabled: !!tenantData?.id,
+  });
+
+  const handleSaveNotifications = async () => {
+    if (!tenantData?.id) return;
+    setSavingNotifs(true);
+    try {
+      const { error } = await supabase.from('tenant_settings').upsert({
+        tenant_id: tenantData.id,
+        admin_email: notificationEmail || null,
+        daily_report_enabled: dailyReport,
+        weekly_report_enabled: weeklyReport,
+        monthly_report_enabled: monthlyReport,
+      }, { onConflict: 'tenant_id' });
+      if (error) throw error;
+      toast({ title: "Settings saved", description: "Notification preferences updated." });
+      queryClient.invalidateQueries({ queryKey: ['tenant-settings-notifications'] });
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingNotifs(false);
+    }
+  };
+
   const branchLimit = tenant?.packages?.branch_limit || 1;
   const userLimit = isRental ? (tenant?.rental_packages?.included_users || 1) : (tenant?.packages?.user_limit || 2);
   const propertyLimit = tenant?.rental_packages?.max_properties || 3;
@@ -131,6 +180,10 @@ const BusinessSettings = () => {
             WhatsApp
           </TabsTrigger>
           <TabsTrigger value="subscription">Subscription</TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center gap-1">
+            <Mail className="h-4 w-4" />
+            Notifications
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
@@ -378,6 +431,80 @@ const BusinessSettings = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="notifications" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Email &amp; Report Notifications
+              </CardTitle>
+              <CardDescription>Configure where automated reports and notifications are sent</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="adminEmail">Admin Email Address</Label>
+                <Input
+                  id="adminEmail"
+                  type="email"
+                  placeholder="admin@example.com"
+                  value={notificationEmail}
+                  onChange={(e) => setNotificationEmail(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  This email will receive daily, weekly, and monthly sales reports and system notifications.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <Label>Automated Reports</Label>
+                <div className="space-y-3 border rounded-lg p-4">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={dailyReport}
+                      onChange={(e) => setDailyReport(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    <div>
+                      <p className="font-medium text-sm">Daily Summary Report</p>
+                      <p className="text-xs text-muted-foreground">End-of-day sales and revenue summary</p>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={weeklyReport}
+                      onChange={(e) => setWeeklyReport(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    <div>
+                      <p className="font-medium text-sm">Weekly Performance Report</p>
+                      <p className="text-xs text-muted-foreground">Weekly sales trends, top products, and revenue analysis</p>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={monthlyReport}
+                      onChange={(e) => setMonthlyReport(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    <div>
+                      <p className="font-medium text-sm">Monthly Statement</p>
+                      <p className="text-xs text-muted-foreground">Monthly profit & loss, customer balances, and GST summary</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <Button onClick={handleSaveNotifications} disabled={savingNotifs}>
+                {savingNotifs ? "Saving..." : "Save Notification Settings"}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
       </Tabs>
     </div>
   );

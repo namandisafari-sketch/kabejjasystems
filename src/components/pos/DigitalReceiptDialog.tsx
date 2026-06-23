@@ -41,6 +41,7 @@ interface DigitalReceiptDialogProps {
   items: CartItem[];
   total: number;
   paymentMethod: string;
+  paymentStatus?: string;
   businessName?: string;
   businessPhone?: string;
   businessEmail?: string;
@@ -60,6 +61,7 @@ export function DigitalReceiptDialog({
   items,
   total,
   paymentMethod,
+  paymentStatus,
   businessName = "TennaHub",
   businessPhone,
   businessEmail,
@@ -336,6 +338,7 @@ export function DigitalReceiptDialog({
                   items={items}
                   total={total}
                   paymentMethod={paymentMethod}
+                  paymentStatus={paymentStatus}
                   receiptNumber={receiptNumber}
                   cashierName={cashierName}
                   saleDate={saleDate}

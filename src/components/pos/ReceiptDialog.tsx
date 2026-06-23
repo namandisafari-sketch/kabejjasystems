@@ -10,10 +10,11 @@ interface ReceiptDialogProps {
   saleId: string;
   cartItems: CartItem[];
   paymentMethod: string;
+  paymentStatus?: string;
   onNewSale: () => void;
 }
 
-export function ReceiptDialog({ open, onOpenChange, saleId, cartItems, paymentMethod, onNewSale }: ReceiptDialogProps) {
+export function ReceiptDialog({ open, onOpenChange, saleId, cartItems, paymentMethod, paymentStatus, onNewSale }: ReceiptDialogProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-UG', {
       style: 'currency',
@@ -75,7 +76,9 @@ export function ReceiptDialog({ open, onOpenChange, saleId, cartItems, paymentMe
           
           <div className="flex justify-between text-muted-foreground mt-1">
             <span>Payment</span>
-            <span className="capitalize">{paymentMethod}</span>
+            <span className={paymentStatus && paymentStatus !== 'paid' ? 'text-orange-600 font-medium' : ''}>
+              {paymentStatus && paymentStatus !== 'paid' ? 'Credit Sale' : <span className="capitalize">{paymentMethod}</span>}
+            </span>
           </div>
           
           <Separator className="my-2" />

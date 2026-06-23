@@ -3,7 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ShoppingCart, History, UtensilsCrossed, Bug, Store, Search, Plus, Minus, Trash2, CreditCard, Banknote, Loader2, User, X, Eye, Printer, RotateCcw, MoreHorizontal } from "lucide-react";
+import { ShoppingCart, History, UtensilsCrossed, Bug, Store, Search, Plus, Minus, Trash2, CreditCard, Banknote, Loader2, User, X, Eye, Printer, RotateCcw, MoreHorizontal, CalendarIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { format as formatDate } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -25,7 +30,6 @@ import { OrderCart, OrderItem } from "@/components/restaurant/OrderCart";
 import { PaymentDialog } from "@/components/restaurant/PaymentDialog";
 import { KitchenTicket } from "@/components/restaurant/KitchenTicket";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -43,11 +47,6 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { getBusinessTypeConfig } from "@/config/businessTypes";
 
 interface MenuItem {
@@ -106,9 +105,17 @@ const RetailSales = ({ tenant }: { tenant: any }) => {
   const { filterBranchId } = useBranchFilter();
   const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
   const [returnSaleId, setReturnSaleId] = useState<string | null>(null);
+  
+  // Filters
+  const [searchCustomer, setSearchCustomer] = useState("");
+  const [filterPaymentStatus, setFilterPaymentStatus] = useState<string>("all");
+  const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>("all");
+  const [filterDateFrom, setFilterDateFrom] = useState<Date | undefined>(undefined);
+  const [filterDateTo, setFilterDateTo] = useState<Date | undefined>(undefined);
+  const [showFilters, setShowFilters] = useState(false);
 
   const { data: orders, isLoading: ordersLoading } = useQuery({
-    queryKey: ['orders', tenantId, filterBranchId],
+    queryKey: ['orders', tenantId, filterBranchId, searchCustomer, filterPaymentStatus, filterPaymentMethod, filterDateFrom?.toISOString(), filterDateTo?.toISOString()],
     queryFn: async () => {
       if (!tenantId) return [];
       let query = supabase
@@ -116,11 +123,27 @@ const RetailSales = ({ tenant }: { tenant: any }) => {
         .select(`*, customers(name)`)
         .eq('tenant_id', tenantId)
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(200);
       
-      // Apply branch filter if staff is restricted to a branch
       if (filterBranchId) {
         query = query.eq('branch_id', filterBranchId);
+      }
+      if (searchCustomer.trim()) {
+        query = query.ilike('customers.name', `%${searchCustomer.trim()}%`);
+      }
+      if (filterPaymentStatus && filterPaymentStatus !== 'all') {
+        query = query.eq('payment_status', filterPaymentStatus);
+      }
+      if (filterPaymentMethod && filterPaymentMethod !== 'all') {
+        query = query.eq('payment_method', filterPaymentMethod);
+      }
+      if (filterDateFrom) {
+        query = query.gte('created_at', filterDateFrom.toISOString());
+      }
+      if (filterDateTo) {
+        const endOfDay = new Date(filterDateTo);
+        endOfDay.setHours(23, 59, 59, 999);
+        query = query.lte('created_at', endOfDay.toISOString());
       }
       
       const { data, error } = await query;
@@ -213,6 +236,106 @@ const RetailSales = ({ tenant }: { tenant: any }) => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Search and Filter Bar */}
+      <Card className="mb-4">
+        <CardContent className="pt-4 pb-3">
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+            <div className="relative flex-1 w-full sm:w-auto">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by customer name..."
+                value={searchCustomer}
+                onChange={(e) => setSearchCustomer(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Select value={filterPaymentStatus} onValueChange={setFilterPaymentStatus}>
+                <SelectTrigger className="w-[130px]">
+                  <SelectValue placeholder="Payment" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Payments</SelectItem>
+                  <SelectItem value="paid">Paid</SelectItem>
+                  <SelectItem value="unpaid">Unpaid</SelectItem>
+                  <SelectItem value="partial">Partial</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterPaymentMethod} onValueChange={setFilterPaymentMethod}>
+                <SelectTrigger className="w-[130px]">
+                  <SelectValue placeholder="Method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Methods</SelectItem>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="mobile_money">Mobile Money</SelectItem>
+                  <SelectItem value="card">Card</SelectItem>
+                  <SelectItem value="credit">Credit</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant={showFilters ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+                className="gap-1"
+              >
+                <CalendarIcon className="h-4 w-4" />
+                {filterDateFrom ? `${formatDate(filterDateFrom, 'dd/MM')} - ${filterDateTo ? formatDate(filterDateTo, 'dd/MM') : "..."}` : "Date"}
+              </Button>
+            </div>
+          </div>
+          
+          {showFilters && (
+            <div className="flex flex-col sm:flex-row gap-3 mt-3 pt-3 border-t">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">From:</span>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1">
+                      <CalendarIcon className="h-4 w-4" />
+                      {filterDateFrom ? formatDate(filterDateFrom, 'PPP') : "Pick date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar mode="single" selected={filterDateFrom} onSelect={setFilterDateFrom} />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">To:</span>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1">
+                      <CalendarIcon className="h-4 w-4" />
+                      {filterDateTo ? formatDate(filterDateTo, 'PPP') : "Pick date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar mode="single" selected={filterDateTo} onSelect={setFilterDateTo} />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              {(searchCustomer || filterPaymentStatus !== 'all' || filterPaymentMethod !== 'all' || filterDateFrom || filterDateTo) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSearchCustomer("");
+                    setFilterPaymentStatus("all");
+                    setFilterPaymentMethod("all");
+                    setFilterDateFrom(undefined);
+                    setFilterDateTo(undefined);
+                  }}
+                  className="text-muted-foreground"
+                >
+                  Clear filters
+                </Button>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
