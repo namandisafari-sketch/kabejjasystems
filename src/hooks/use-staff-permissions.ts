@@ -30,8 +30,8 @@ export function useStaffPermissions() {
 
       if (!profile) return null;
 
-      // Tenant owners and admins have full access
-      if (profile.role === 'tenant_owner' || profile.role === 'superadmin' || profile.role === 'admin') {
+      // Tenant owners and admins have full access (null role = business owner)
+      if (!profile.role || profile.role === 'tenant_owner' || profile.role === 'superadmin' || profile.role === 'admin') {
         return {
           hasFullAccess: true,
           allowedModules: null, // null means all modules
