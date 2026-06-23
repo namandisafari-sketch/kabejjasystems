@@ -246,8 +246,8 @@ const App = () => {
           <Sonner />
           <PWAInstallPrompt />
           <InstallPrompt />
-            <BrowserRouter>
-          <KeyboardShortcutsProvider>
+          <BrowserRouter>
+            <KeyboardShortcutsProvider>
               <Routes>
               <Route path="/" element={<OnboardingGate />} />
               <Route path="/home" element={<PWAHome />} />
@@ -537,8 +537,8 @@ const App = () => {
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
           </KeyboardShortcutsProvider>
+          </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
     </ThemeProvider>
