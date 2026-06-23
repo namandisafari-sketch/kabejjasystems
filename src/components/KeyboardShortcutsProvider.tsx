@@ -22,68 +22,73 @@ export function KeyboardShortcutsProvider({ children }: { children: React.ReactN
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Prevent shortcuts if user is typing in an input field
-      const target = event.target as HTMLElement;
-      if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.contentEditable === 'true'
-      ) {
-        // Allow only F1 and Escape in input fields
-        if (event.key.toLowerCase() !== 'f1' && event.key !== 'Escape') {
-          return;
-        }
-      }
-
-      // Build key combo string
-      const modifiers = [];
-      if (event.ctrlKey || event.metaKey) modifiers.push('Ctrl');
-      if (event.shiftKey) modifiers.push('Shift');
-      if (event.altKey) modifiers.push('Alt');
-
-      const key = event.key.toUpperCase();
-      const combo = modifiers.length > 0 ? `${modifiers.join('+')}+${key}` : key;
-
-      // Handle shortcuts
-      switch (combo) {
-        case 'Ctrl+I':
-        case 'Alt+N':
-          // Navigate to POS
-          navigate('/business/pos');
-          event.preventDefault();
-          break;
-
-        case 'Ctrl+P':
-          // Trigger print
-          window.print();
-          event.preventDefault();
-          break;
-
-        case 'Ctrl+H':
-          // Go to sales history
-          navigate('/business/sales');
-          event.preventDefault();
-          break;
-
-        case 'F1':
-          // Show shortcuts dialog
-          setShowShortcutsDialog(true);
-          event.preventDefault();
-          break;
-
-        case 'Escape':
-          // Close dialog if it's open
-          if (showShortcutsDialog) {
-            setShowShortcutsDialog(false);
-          } else {
-            // Dispatch custom event for other dialogs
-            const closeEvent = new CustomEvent('closeAllDialogs');
-            window.dispatchEvent(closeEvent);
+      try {
+        // Prevent shortcuts if user is typing in an input field
+        const target = event.target as HTMLElement;
+        if (
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.contentEditable === 'true'
+        ) {
+          // Allow only F1 and Escape in input fields
+          if (event.key.toLowerCase() !== 'f1' && event.key !== 'Escape') {
+            return;
           }
-          break;
+        }
 
-        default:
-          break;
+        // Build key combo string
+        const modifiers = [];
+        if (event.ctrlKey || event.metaKey) modifiers.push('Ctrl');
+        if (event.shiftKey) modifiers.push('Shift');
+        if (event.altKey) modifiers.push('Alt');
+
+        const key = event.key.toUpperCase();
+        const combo = modifiers.length > 0 ? `${modifiers.join('+')}+${key}` : key;
+
+        // Handle shortcuts
+        switch (combo) {
+          case 'Ctrl+I':
+          case 'Alt+N':
+            // Navigate to POS
+            navigate('/business/pos');
+            event.preventDefault();
+            break;
+
+          case 'Ctrl+P':
+            // Trigger print
+            window.print();
+            event.preventDefault();
+            break;
+
+          case 'Ctrl+H':
+            // Go to sales history
+            navigate('/business/sales');
+            event.preventDefault();
+            break;
+
+          case 'F1':
+            // Show shortcuts dialog
+            setShowShortcutsDialog(true);
+            event.preventDefault();
+            break;
+
+          case 'Escape':
+            // Close dialog if it's open
+            if (showShortcutsDialog) {
+              setShowShortcutsDialog(false);
+            } else {
+              // Dispatch custom event for other dialogs
+              const closeEvent = new CustomEvent('closeAllDialogs');
+              window.dispatchEvent(closeEvent);
+            }
+            break;
+
+          default:
+            break;
+        }
+      } catch (err) {
+        // Silently catch keyboard handler errors to prevent crashing
+        console.error('Keyboard shortcut error:', err);
       }
     };
 
@@ -97,7 +102,9 @@ export function KeyboardShortcutsProvider({ children }: { children: React.ReactN
   return (
     <>
       {children}
-      <KeyboardShortcutsDialog open={showShortcutsDialog} onOpenChange={setShowShortcutsDialog} />
+      {typeof window !== 'undefined' && (
+        <KeyboardShortcutsDialog open={showShortcutsDialog} onOpenChange={setShowShortcutsDialog} />
+      )}
     </>
   );
 }
