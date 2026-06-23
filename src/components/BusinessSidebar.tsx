@@ -88,6 +88,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Bell,
   MessageSquare,
   BadgeCheck,
+  TrendingUp,
+  Heart,
 };
 
 const categoryLabels: Record<string, keyof typeof t.navigation.businessSidebarCategories> = {

@@ -4,7 +4,7 @@ import {
   QrCode, Wallet, Bed, CalendarDays, Package, UtensilsCrossed, Receipt, ChefHat,
   Scissors, Calendar, Pill, HeartPulse, Wrench, Cog, PackageMinus, Truck, Tags, AlertTriangle, 
   ClipboardList, CreditCard, Wallet2, Sparkles, GraduationCap, ClipboardCheck, Award, BookOpen, FileText, ScanLine,
-  ShieldAlert, Building2, DoorOpen, Calculator, Home, LogOut
+  ShieldAlert, Building2, DoorOpen, Calculator, Home, LogOut, UserPlus, Link, Shield, Upload, TrendingUp, Heart
 } from "lucide-react";
 import { useTenantModules, moduleRoutes, ecdRouteOverrides } from "@/hooks/use-tenant-modules";
 import { useTenant } from "@/hooks/use-tenant";
@@ -54,6 +54,12 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   DoorOpen,
   Calculator,
   Home,
+  UserPlus,
+  Link,
+  Shield,
+  Upload,
+  TrendingUp,
+  Heart,
 };
 
 interface MobileBottomNavProps {
