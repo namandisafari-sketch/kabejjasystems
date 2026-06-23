@@ -16,6 +16,7 @@ import {
   Check, Loader2, Phone, Mail, User, FileText, Shield, ArrowLeft,
 } from "lucide-react";
 import { format } from "date-fns";
+import { TennaHubLogo } from "@/components/TennaHubLogo";
 
 export default function PublicPropertyListing() {
   const { slug } = useParams<{ slug: string }>();
@@ -612,8 +613,14 @@ export default function PublicPropertyListing() {
 
       {/* Footer */}
       <footer className="border-t bg-muted/30 py-6">
-        <div className="max-w-4xl mx-auto px-4 text-center text-xs text-muted-foreground">
-          <p>Powered by Kabejja Systems - Property Management</p>
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <div className="flex justify-center mb-2">
+            <TennaHubLogo width={100} height={30} variant="wordmark" />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Powered by TennaHub Technologies Limited &middot;{" "}
+            <a href="tel:+256745368426" className="hover:text-primary transition-colors">+256 745 368 426</a>
+          </p>
         </div>
       </footer>
     </div>
