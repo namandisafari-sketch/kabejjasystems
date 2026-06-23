@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import {
   Search, Plus, Minus, Trash2, ShoppingCart, CreditCard, Printer, X, User,
   ScanBarcode, Wallet, Edit3, CalendarIcon, Keyboard, History, PauseCircle, PlayCircle,
-  Loader2, Banknote, Users, BarChart3, Menu, SplitSquareHorizontal, Receipt
+  Loader2, Banknote, Users, BarChart3, Menu, SplitSquareHorizontal, Receipt, UserPlus
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
