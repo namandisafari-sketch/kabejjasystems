@@ -10,13 +10,21 @@ import {
   DollarSign, Clock, AlertTriangle, TrendingUp, Banknote, Smartphone, Wallet,
   Users, Package, Percent, CalendarIcon, Hammer, ShoppingCart, ArrowRight,
   TrendingDown, BarChart3, Eye, PlusCircle, Wrench, CreditCard,
-  ClipboardList, Lock, Building2, FileText,
+  ClipboardList, Lock, Building2, FileText, RotateCcw, MoreHorizontal, RefreshCcw,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ReturnExchangeDialog } from "@/components/pos/ReturnExchangeDialog";
 import { DayEndReportDialog } from "./DayEndReportDialog";
 import { StockTakingDialog } from "./StockTakingDialog";
 import { SupplierAgingReport } from "./SupplierAgingReport";
@@ -83,6 +91,7 @@ const HardwareDashboard = ({ tenantId }: { tenantId: string }) => {
   const [showStockTaking, setShowStockTaking] = useState(false);
   const [showSupplierAging, setShowSupplierAging] = useState(false);
   const [showReceivablesAging, setShowReceivablesAging] = useState(false);
+  const [returnSaleId, setReturnSaleId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!tenantId) return;
@@ -99,7 +108,7 @@ const HardwareDashboard = ({ tenantId }: { tenantId: string }) => {
             .eq("tenant_id", tenantId),
           supabase.from("products").select("id, name, stock_quantity, min_stock_level, unit_price, cost_price, category")
             .eq("tenant_id", tenantId).eq("is_active", true),
-          supabase.from("sales").select("id, total_amount, payment_status, sale_date, payment_method, customers!sales_customer_id_fkey(name)")
+          supabase.from("sales").select("id, total_amount, payment_status, return_status, order_number, sale_date, payment_method, customers!sales_customer_id_fkey(name)")
             .eq("tenant_id", tenantId).order("sale_date", { ascending: false }).limit(8),
           supabase.from("customers").select("name, phone, current_balance").eq("tenant_id", tenantId).gt("current_balance", 0).order("current_balance", { ascending: false }).limit(5),
         ]);
@@ -213,9 +222,12 @@ const HardwareDashboard = ({ tenantId }: { tenantId: string }) => {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
         <Button variant="outline" size="sm" className="w-full justify-center gap-2" onClick={() => navigate("/business/pos")}>
           <ShoppingCart className="h-4 w-4" /> New Sale
+        </Button>
+        <Button variant="outline" size="sm" className="w-full justify-center gap-2" onClick={() => navigate("/business/sales")}>
+          <RefreshCcw className="h-4 w-4" /> Refunds
         </Button>
         <Button variant="outline" size="sm" className="w-full justify-center gap-2" onClick={() => navigate("/business/inventory")}>
           <Package className="h-4 w-4" /> Inventory
@@ -460,8 +472,11 @@ const HardwareDashboard = ({ tenantId }: { tenantId: string }) => {
 
             {/* Recent Sales */}
             <Card className="rounded-xl border-border">
-              <CardHeader className="pb-2">
+              <CardHeader className="pb-2 flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">Recent Transactions</CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/business/sales")}>
+                  View All <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
               </CardHeader>
               <CardContent>
                 <ScrollArea className="h-[250px] w-full pr-4">
@@ -470,17 +485,54 @@ const HardwareDashboard = ({ tenantId }: { tenantId: string }) => {
                       recentSales.map((sale, idx) => (
                         <div key={idx} className="flex items-center justify-between pb-3 border-b last:border-0">
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">{sale.customers?.name || "Unknown"}</p>
-                            <p className="text-xs text-muted-foreground">{format(new Date(sale.sale_date), "HH:mm")}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-sm truncate">{sale.customers?.name || "Walk-in"}</p>
+                              <span className="text-xs text-muted-foreground">#{sale.order_number}</span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <p className="text-xs text-muted-foreground">{format(new Date(sale.sale_date), "HH:mm")}</p>
+                              <Badge variant={sale.payment_status === 'paid' ? 'secondary' : 'destructive'} className="text-[10px] px-1.5 py-0">
+                                {sale.payment_status || 'paid'}
+                              </Badge>
+                              {sale.return_status && (
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-orange-600 border-orange-600">
+                                  {sale.return_status === 'voided' ? 'Voided' : 
+                                   sale.return_status === 'exchanged' ? 'Exchanged' :
+                                   sale.return_status === 'full_return' ? 'Returned' : 'Partial'}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                          <div className="text-right ml-2">
-                            <p className="font-semibold text-sm">{formatCurrency(sale.total_amount)}</p>
-                            <Badge 
-                              variant="outline" 
-                              className="text-xs"
-                            >
-                              {sale.payment_method}
-                            </Badge>
+                          <div className="flex items-center gap-1 ml-2">
+                            <div className="text-right mr-1">
+                              <p className="font-semibold text-sm">{formatCurrency(sale.total_amount)}</p>
+                              <p className="text-xs text-muted-foreground capitalize">{sale.payment_method}</p>
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => navigate(`/business/sales?receipt=${sale.id}`)}>
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View Receipt
+                                </DropdownMenuItem>
+                                {!sale.return_status && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem 
+                                      onClick={() => setReturnSaleId(sale.id)}
+                                      className="text-orange-600"
+                                    >
+                                      <RotateCcw className="h-4 w-4 mr-2" />
+                                      Return / Exchange
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                         </div>
                       ))
@@ -498,6 +550,14 @@ const HardwareDashboard = ({ tenantId }: { tenantId: string }) => {
       <StockTakingDialog isOpen={showStockTaking} onClose={() => setShowStockTaking(false)} tenantId={tenantId} />
       <SupplierAgingReport isOpen={showSupplierAging} onClose={() => setShowSupplierAging(false)} tenantId={tenantId} />
       <ReceivablesAgingReport isOpen={showReceivablesAging} onClose={() => setShowReceivablesAging(false)} tenantId={tenantId} />
+      {returnSaleId && (
+        <ReturnExchangeDialog
+          open={!!returnSaleId}
+          onOpenChange={(open) => !open && setReturnSaleId(null)}
+          saleId={returnSaleId}
+          tenantId={tenantId}
+        />
+      )}
     </div>
   );
 };
