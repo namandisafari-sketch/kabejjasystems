@@ -19,6 +19,7 @@ import { isSchoolBusiness, isPharmacyBusiness } from "@/config/businessTypes";
 import SchoolDashboard from "@/components/dashboard/SchoolDashboard";
 import RentalDashboard from "./rental/RentalDashboard";
 import PharmacyDashboard from "@/components/dashboard/PharmacyDashboard";
+import HardwareDashboard from "@/components/dashboard/HardwareDashboard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Uganda timezone offset (UTC+3)
@@ -43,6 +44,7 @@ const BusinessDashboard = () => {
   const isSchool = tenant?.businessType && isSchoolBusiness(tenant.businessType);
   const isRental = tenant?.businessType === 'rental_management';
   const isPharmacy = tenant?.businessType && isPharmacyBusiness(tenant.businessType);
+  const isHardware = tenant?.businessType === 'hardware';
   const selectedDateStr = formatUgandaDate(selectedDate);
 
   const formatCurrency = (amount: number) => {
@@ -171,7 +173,7 @@ const BusinessDashboard = () => {
 
       return results;
     },
-    enabled: !!tenant?.tenantId && !isSchool && !isRental && !isPharmacy,
+    enabled: !!tenant?.tenantId && !isSchool && !isRental && !isPharmacy && !isHardware,
   });
 
   // Recent sales query
@@ -189,7 +191,7 @@ const BusinessDashboard = () => {
 
       return data || [];
     },
-    enabled: !!tenant?.tenantId && !isSchool && !isRental && !isPharmacy,
+    enabled: !!tenant?.tenantId && !isSchool && !isRental && !isPharmacy && !isHardware,
   });
 
   if (isRental) {
@@ -202,6 +204,10 @@ const BusinessDashboard = () => {
 
   if (isPharmacy && tenant?.tenantId) {
     return <PharmacyDashboard tenantId={tenant.tenantId} />;
+  }
+
+  if (isHardware && tenant?.tenantId) {
+    return <HardwareDashboard tenantId={tenant.tenantId} />;
   }
 
   return (
