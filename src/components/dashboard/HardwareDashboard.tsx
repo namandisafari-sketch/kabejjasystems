@@ -10,12 +10,17 @@ import {
   DollarSign, Clock, AlertTriangle, TrendingUp, Banknote, Smartphone, Wallet,
   Users, Package, Percent, CalendarIcon, Hammer, ShoppingCart, ArrowRight,
   TrendingDown, BarChart3, Eye, PlusCircle, Wrench, CreditCard,
+  ClipboardList, Lock, Building2, FileText,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { DayEndReportDialog } from "./DayEndReportDialog";
+import { StockTakingDialog } from "./StockTakingDialog";
+import { SupplierAgingReport } from "./SupplierAgingReport";
+import { ReceivablesAgingReport } from "./ReceivablesAgingReport";
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-UG", { style: "currency", currency: "UGX", minimumFractionDigits: 0 }).format(amount);
@@ -74,6 +79,10 @@ const HardwareDashboard = ({ tenantId }: { tenantId: string }) => {
   const [topProducts, setTopProducts] = useState<any[]>([]);
   const [paymentBreakdown, setPaymentBreakdown] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showDayEnd, setShowDayEnd] = useState(false);
+  const [showStockTaking, setShowStockTaking] = useState(false);
+  const [showSupplierAging, setShowSupplierAging] = useState(false);
+  const [showReceivablesAging, setShowReceivablesAging] = useState(false);
 
   useEffect(() => {
     if (!tenantId) return;
@@ -216,6 +225,22 @@ const HardwareDashboard = ({ tenantId }: { tenantId: string }) => {
         </Button>
         <Button variant="outline" size="sm" className="w-full justify-center gap-2" onClick={() => navigate("/business/reports")}>
           <BarChart3 className="h-4 w-4" /> Reports
+        </Button>
+      </div>
+
+      {/* Reports & Financial Actions */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <Button variant="ghost" size="sm" className="w-full justify-center gap-2 text-sm" onClick={() => setShowDayEnd(true)}>
+          <Lock className="h-4 w-4" /> Day End
+        </Button>
+        <Button variant="ghost" size="sm" className="w-full justify-center gap-2 text-sm" onClick={() => setShowStockTaking(true)}>
+          <ClipboardList className="h-4 w-4" /> Stock Take
+        </Button>
+        <Button variant="ghost" size="sm" className="w-full justify-center gap-2 text-sm" onClick={() => setShowSupplierAging(true)}>
+          <Building2 className="h-4 w-4" /> Supplier Aging
+        </Button>
+        <Button variant="ghost" size="sm" className="w-full justify-center gap-2 text-sm" onClick={() => setShowReceivablesAging(true)}>
+          <FileText className="h-4 w-4" /> Receivables Aging
         </Button>
       </div>
 
@@ -469,6 +494,10 @@ const HardwareDashboard = ({ tenantId }: { tenantId: string }) => {
           </div>
         </>
       )}
+      <DayEndReportDialog isOpen={showDayEnd} onClose={() => setShowDayEnd(false)} tenantId={tenantId} />
+      <StockTakingDialog isOpen={showStockTaking} onClose={() => setShowStockTaking(false)} tenantId={tenantId} />
+      <SupplierAgingReport isOpen={showSupplierAging} onClose={() => setShowSupplierAging(false)} tenantId={tenantId} />
+      <ReceivablesAgingReport isOpen={showReceivablesAging} onClose={() => setShowReceivablesAging(false)} tenantId={tenantId} />
     </div>
   );
 };
