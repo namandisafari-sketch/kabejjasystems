@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/i18n";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { KeyboardShortcutsProvider } from "@/components/KeyboardShortcutsProvider";
 import { useWelcomeNotifications } from "@/hooks/use-welcome-notifications";
 import { ProtectedAdminRoute } from "@/components/ProtectedAdminRoute";
 import { ProtectedStaffRoute } from "@/components/ProtectedStaffRoute";
@@ -245,8 +246,9 @@ const App = () => {
           <Sonner />
           <PWAInstallPrompt />
           <InstallPrompt />
-          <BrowserRouter>
-            <Routes>
+          <KeyboardShortcutsProvider>
+            <BrowserRouter>
+              <Routes>
               <Route path="/" element={<OnboardingGate />} />
               <Route path="/home" element={<PWAHome />} />
               <Route path="/signup" element={<Signup />} />
@@ -536,6 +538,7 @@ const App = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
+            </KeyboardShortcutsProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </ThemeProvider>

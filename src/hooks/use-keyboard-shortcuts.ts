@@ -1,87 +1,141 @@
-import { useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
-export interface Shortcut {
-  key: string;
-  ctrlKey?: boolean;
-  altKey?: boolean;
-  shiftKey?: boolean;
-  label: string;
-  description: string;
-  action: () => void;
-  category: string;
+// Keyboard shortcut configuration
+const SHORTCUTS = {
+  'ctrl+i': { action: 'newInvoice', description: 'Create new invoice (POS)' },
+  'alt+n': { action: 'newInvoice', description: 'Create new invoice (POS)' },
+  'ctrl+p': { action: 'print', description: 'Print receipt' },
+  'ctrl+h': { action: 'history', description: 'View transaction history' },
+  'f1': { action: 'help', description: 'Show keyboard shortcuts' },
+  'shift+f1': { action: 'showFeedback', description: 'Send feedback' },
+  'ctrl+d': { action: 'dashboard', description: 'Go to dashboard' },
+  'ctrl+inventory': { action: 'inventory', description: 'Go to inventory' },
+  'ctrl+s': { action: 'save', description: 'Save current form' },
+  'escape': { action: 'closeDialog', description: 'Close current dialog' },
+};
+
+interface ShortcutHandler {
+  (event: KeyboardEvent): void | boolean;
 }
 
-export function useKeyboardShortcuts(businessType?: string) {
+export function useKeyboardShortcuts() {
   const navigate = useNavigate();
-
-  const isSchool = businessType === 'school' || businessType === 'secondary_school' || 
-                   businessType === 'primary_school' || businessType === 'kindergarten';
-
-  const shortcuts: Shortcut[] = useMemo(() => [
-    // Navigation shortcuts (Alt + key to avoid browser conflicts)
-    { key: "d", altKey: true, label: "Alt+D", description: "Go to Dashboard", action: () => navigate("/business"), category: "Navigation" },
-    { key: "s", altKey: true, label: "Alt+S", description: "Go to Settings", action: () => navigate("/business/settings"), category: "Navigation" },
-    
-    // School-specific shortcuts
-    ...(isSchool ? [
-      { key: "1", altKey: true, label: "Alt+1", description: "Go to Students", action: () => navigate("/business/students"), category: "School" },
-      { key: "2", altKey: true, label: "Alt+2", description: "Go to Fees", action: () => navigate("/business/fees"), category: "School" },
-      { key: "3", altKey: true, label: "Alt+3", description: "Go to Exams", action: () => navigate("/business/exams"), category: "School" },
-      { key: "4", altKey: true, label: "Alt+4", description: "Go to Report Cards", action: () => navigate("/business/report-cards"), category: "School" },
-      { key: "5", altKey: true, label: "Alt+5", description: "Go to Attendance", action: () => navigate("/business/attendance"), category: "School" },
-      { key: "6", altKey: true, label: "Alt+6", description: "Go to Classes", action: () => navigate("/business/classes"), category: "School" },
-      { key: "7", altKey: true, label: "Alt+7", description: "Go to Parents", action: () => navigate("/business/parents"), category: "School" },
-      { key: "8", altKey: true, label: "Alt+8", description: "Go to Staff", action: () => navigate("/business/staff"), category: "School" },
-    ] : []),
-
-    // Global shortcuts
-    { key: "f", altKey: true, label: "Alt+F", description: "Toggle Fullscreen", action: () => {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      } else {
-        document.documentElement.requestFullscreen?.().catch(() => {
-          // Fallback: open in new tab if in iframe
-          if (window.self !== window.top) {
-            window.open(window.location.href, '_blank');
-          }
-        });
-      }
-    }, category: "Global" },
-
-    // Help shortcut
-    { key: "?", shiftKey: true, label: "Shift+?", description: "Show Keyboard Shortcuts", action: () => {
-      // Trigger click on keyboard shortcuts button
-      const btn = document.querySelector('[data-shortcuts-trigger]') as HTMLButtonElement;
-      btn?.click();
-    }, category: "Global" },
-  ], [isSchool, navigate]);
-
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    // Don't trigger shortcuts when typing in inputs
-    const target = event.target as HTMLElement;
-    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable) {
-      return;
-    }
-
-    for (const shortcut of shortcuts) {
-      const ctrlMatch = shortcut.ctrlKey ? (event.ctrlKey || event.metaKey) : !(event.ctrlKey || event.metaKey);
-      const altMatch = shortcut.altKey ? event.altKey : !event.altKey;
-      const shiftMatch = shortcut.shiftKey ? event.shiftKey : true; // Don't require shift to be absent
-
-      if (event.key.toLowerCase() === shortcut.key.toLowerCase() && ctrlMatch && altMatch && shiftMatch) {
-        event.preventDefault();
-        event.stopPropagation();
-        shortcut.action();
-        return;
-      }
-    }
-  }, [shortcuts]);
+  const location = useLocation();
+  const [showShortcutsDialog, setShowShortcutsDialog] = useState(false);
 
   useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown, true); // Use capture phase
-    return () => window.removeEventListener("keydown", handleKeyDown, true);
-  }, [handleKeyDown]);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Build key combo string
+      const modifiers = [];
+      if (event.ctrlKey || event.metaKey) modifiers.push('ctrl');
+      if (event.shiftKey) modifiers.push('shift');
+      if (event.altKey) modifiers.push('alt');
 
-  return { shortcuts };
+      const key = event.key.toLowerCase();
+      const combo = modifiers.length > 0 ? `${modifiers.join('+')}+${key}` : key;
+
+      // Prevent shortcuts if user is typing in an input field
+      const target = event.target as HTMLElement;
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.contentEditable === 'true'
+      ) {
+        // Allow only specific shortcuts in input fields
+        if (combo !== 'escape') return;
+      }
+
+      // Handle shortcuts
+      switch (combo) {
+        case 'ctrl+i':
+        case 'alt+n':
+          // Navigate to POS if on hardware/retail business
+          navigate('/business/pos');
+          event.preventDefault();
+          break;
+
+        case 'ctrl+p':
+          // Trigger print
+          if (window.print) {
+            window.print();
+            event.preventDefault();
+          }
+          break;
+
+        case 'ctrl+h':
+          // Go to sales/history page - check current business type
+          navigate('/business/sales');
+          event.preventDefault();
+          break;
+
+        case 'f1':
+          // Show shortcuts dialog
+          setShowShortcutsDialog(true);
+          event.preventDefault();
+          break;
+
+        case 'shift+f1':
+          // Go to feedback/suggestions
+          navigate('/business/suggestions');
+          event.preventDefault();
+          break;
+
+        case 'ctrl+d':
+          // Go to dashboard
+          navigate('/business/dashboard');
+          event.preventDefault();
+          break;
+
+        case 'ctrl+i':
+          // Go to inventory (different context)
+          if (event.shiftKey) {
+            navigate('/business/inventory');
+            event.preventDefault();
+          }
+          break;
+
+        case 'escape':
+          // Close any open dialog - this is handled by dialog components
+          // Dispatching custom event that dialog components can listen to
+          const closeEvent = new CustomEvent('closeAllDialogs');
+          window.dispatchEvent(closeEvent);
+          break;
+
+        default:
+          break;
+      }
+    };
+
+    // Add global event listener
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [navigate, location]);
+
+  return {
+    showShortcutsDialog,
+    setShowShortcutsDialog,
+    shortcuts: SHORTCUTS,
+  };
 }
+
+// Shortcuts reference component
+export const KeyboardShortcutsDialog = ({ 
+  open, 
+  onOpenChange 
+}: { 
+  open: boolean; 
+  onOpenChange: (open: boolean) => void 
+}) => {
+  // This would use your Dialog component
+  // Just returns the shortcut list for now
+  const shortcuts = Object.entries(SHORTCUTS).map(([combo, info]) => ({
+    combo,
+    action: info.action,
+    description: info.description,
+  }));
+
+  return shortcuts;
+};
